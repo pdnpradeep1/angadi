@@ -1,5 +1,11 @@
-import React from 'react';
-import { LoginContainer, LoginForm, LoginInput, LoginButton, LoginTitle } from '../styles/LoginStyle';
+import React from "react";
+import {
+  LoginContainer,
+  LoginForm,
+  LoginInput,
+  LoginButton,
+  LoginTitle,
+} from "../styles/LoginStyle";
 
 function Login() {
   return (
