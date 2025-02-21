@@ -80,3 +80,25 @@ export const ForgotPasswordLink = styled.a`
     color: #0056b3;
   }
 `;
+
+export const GoogleLoginButton = styled.button`
+  width: 100%;
+  padding: 12px;
+  color: #fff;
+  background-color: #db4437; /* Google red */
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  margin-top: 10px;
+
+  &:hover {
+    background-color: #c13527; /* Darker red */
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+`;
