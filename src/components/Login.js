@@ -5,6 +5,7 @@ import {
   LoginInput,
   LoginButton,
   LoginTitle,
+  ForgotPasswordLink,
 } from "../styles/LoginStyle";
 
 function Login() {
@@ -12,9 +13,12 @@ function Login() {
     <LoginContainer>
       <LoginTitle>Login to Your Account</LoginTitle>
       <LoginForm>
-        <LoginInput type="text" placeholder="Username" />
-        <LoginInput type="password" placeholder="Password" />
-        <LoginButton>Login</LoginButton>
+        <LoginInput type="text" placeholder="Username" required />
+        <LoginInput type="password" placeholder="Password" required />
+        <LoginButton type="submit">Login</LoginButton>
+        <ForgotPasswordLink href="/forgot-password">
+          Forgot Password?
+        </ForgotPasswordLink>
       </LoginForm>
     </LoginContainer>
   );
