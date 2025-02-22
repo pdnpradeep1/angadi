@@ -1,0 +1,36 @@
+/* Light Mode */
+body.light {
+  background-color: white;
+  color: black;
+}
+
+/* Dark Mode */
+body.dark {
+  background-color: #121212;
+  color: white;
+}
+
+/* Navbar Styling */
+.navbar {
+  padding: 10px;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+  padding: 8px 16px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.light .theme-toggle {
+  background-color: black;
+  color: white;
+}
+
+.dark .theme-toggle {
+  background-color: white;
+  color: black;
+}
