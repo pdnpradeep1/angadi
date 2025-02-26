@@ -2,6 +2,9 @@ import Home from "./components/Home";
 import Login from "./components/Login";
 import Signup from "./components/signup";
 import Dashboard from "./components/Dashboard";
+import ForgetPassword from './components/ForgetPassword';
+import ProfilePage from './components/ProfilePage';
+
 import React, { useState } from "react";
 import {
   BrowserRouter as Router,
@@ -35,9 +38,14 @@ function AppRoutes() {
         element={!isAuthenticated ? <Signup /> : <Navigate to="/dashboard" />}
       />
       <Route
-        path="/dashboard"
-        element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />}
+        path="/customer/dashboard"
+        element={!isAuthenticated ? <Dashboard /> : <Navigate to="/login" />}
       />
+       <Route
+        path="/auth/forgetpassword"
+        element={!isAuthenticated ? <ForgetPassword /> : <Navigate to="/login" />}
+      />
+       <Route path="/profile" component={ProfilePage} />
     </Routes>
   );
 }

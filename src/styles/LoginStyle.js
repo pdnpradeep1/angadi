@@ -1,5 +1,20 @@
 import styled from "styled-components";
 
+export const ErrorMessage = styled.div`
+  color: red;
+  font-size: 0.9rem;
+  margin-top: 5px;
+  padding: 2px 5px;
+  border-radius: 2px;
+  background-color: #f8d7da;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background-color: #f5c6cb;
+  }
+`;
+
+// ... other styled components ...
 export const LoginContainer = styled.div`
   display: flex;
   flex-direction: column;
