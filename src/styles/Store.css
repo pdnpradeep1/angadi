@@ -1,0 +1,202 @@
+/* Main container styling */
+.app-container {
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* Full viewport height */
+    background-color: #f7f7f7; /* Subtle background color */
+    padding: 20px;
+  }
+  
+  /* Content Box with Card-like Design */
+  .content-box {
+    width: 90%;
+    max-width: 900px;
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    max-height: 90vh;
+    overflow: hidden;
+  }
+  
+  /* Header section */
+  .header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+  }
+  
+  .shopify-logo {
+    height: 40px;
+  }
+  
+  .email-container {
+    display: flex;
+    align-items: center;
+  }
+  
+  .email {
+    margin-right: 15px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .logout-button {
+    padding: 8px 15px;
+    background-color: #ff4d4f;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .logout-button:hover {
+    background-color: #d13f3e;
+  }
+  
+  /* Recent stores section */
+  .recent-stores {
+    width: 100%;
+    text-align: center;
+    flex-grow: 1;
+  }
+  
+  .recent-stores h2 {
+    margin-bottom: 20px;
+    font-size: 24px;
+    font-weight: 700;
+    color: #333;
+  }
+  
+  .stores-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  
+  .store-item {
+    width: 80%;
+    max-width: 500px;
+  }
+  
+  .store-box {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .store-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .store-name {
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 10px;
+  }
+  
+  .store-url {
+    font-size: 14px;
+    color: #888;
+  }
+  
+  /* Button for creating a new store */
+  .create-store-button {
+    padding: 12px 25px;
+    background-color: #007bff;
+    color: white;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .create-store-button:hover {
+    background-color: #0056b3;
+  }
+  
+  .create-store-container {
+    width: 100%;
+    padding: 25px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    margin-top: 20px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  }
+  
+  .create-store-container h3 {
+    margin-bottom: 20px;
+    font-size: 24px;
+    font-weight: 700;
+    color: #333;
+  }
+  
+  .create-store-container .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .create-store-container label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 5px;
+  }
+  
+  .create-store-container input {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    transition: border 0.3s ease;
+  }
+  
+  .create-store-container input:focus {
+    border-color: #007bff;
+    outline: none;
+  }
+  
+  .create-store-container button {
+    padding: 12px 25px;
+    background-color: #007bff;
+    color: white;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .create-store-container button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+  
+  .create-store-container button:hover {
+    background-color: #0056b3;
+  }
+  

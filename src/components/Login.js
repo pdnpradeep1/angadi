@@ -68,7 +68,7 @@ function Login() {
         window.location.href = '/dashboard/user';
       }
         else if (userRole[0] === 'CUSTOMER') {
-        window.location.href = '/customer/dashboard';
+        window.location.href = '/stores';
       } else {
         throw new Error('Unknown user role');
       }
@@ -88,7 +88,7 @@ function Login() {
     if (userData.role === 'admin') {
       return '/dashboard/admin';
     } else if (userData.role === 'user') {
-      return '/dashboard/user';
+      return '/stores';
     } else {
       throw new Error('Unknown user role');
     }

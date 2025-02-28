@@ -8,10 +8,9 @@ export const ErrorMessage = styled.div`
   border-radius: 2px;
   background-color: #f8d7da;
   transition: all 0.3s ease;
-
   &:hover {
     background-color: #f5c6cb;
-  }
+  } 
 `;
 
 // ... other styled components ...

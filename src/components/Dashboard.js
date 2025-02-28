@@ -236,6 +236,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styled, { keyframes } from "styled-components";
 import { FaBars, FaTimes, FaUserCircle } from "react-icons/fa";
+// import Store from './Store'; 
 
 const fadeIn = keyframes`
   from {
@@ -356,6 +357,9 @@ const Dashboard = () => {
             </MenuItem>
             <MenuItem>
               <Link to="/dashboard/profile">Profile</Link>
+            </MenuItem>
+            <MenuItem>
+            {/* <Store />  */}
             </MenuItem>
           </ul>
         </SidebarContent>

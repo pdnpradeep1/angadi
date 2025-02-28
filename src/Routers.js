@@ -4,6 +4,9 @@ import Signup from "./components/signup";
 import Dashboard from "./components/Dashboard";
 import ForgetPassword from './components/ForgetPassword';
 import ProfilePage from './components/ProfilePage';
+import Store from './components/Store';
+import StoreDashboard from './components/StoreDashboard';
+import ProductList from "./components/ProductList";  
 
 import React, { useState } from "react";
 import {
@@ -46,6 +49,21 @@ function AppRoutes() {
         element={!isAuthenticated ? <ForgetPassword /> : <Navigate to="/login" />}
       />
        <Route path="/profile" component={ProfilePage} />
+       <Route
+        path="/stores"
+        element={!isAuthenticated ? <Store /> : <Navigate to="/login" />}
+      />
+         <Route
+          path="/store-dashboard/:storeId"
+          element={<StoreDashboard />}
+        >
+
+        <Route path="all-products" element={<ProductList />} />
+        
+
+        </Route>
+
+       
     </Routes>
   );
 }
