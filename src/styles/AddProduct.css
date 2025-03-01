@@ -1,0 +1,82 @@
+/* AddProduct.css */
+.add-product-container {
+    display: flex;
+    height: 100vh;
+  }
+  
+  .sidebar {
+    width: 250px;
+    /* background-color: #f4f4f4; */
+    padding: 20px;
+    position: fixed;
+    height: 100vh;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .sidebar h4 {
+    font-size: 18px;
+  }
+  
+  .sidebar ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .sidebar ul li {
+    padding: 10px;
+    cursor: pointer;
+  }
+  
+  .sidebar ul li.active {
+    font-weight: bold;
+    color: #007bff;
+  }
+  
+  .form-content {
+    margin-left: 250px;
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+    background-color: #ffffff;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .form-content h3 {
+    font-size: 22px;
+    margin-bottom: 20px;
+  }
+  
+  .form-content label {
+    font-weight: bold;
+    display: block;
+    margin-top: 10px;
+  }
+  
+  .form-content input,
+  .form-content select,
+  .form-content textarea {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+  }
+  
+  .form-content textarea {
+    height: 100px;
+  }
+  
+  button {
+    padding: 8px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+  button:hover {
+    background-color: #0056b3;
+  }
+  

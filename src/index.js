@@ -1,27 +1,29 @@
-// import React from 'react';
-// import ReactDOM from 'react-dom';
-// import App from './App';
-// import { BrowserRouter as Router } from 'react-router-dom';
-// import GlobalStyle from './styles/GlobalStyle';
+
+// import React from "react";
+// import ReactDOM from "react-dom";
+// import { BrowserRouter } from "react-router-dom";
+// import App from "./App";
 
 // ReactDOM.render(
-//   <React.StrictMode>
-//     <Router>
-//       <GlobalStyle />
-//       <App />
-//     </Router>
-//   </React.StrictMode>,
-//   document.getElementById('root')
+//   <BrowserRouter>
+//     <App />
+//   </BrowserRouter>,
+//   document.getElementById("root")
 // );
 
-import React from "react";
-import ReactDOM from "react-dom";
-import { BrowserRouter } from "react-router-dom";
-import App from "./App";
 
-ReactDOM.render(
-  <BrowserRouter>
+import React from "react";
+import { createRoot } from "react-dom/client";
+import App from "./App";
+import "./index.css"; // Import the global CSS with Tailwind
+
+// Create a root
+const container = document.getElementById("root");
+const root = createRoot(container);
+
+// Render your app
+root.render(
+  <React.StrictMode>
     <App />
-  </BrowserRouter>,
-  document.getElementById("root")
+  </React.StrictMode>
 );

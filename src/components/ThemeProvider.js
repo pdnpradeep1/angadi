@@ -6,13 +6,37 @@ const ThemeContext = createContext();
 export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
+  // Check local storage or system preference for theme
+  const getInitialTheme = () => {
+    if (typeof window !== "undefined" && window.localStorage) {
+      const storedPrefs = window.localStorage.getItem("theme");
+      if (typeof storedPrefs === "string") {
+        return storedPrefs;
+      }
+
+      // Check user system preference
+      const userMedia = window.matchMedia("(prefers-color-scheme: dark)");
+      if (userMedia.matches) {
+        return "dark";
+      }
+    }
+
+    return "light"; // Default theme
+  };
+
+  const [theme, setTheme] = useState(getInitialTheme());
 
   // Apply theme to <html> tag
   useEffect(() => {
     const root = window.document.documentElement;
+    
+    // Remove previous theme class
     root.classList.remove("light", "dark");
-    root.classList.add(theme); // Ensure this works
+    
+    // Add current theme class
+    root.classList.add(theme);
+    
+    // Store theme choice in localStorage
     localStorage.setItem("theme", theme);
   }, [theme]);
 
