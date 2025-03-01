@@ -12,6 +12,7 @@ import ForgetPassword from './components/ForgetPassword';
 import Store from './components/Store';
 import StoreDashboard from './components/StoreDashboard';
 import ProductList from "./components/ProductList";
+import AddProduct from "./components/AddProduct"; // Import the AddProduct component
 
 // Auth guard component
 const ProtectedRoute = ({ children }) => {
@@ -117,6 +118,16 @@ function AppRoutes() {
       >
         <Route path="all-products" element={<ProductList />} />
       </Route>
+      
+      {/* Add the route for the AddProduct page */}
+      <Route
+        path="/store-dashboard/:storeId/add-product"
+        element={
+          <ProtectedRoute>
+            <AddProduct />
+          </ProtectedRoute>
+        }
+      />
       
       {/* Catch-all route for 404 */}
       <Route path="*" element={<NotFoundPage />} />

@@ -1,82 +1,233 @@
-/* AddProduct.css */
+/* AddProduct.css - Enhanced version */
 .add-product-container {
     display: flex;
     height: 100vh;
+    overflow: hidden;
   }
   
   .sidebar {
     width: 250px;
-    /* background-color: #f4f4f4; */
     padding: 20px;
     position: fixed;
     height: 100vh;
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
   }
   
   .sidebar h4 {
     font-size: 18px;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   }
   
   .sidebar ul {
     list-style-type: none;
     padding: 0;
+    flex-grow: 1;
   }
   
   .sidebar ul li {
-    padding: 10px;
+    padding: 12px 15px;
+    margin-bottom: 8px;
     cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+  }
+  
+  .sidebar ul li:hover {
+    background-color: rgba(0, 0, 0, 0.05);
   }
   
   .sidebar ul li.active {
-    font-weight: bold;
+    font-weight: 600;
     color: #007bff;
+    background-color: rgba(0, 123, 255, 0.1);
   }
   
   .form-content {
     margin-left: 250px;
-    padding: 20px;
+    padding: 30px;
     overflow-y: auto;
     flex: 1;
-    background-color: #ffffff;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    height: 100vh;
   }
   
-  .form-content h3 {
+  .section {
+    max-width: 800px;
+  }
+  
+  .section h3 {
     font-size: 22px;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   }
   
-  .form-content label {
-    font-weight: bold;
-    display: block;
-    margin-top: 10px;
-  }
-  
-  .form-content input,
-  .form-content select,
-  .form-content textarea {
+  /* Form elements styling */
+  input, select, textarea {
     width: 100%;
-    padding: 10px;
-    margin-top: 5px;
+    padding: 12px;
     margin-bottom: 15px;
     border: 1px solid #ddd;
-    border-radius: 5px;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.2s ease;
   }
   
-  .form-content textarea {
-    height: 100px;
+  input:focus, select:focus, textarea:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
   }
   
+  textarea {
+    min-height: 120px;
+    resize: vertical;
+  }
+  
+  label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+  
+  /* Button styling */
   button {
-    padding: 8px 15px;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+  
+  .btn-primary {
     background-color: #007bff;
     color: white;
     border: none;
+  }
+  
+  .btn-primary:hover:not(:disabled) {
+    background-color: #0069d9;
+  }
+  
+  .btn-secondary {
+    background-color: #f8f9fa;
+    color: #212529;
+    border: 1px solid #ddd;
+  }
+  
+  .btn-secondary:hover:not(:disabled) {
+    background-color: #e2e6ea;
+  }
+  
+  /* File upload styling */
+  .file-upload-container {
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    padding: 30px;
+    text-align: center;
+    margin-bottom: 20px;
+    transition: border-color 0.2s ease;
     cursor: pointer;
-    border-radius: 5px;
   }
   
-  button:hover {
-    background-color: #0056b3;
+  .file-upload-container:hover {
+    border-color: #007bff;
   }
   
+  /* Dark mode adjustments */
+  @media (prefers-color-scheme: dark) {
+    .sidebar {
+      background-color: #1e1e1e;
+      color: #e1e1e1;
+    }
+    
+    .sidebar h4 {
+      border-bottom-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .sidebar ul li:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+    
+    .sidebar ul li.active {
+      background-color: rgba(0, 123, 255, 0.2);
+    }
+    
+    .form-content {
+      background-color: #121212;
+      color: #e1e1e1;
+    }
+    
+    .section h3 {
+      border-bottom-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    input, select, textarea {
+      background-color: #2d2d2d;
+      border-color: #444;
+      color: #e1e1e1;
+    }
+    
+    .btn-secondary {
+      background-color: #2d2d2d;
+      color: #e1e1e1;
+      border-color: #444;
+    }
+    
+    .btn-secondary:hover:not(:disabled) {
+      background-color: #3d3d3d;
+    }
+    
+    .file-upload-container {
+      border-color: #444;
+    }
+  }
+  
+  /* Responsive Adjustments */
+  @media (max-width: 768px) {
+    .add-product-container {
+      flex-direction: column;
+    }
+    
+    .sidebar {
+      width: 100%;
+      height: auto;
+      position: relative;
+      padding: 15px;
+    }
+    
+    .form-content {
+      margin-left: 0;
+      padding: 15px;
+      height: auto;
+    }
+  }
+  
+  /* Animation for section transitions */
+  .section {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }

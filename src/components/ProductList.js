@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { 
   FiPlus, 
   FiSearch, 
@@ -11,8 +11,12 @@ import {
   FiUpload,
   FiDownload
 } from "react-icons/fi";
+import axios from "axios";
+import ProductImportExport from './ProductImportExport';
+
 
 const ProductList = () => {
+  const { storeId } = useParams(); // Get storeId from URL params
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [sortBy, setSortBy] = useState("name");
@@ -20,6 +24,8 @@ const ProductList = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [actionDropdown, setActionDropdown] = useState(null);
+  const [showImportExport, setShowImportExport] = useState(false);
+
 
   // Sample product data
   const products = [
@@ -129,10 +135,11 @@ const ProductList = () => {
   });
 
   return (
+    
     <div className="container bg-white dark:bg-secondary-800 rounded-lg shadow-md">
       <div className="p-6">
         <h1 className="text-2xl font-bold text-secondary-900 dark:text-white mb-6">Products</h1>
-        
+       
         {/* Search and Actions Bar */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div className="relative w-full md:w-auto md:min-w-[320px]">
@@ -160,6 +167,22 @@ const ProductList = () => {
                  filterStatus === "active" ? "Active Only" : "Inactive Only"}
               </button>
             </div>
+
+            <div className="actions">
+          <button 
+            onClick={() => setShowImportExport(!showImportExport)}
+            className="btn btn-secondary mr-2"
+          >
+            <FiUpload className="mr-2" /> Import/Export
+          </button>
+        </div>
+      
+      
+          {showImportExport && (
+            <div className="mb-4">
+              <ProductImportExport storeId={storeId} />
+            </div>
+          )}
             
             <div className="relative">
               <button
@@ -212,7 +235,7 @@ const ProductList = () => {
             </div>
             
             <Link
-              to="/add-product"
+              to={`/store-dashboard/${storeId}/add-product`}
               className="btn btn-primary flex items-center whitespace-nowrap"
             >
               <FiPlus className="mr-2" /> Add new product
