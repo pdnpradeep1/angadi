@@ -40,6 +40,26 @@ const StoreSidebar = ({ store }) => {
 
   const storeId = getStoreId();
 
+  // const menuItems = [
+  //   { name: "Dashboard", icon: <FiHome />, path: `/store-dashboard/${storeId}` },
+  //   { name: "Orders", icon: <FiShoppingBag />, path: `/store-dashboard/${storeId}/orders` },
+  //   { name: "Delivery", icon: <FiTruck />, path: `/store-dashboard/${storeId}/delivery` },
+  //   { 
+  //     name: "Products", 
+  //     icon: <FiPackage />, 
+  //     path: `/store-dashboard/${storeId}/products`,
+  //     subItems: [
+  //       { name: "All Products", path: `/store-dashboard/${storeId}/all-products`, count: "32" },
+  //       { name: "Categories", path: `/store-dashboard/${storeId}/categories`, count: "8" },
+  //       { name: "Inventory", path: `/store-dashboard/${storeId}/inventory` }
+  //     ]
+  //   },
+  //   { name: "Analytics", icon: <FiBarChart2 />, path: `/store-dashboard/${storeId}/analytics` },
+  //   { name: "Audience", icon: <FiUsers />, path: `/store-dashboard/${storeId}/audience` },
+  //   { name: "Payments", icon: <FiCreditCard />, path: `/store-dashboard/${storeId}/payments` },
+  //   { name: "Settings", icon: <FiSettings />, path: `/store-dashboard/${storeId}/settings` }
+  // ];
+
   const menuItems = [
     { name: "Dashboard", icon: <FiHome />, path: `/store-dashboard/${storeId}` },
     { name: "Orders", icon: <FiShoppingBag />, path: `/store-dashboard/${storeId}/orders` },
@@ -51,7 +71,8 @@ const StoreSidebar = ({ store }) => {
       subItems: [
         { name: "All Products", path: `/store-dashboard/${storeId}/all-products`, count: "32" },
         { name: "Categories", path: `/store-dashboard/${storeId}/categories`, count: "8" },
-        { name: "Inventory", path: `/store-dashboard/${storeId}/inventory` }
+        { name: "Inventory", path: `/store-dashboard/${storeId}/inventory` }, // New inventory link
+        // { name: "Inventory Management", path: `/store-dashboard/${storeId}/inventory` } // Inventory management link
       ]
     },
     { name: "Analytics", icon: <FiBarChart2 />, path: `/store-dashboard/${storeId}/analytics` },

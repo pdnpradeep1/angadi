@@ -13,6 +13,7 @@ import {
 } from 'react-icons/fi';
 import CreateStore from './create-store';
 import axios from 'axios';
+import  api from '../utils/apiConfig';
 
 // Toggle Switch Component
 const ToggleSwitch = ({ isActive, onChange, loading, size = "md" }) => {
@@ -175,18 +176,34 @@ const Store = () => {
         throw new Error('Authentication required');
       }
       
-      // Send update to backend
-      const response = await axios.patch(
-        `http://localhost:8080/api/stores/stores/${storeId}`, 
-        { visible: !currentStatus },
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      // // Send update to backend
+      // const response = await axios.patch(
+      //   `http://localhost:8080/api/stores/stores/${storeId}`, 
+      //   { visible: !currentStatus },
+      //   {
+      //     headers: {
+      //       'Authorization': `Bearer ${token}`,
+      //       'Content-Type': 'application/json'
+      //     }
+      //   }
+      // );
       
+
+          
+    // Send update to backend - fixed URL structure
+    // const response = await axios.put(
+    //   `http://localhost:8080/api/stores/${storeId}/visibility`, 
+    //   {
+    //     params: { visible: !currentStatus }, // send as query parameter
+    //     headers: {
+    //       'Authorization': `Bearer ${token}`,
+    //       'Content-Type': 'application/json'
+    //     }
+    //   }
+    // );
+
+    const response = await api.patch(`/stores/${storeId}/visibility`, { visible: !currentStatus });
+    
       // Update store in local state
       setStores(prevStores => 
         prevStores.map(store => 
@@ -196,11 +213,15 @@ const Store = () => {
         )
       );
       
-      console.log(`Store ${storeId} status updated:`, response.data);
+      console.log(`Store ${storeId} visibility updated:`, response.data);
     } catch (error) {
       console.error('Error updating store status:', error);
-      // Show error notification (could be enhanced with a toast)
-      alert(`Failed to update store status: ${error.response?.data?.message || error.message}`);
+      // More detailed error handling
+      if (error.message === 'Network Error') {
+        alert('Failed to update store status: Connection to server failed. Please check if the backend is running.');
+      } else {
+        alert(`Failed to update store status: ${error.response?.data?.message || error.message}`);
+      }
     } finally {
       // Clear loading state for this toggle
       setToggleLoading(prev => ({ ...prev, [storeId]: false }));
