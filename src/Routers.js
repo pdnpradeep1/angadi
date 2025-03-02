@@ -106,29 +106,24 @@ function AppRoutes() {
       >
         <Route path="all-products" element={<ProductList />} />
         <Route path="inventory" element={<InventoryManagement />} />
+         {/* <Route path="orders" element={<OrdersMainComponent />} />
+        <Route path="orders/:status" element={<OrdersMainComponent />} />
+        <Route path="orders/view/:orderId" element={<OrderDetail />} /> */}
+
+<Route path="orders" element={<OrdersContainer />}>
+    <Route index element={<OrdersMainComponent />} />
+    <Route path="all" element={<OrdersMainComponent />} />
+    <Route path="pending" element={<OrdersMainComponent />} />
+    <Route path="processing" element={<OrdersMainComponent />} />
+    <Route path="shipped" element={<OrdersMainComponent />} />
+    <Route path="delivered" element={<OrdersMainComponent />} />
+    <Route path="cancelled" element={<OrdersMainComponent />} />
+    <Route path="refunds" element={<OrdersMainComponent />} />
+    <Route path="returns" element={<OrdersMainComponent />} />
+    <Route path="view/:orderId" element={<OrderDetail />} />
+  </Route>
       </Route>
 
-      {/* Orders routes with updated structure */}
-      <Route 
-        path="/store-dashboard/:storeId/orders" 
-        element={
-          <ProtectedRoute>
-            <OrdersContainer />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<OrdersMainComponent />} />
-        <Route path="all" element={<OrdersMainComponent />} />
-        <Route path="pending" element={<OrdersMainComponent />} />
-        <Route path="processing" element={<OrdersMainComponent />} />
-        <Route path="shipped" element={<OrdersMainComponent />} />
-        <Route path="delivered" element={<OrdersMainComponent />} />
-        <Route path="cancelled" element={<OrdersMainComponent />} />
-        <Route path="refunds" element={<OrdersMainComponent />} />
-        <Route path="returns" element={<OrdersMainComponent />} />
-        <Route path="view/:orderId" element={<OrderDetail />} />
-      </Route>
-      
       {/* Add the route for the AddProduct page */}
       <Route
         path="/store-dashboard/:storeId/add-product"

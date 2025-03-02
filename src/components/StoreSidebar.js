@@ -62,7 +62,9 @@ const StoreSidebar = ({ store }) => {
 
   const menuItems = [
     { name: "Dashboard", icon: <FiHome />, path: `/store-dashboard/${storeId}` },
-    { name: "Orders", icon: <FiShoppingBag />, path: `/store-dashboard/${storeId}/orders` },
+    // { name: "Orders", icon: <FiShoppingBag />, path: `/store-dashboard/${storeId}/orders` },
+    // In the menuItems array in StoreSidebar.js
+{ name: "Orders", icon: <FiShoppingBag />, path: `/store-dashboard/${storeId}/orders` },
     { name: "Delivery", icon: <FiTruck />, path: `/store-dashboard/${storeId}/delivery` },
     { 
       name: "Products", 
@@ -80,6 +82,8 @@ const StoreSidebar = ({ store }) => {
     { name: "Payments", icon: <FiCreditCard />, path: `/store-dashboard/${storeId}/payments` },
     { name: "Settings", icon: <FiSettings />, path: `/store-dashboard/${storeId}/settings` }
   ];
+
+  
 
   const isActive = (path) => {
     return location.pathname === path || 

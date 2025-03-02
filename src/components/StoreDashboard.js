@@ -78,8 +78,12 @@ const StoreDashboard = () => {
   }, [storeId, navigate]);
 
   // If outlet is rendered, show that instead of dashboard content
+  // const hasOutlet = window.location.pathname.includes('all-products') || 
+  // window.location.pathname.includes('inventory');
+
   const hasOutlet = window.location.pathname.includes('all-products') || 
-  window.location.pathname.includes('inventory');
+                 window.location.pathname.includes('inventory') ||
+                 window.location.pathname.includes('orders');
 
   const renderOverviewTab = () => (
     <div className="space-y-6">
