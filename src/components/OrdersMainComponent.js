@@ -12,14 +12,21 @@ import {
   FiCheck,
   FiXCircle,
   FiCalendar,
-  FiDollarSign
+  FiDollarSign,
+  FiShoppingBag
 } from "react-icons/fi";
 import axios from "axios";
 
 const OrdersMainComponent = () => {
-  const { storeId, status = 'all' } = useParams();
-  const navigate = useNavigate();
+  const { storeId } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
+  
+  // Get the status from the URL path
+  const path = location.pathname;
+  const statusMatch = path.match(/\/orders\/([^/]+)/);
+  const status = statusMatch ? statusMatch[1] : 'all';
+  
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -229,7 +236,7 @@ const OrdersMainComponent = () => {
   };
 
   return (
-    <div className="flex-1 overflow-hidden flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="h-screen overflow-auto bg-gray-50 dark:bg-gray-900">
       {/* Top Bar with Search and Filters */}
       <div className="p-4 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -244,7 +251,7 @@ const OrdersMainComponent = () => {
                 placeholder="Search orders..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="input pl-10 w-full md:w-64"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm pl-10"
               />
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <FiSearch className="text-gray-400" />
@@ -254,14 +261,14 @@ const OrdersMainComponent = () => {
             
             <button
               onClick={() => setFilterOpen(!filterOpen)}
-              className="btn btn-secondary flex items-center gap-2"
+              className="px-4 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-md flex items-center gap-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-600"
             >
               <FiFilter /> Filters
             </button>
             
             <button
               onClick={() => window.location.href = `/store-dashboard/${storeId}/orders/export`}
-              className="btn btn-primary flex items-center gap-2"
+              className="px-4 py-2 bg-primary-600 text-white rounded-md flex items-center gap-2 text-sm hover:bg-primary-700"
             >
               <FiDownload /> Export
             </button>
@@ -288,7 +295,7 @@ const OrdersMainComponent = () => {
                       name="dateFrom"
                       value={filters.dateFrom}
                       onChange={handleFilterChange}
-                      className="input pl-8 text-sm"
+                      className="pl-8 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                       placeholder="From"
                     />
                   </div>
@@ -298,7 +305,7 @@ const OrdersMainComponent = () => {
                     name="dateTo"
                     value={filters.dateTo}
                     onChange={handleFilterChange}
-                    className="input text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                     placeholder="To"
                   />
                 </div>
@@ -318,7 +325,7 @@ const OrdersMainComponent = () => {
                       name="minAmount"
                       value={filters.minAmount}
                       onChange={handleFilterChange}
-                      className="input pl-8 text-sm"
+                      className="pl-8 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                       placeholder="Min"
                     />
                   </div>
@@ -332,7 +339,7 @@ const OrdersMainComponent = () => {
                       name="maxAmount"
                       value={filters.maxAmount}
                       onChange={handleFilterChange}
-                      className="input pl-8 text-sm"
+                      className="pl-8 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                       placeholder="Max"
                     />
                   </div>
@@ -348,7 +355,7 @@ const OrdersMainComponent = () => {
                   name="customerEmail"
                   value={filters.customerEmail}
                   onChange={handleFilterChange}
-                  className="input text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                   placeholder="customer@example.com"
                 />
               </div>
@@ -357,13 +364,13 @@ const OrdersMainComponent = () => {
             <div className="flex justify-end mt-4 gap-2">
               <button
                 onClick={clearFilters}
-                className="btn btn-secondary text-sm"
+                className="px-4 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-md text-sm hover:bg-gray-50 dark:hover:bg-gray-600"
               >
                 Clear Filters
               </button>
               <button
                 onClick={fetchOrders}
-                className="btn btn-primary text-sm"
+                className="px-4 py-2 bg-primary-600 text-white rounded-md text-sm hover:bg-primary-700"
               >
                 Apply Filters
               </button>
@@ -373,7 +380,7 @@ const OrdersMainComponent = () => {
       </div>
 
       {/* Orders Table */}
-      <div className="flex-1 overflow-auto p-4">
+      <div className="p-4">
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
@@ -406,6 +413,35 @@ const OrdersMainComponent = () => {
                   <tr>
                     <th 
                       className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
+                      onClick={() => handleSort('orderNumber')}
+                    >
+                      <div className="flex items-center">
+                        <span>Order Number</span>
+                        {sorting.field === 'orderNumber' && (
+                          <span className="ml-1">
+                            {sorting.direction === 'asc' ? '↑' : '↓'}
+                          </span>
+                        )}
+                      </div>
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Customer
+                    </th>
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
+                      onClick={() => handleSort('createdAt')}
+                    >
+                      <div className="flex items-center">
+                        <span>Date</span>
+                        {sorting.field === 'createdAt' && (
+                          <span className="ml-1">
+                            {sorting.direction === 'asc' ? '↑' : '↓'}
+                          </span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                       onClick={() => handleSort('totalAmount')}
                     >
                       <div className="flex items-center">
@@ -416,6 +452,15 @@ const OrdersMainComponent = () => {
                           </span>
                         )}
                       </div>
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Items
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Actions
                     </th>
                   </tr>
                 </thead>
@@ -451,9 +496,9 @@ const OrdersMainComponent = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button
                           onClick={() => navigate(`/store-dashboard/${storeId}/orders/view/${order.id}`)}
-                          className="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300 px-2 py-1 rounded hover:bg-primary-50 dark:hover:bg-primary-900/20"
+                          className="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300 px-3 py-1 rounded hover:bg-primary-50 dark:hover:bg-primary-900/20 flex items-center justify-center"
                         >
-                          <FiEye />
+                          <FiEye className="mr-1" /> View
                         </button>
                       </td>
                     </tr>
@@ -563,41 +608,3 @@ const OrdersMainComponent = () => {
 };
 
 export default OrdersMainComponent;
-                    // <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    //   Status
-                    // </th>
-                    // <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    //   Items
-                    // </th>
-                    // <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    //   Actions
-                    // </th> => handleSort('orderNumber')}
-                    // >
-                    //   <div className="flex items-center">
-                    //     <span>Order Number</span>
-                    //     {sorting.field === 'orderNumber' && (
-                    //       <span className="ml-1">
-                    //         {sorting.direction === 'asc' ? '↑' : '↓'}
-                    //       </span>
-                    //     )}
-                    //   </div>
-                    // </th>
-                    // <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    //   Customer
-                    // </th>
-                    // <th 
-                    //   className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
-                    //   onClick={() => handleSort('createdAt')}
-                    // >
-                    //   <div className="flex items-center">
-                    //     <span>Date</span>
-                    //     {sorting.field === 'createdAt' && (
-                    //       <span className="ml-1">
-                    //         {sorting.direction === 'asc' ? '↑' : '↓'}
-                    //       </span>
-                    //     )}
-                    //   </div>
-                    // </th>
-                    // <th 
-                    //   className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
-                    //   onClick={()

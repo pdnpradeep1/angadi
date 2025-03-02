@@ -1,53 +1,87 @@
-import React from "react";
+import React, { useState } from "react";
 import { Outlet, useParams } from "react-router-dom";
 import OrdersSidebar from "./OrdersSidebar";
+import { FiMenu, FiX } from "react-icons/fi";
 
 const OrdersContainer = () => {
   const { storeId } = useParams();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
+  const toggleMobileSidebar = () => {
+    setMobileSidebarOpen(!mobileSidebarOpen);
+  };
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Orders Sidebar */}
-      <div className="w-64 flex-shrink-0 hidden md:block">
+    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
+      {/* Desktop Sidebar */}
+      <div 
+        className={`hidden md:block transition-all duration-300 ease-in-out ${
+          sidebarOpen ? 'w-64' : 'w-0'
+        } h-screen overflow-y-auto`}
+      >
         <OrdersSidebar />
       </div>
       
-      {/* Mobile Sidebar Toggle */}
-      <div className="md:hidden fixed bottom-4 right-4 z-20">
-        <button
-          onClick={() => document.getElementById('mobile-sidebar').classList.toggle('translate-x-0')}
-          className="rounded-full w-12 h-12 bg-primary-600 text-white flex items-center justify-center shadow-lg"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 12h18M3 6h18M3 18h18"></path>
-          </svg>
-        </button>
-      </div>
-      
       {/* Mobile Sidebar */}
-      <div
-        id="mobile-sidebar"
-        className="fixed inset-y-0 left-0 w-64 transform -translate-x-full transition-transform duration-300 ease-in-out z-30 md:hidden"
+      <div 
+        className={`fixed inset-0 z-40 md:hidden transition-opacity duration-300 ease-in-out ${
+          mobileSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
       >
-        <div className="h-full relative">
-          <button
-            onClick={() => document.getElementById('mobile-sidebar').classList.remove('translate-x-0')}
-            className="absolute top-4 right-4 p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 6L6 18M6 6l12 12"></path>
-            </svg>
-          </button>
-          <OrdersSidebar />
+        <div className="absolute inset-0 bg-gray-600 dark:bg-gray-900 opacity-75"></div>
+        
+        <div className={`relative flex flex-col w-64 h-full max-w-xs bg-white dark:bg-gray-800 transition-transform duration-300 ease-in-out ${
+          mobileSidebarOpen ? 'transform translate-x-0' : 'transform -translate-x-full'
+        }`}>
+          <div className="absolute top-0 right-0 pt-4 pr-4">
+            <button
+              className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              onClick={toggleMobileSidebar}
+            >
+              <FiX className="h-6 w-6" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <OrdersSidebar />
+          </div>
         </div>
       </div>
       
       {/* Main Content */}
-      <div className="flex-1 overflow-hidden">
-        <Outlet />
+      <div className="flex flex-col flex-1 overflow-hidden">
+        {/* Top Bar */}
+        <div className="md:hidden bg-white dark:bg-gray-800 shadow-sm px-4 py-2 flex items-center">
+          <button
+            onClick={toggleMobileSidebar}
+            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none"
+          >
+            <FiMenu className="h-6 w-6" />
+          </button>
+        </div>
+        
+        {/* Content Area */}
+        <div className="flex-1 overflow-auto">
+          <Outlet />
+        </div>
       </div>
+      
+      {/* Sidebar Toggle for Desktop */}
+      <button
+        onClick={toggleSidebar}
+        className="hidden md:block fixed left-64 bottom-4 z-30 bg-primary-600 hover:bg-primary-700 text-white p-2 rounded-full shadow-lg transform transition-transform duration-300 ease-in-out"
+        style={{ 
+          transform: sidebarOpen ? 'translateX(0)' : 'translateX(-64px)'
+        }}
+      >
+        <FiMenu className="h-5 w-5" />
+      </button>
     </div>
   );
-};
+}
 
 export default OrdersContainer;
