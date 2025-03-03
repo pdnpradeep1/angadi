@@ -202,7 +202,7 @@ const Store = () => {
     //   }
     // );
 
-    const response = await api.patch(`/stores/${storeId}/visibility`, { visible: !currentStatus });
+    const response = await api.put(`/api/stores/${storeId}/visibility?visible=${!currentStatus}`);
     
       // Update store in local state
       setStores(prevStores => 
