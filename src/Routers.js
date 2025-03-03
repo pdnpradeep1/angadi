@@ -1,8 +1,10 @@
+// In your AppRoutes.js file, add the new pricing route
+
 import React from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 import Home from "./components/Home";
 import Login from "./components/Login";
-import Signup from "./components/signup"; 
+import Signup from "./components/signup";
 import Dashboard from "./components/Dashboard";
 import ForgetPassword from './components/ForgetPassword';
 import Store from './components/Store';
@@ -14,6 +16,7 @@ import OrdersContainer from './components/OrdersContainer';
 import OrdersMainComponent from './components/OrdersMainComponent';
 import OrderDetail from './components/OrderDetail';
 import OrderExport from './components/OrderExport';
+import PricingPage from './components/PricingPage'; // Import the new PricingPage component
 
 // Auth guard component
 const ProtectedRoute = ({ children }) => {
@@ -59,6 +62,7 @@ function AppRoutes() {
     <Routes>
       {/* Public routes */}
       <Route path="/" element={<Home />} />
+      <Route path="/pricing" element={<PricingPage />} /> {/* Add the pricing route */}
       <Route
         path="/login"
         element={
@@ -107,23 +111,20 @@ function AppRoutes() {
       >
         <Route path="all-products" element={<ProductList />} />
         <Route path="inventory" element={<InventoryManagement />} />
-         {/* <Route path="orders" element={<OrdersMainComponent />} />
-        <Route path="orders/:status" element={<OrdersMainComponent />} />
-        <Route path="orders/view/:orderId" element={<OrderDetail />} /> */}
 
-<Route path="orders" element={<OrdersContainer />}>
-    <Route index element={<OrdersMainComponent />} />
-    <Route path="all" element={<OrdersMainComponent />} />
-    <Route path="pending" element={<OrdersMainComponent />} />
-    <Route path="processing" element={<OrdersMainComponent />} />
-    <Route path="shipped" element={<OrdersMainComponent />} />
-    <Route path="delivered" element={<OrdersMainComponent />} />
-    <Route path="cancelled" element={<OrdersMainComponent />} />
-    <Route path="refunds" element={<OrdersMainComponent />} />
-    <Route path="returns" element={<OrdersMainComponent />} />
-    <Route path="view/:orderId" element={<OrderDetail />} />
-    <Route path="export" element={<OrderExport />} />
-  </Route>
+        <Route path="orders" element={<OrdersContainer />}>
+          <Route index element={<OrdersMainComponent />} />
+          <Route path="all" element={<OrdersMainComponent />} />
+          <Route path="pending" element={<OrdersMainComponent />} />
+          <Route path="processing" element={<OrdersMainComponent />} />
+          <Route path="shipped" element={<OrdersMainComponent />} />
+          <Route path="delivered" element={<OrdersMainComponent />} />
+          <Route path="cancelled" element={<OrdersMainComponent />} />
+          <Route path="refunds" element={<OrdersMainComponent />} />
+          <Route path="returns" element={<OrdersMainComponent />} />
+          <Route path="view/:orderId" element={<OrderDetail />} />
+          <Route path="export" element={<OrderExport />} />
+        </Route>
       </Route>
 
       {/* Add the route for the AddProduct page */}

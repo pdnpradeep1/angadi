@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useTheme } from "./ThemeProvider";
-import { FiSun, FiMoon, FiMenu, FiX, FiShoppingBag, FiUser } from "react-icons/fi";
+import { FiSun, FiMoon, FiMenu, FiX, FiShoppingBag, FiUser, FiDollarSign } from "react-icons/fi";
 
 const Navbar = () => {
   const { theme, toggleTheme } = useTheme();
@@ -19,6 +19,7 @@ const Navbar = () => {
   const navLinks = [
     { name: "Home", path: "/" },
     { name: "Products", path: "/products" },
+    { name: "Pricing", path: "/pricing" }, // Added Pricing Link
   ];
 
   const renderAuthLinks = () => {
@@ -88,7 +89,14 @@ const Navbar = () => {
                         : "text-secondary-600 dark:text-secondary-300 hover:bg-secondary-100 dark:hover:bg-secondary-700"
                     }`}
                   >
-                    {link.name}
+                    {link.name === "Pricing" ? (
+                      <div className="flex items-center">
+                        {/* <FiDollarSign className="mr-1" /> */}
+                        {link.name}
+                      </div>
+                    ) : (
+                      link.name
+                    )}
                   </Link>
                 ))}
               </div>
@@ -133,7 +141,14 @@ const Navbar = () => {
               }`}
               onClick={() => setMobileMenuOpen(false)}
             >
-              {link.name}
+              {link.name === "Pricing" ? (
+                <div className="flex items-center">
+                  <FiDollarSign className="mr-1" />
+                  {link.name}
+                </div>
+              ) : (
+                link.name
+              )}
             </Link>
           ))}
         </div>
@@ -141,7 +156,7 @@ const Navbar = () => {
           <div className="flex items-center px-5">
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-full text-secondary-600 dark:text-secondary-300 hover:bg-secondary-100 dark:hover:bg-secondary-700 focus:outline-none"
+              className="p-2 rounded-full text-secondary-600 dark:text-secondary-400 hover:text-secondary-700 dark:hover:text-secondary-300 focus:outline-none"
             >
               {theme === "light" ? <FiMoon size={20} /> : <FiSun size={20} />}
             </button>
