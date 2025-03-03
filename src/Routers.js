@@ -13,6 +13,7 @@ import InventoryManagement from "./components/InventoryManagement";
 import OrdersContainer from './components/OrdersContainer';
 import OrdersMainComponent from './components/OrdersMainComponent';
 import OrderDetail from './components/OrderDetail';
+import OrderExport from './components/OrderExport';
 
 // Auth guard component
 const ProtectedRoute = ({ children }) => {
@@ -121,6 +122,7 @@ function AppRoutes() {
     <Route path="refunds" element={<OrdersMainComponent />} />
     <Route path="returns" element={<OrdersMainComponent />} />
     <Route path="view/:orderId" element={<OrderDetail />} />
+    <Route path="export" element={<OrderExport />} />
   </Route>
       </Route>
 

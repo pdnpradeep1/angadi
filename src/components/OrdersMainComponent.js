@@ -69,13 +69,13 @@ const OrdersMainComponent = () => {
         url += `&search=${searchTerm}`;
       }
       
-      // Add date filters if present
-      if (filters.dateFrom) {
-        url += `&dateFrom=${filters.dateFrom}`;
+    // Add date filters if present
+    if (filters.dateFrom) {
+        url += `&dateFrom=${filters.dateFrom}T00:00:00`;
       }
       
       if (filters.dateTo) {
-        url += `&dateTo=${filters.dateTo}`;
+        url += `&dateTo=${filters.dateTo}T23:59:59`;
       }
       
       // Add amount filters if present
@@ -475,10 +475,10 @@ const OrdersMainComponent = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900 dark:text-white">
-                          {order.customer.name}
+                        {order.customer?.name || 'Unknown Customer'}
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
-                          {order.customer.email}
+                        {order.customer?.email || 'No email provided'}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
