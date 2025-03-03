@@ -12,50 +12,51 @@ import {
   FiX
 } from 'react-icons/fi';
 import CreateStore from './create-store';
-import axios from 'axios';
-import  api from '../utils/apiConfig';
+import api from '../utils/apiConfig';
+import { jwtDecode } from 'jwt-decode';
 
-// Toggle Switch Component
 const ToggleSwitch = ({ isActive, onChange, loading, size = "md" }) => {
-  const baseClasses = "relative inline-flex items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2";
-  const sizeClasses = size === "sm" ? "h-5 w-9" : "h-6 w-11";
-  const bgClasses = isActive 
+  // Define the track (background) styles
+  const trackWidth = size === "sm" ? "w-9" : "w-11";
+  const trackHeight = size === "sm" ? "h-5" : "h-6";
+  const trackClasses = `${trackWidth} ${trackHeight} rounded-full transition-colors duration-200 ease-in-out relative`;
+  
+  // Use original colors
+  const trackColorClasses = isActive 
     ? "bg-green-500" 
     : "bg-gray-300 dark:bg-gray-600";
   
-  const toggleClasses = "inline-block transform rounded-full bg-white transition-transform";
-  const toggleSizeClasses = size === "sm" 
-    ? "h-4 w-4" 
-    : "h-5 w-5";
-  const togglePositionClasses = isActive 
-    ? "translate-x-5" 
-    : "translate-x-1";
+  // Define the thumb (circle) styles
+  const thumbSize = size === "sm" ? "h-4 w-4" : "h-5 w-5";
+  const thumbClasses = `${thumbSize} bg-white rounded-full shadow transform transition-transform duration-200 ease-in-out absolute top-1/2 -translate-y-1/2`;
+  const thumbPosition = isActive ? "right-0.5" : "left-0.5";
   
   return (
     <button
       type="button"
-      className={`${baseClasses} ${sizeClasses} ${bgClasses} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+      role="switch"
+      aria-checked={isActive}
       onClick={!loading ? onChange : undefined}
       disabled={loading}
-      aria-pressed={isActive}
+      className={`relative inline-flex items-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
     >
       <span className="sr-only">{isActive ? 'Active' : 'Inactive'}</span>
-      <span 
-        className={`${toggleClasses} ${toggleSizeClasses} ${togglePositionClasses}`}
-      >
-        {loading && (
-          <svg className="animate-spin h-4 w-4 text-primary-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-        )}
-      </span>
+      <div className={`${trackClasses} ${trackColorClasses}`}>
+        <span className={`${thumbClasses} ${thumbPosition}`}>
+          {loading && (
+            <svg className="animate-spin h-3 w-3 text-primary-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          )}
+        </span>
+      </div>
     </button>
   );
 };
 
 const Store = () => {
-  const [userEmail, setUserEmail] = useState('user@example.com');
+  // const [userEmail, setUserEmail] = useState('user@example.com');
   const [stores, setStores] = useState([]);
   const [loadingStores, setLoadingStores] = useState(true);
   const [error, setError] = useState(null);
@@ -64,6 +65,7 @@ const Store = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [toggleLoading, setToggleLoading] = useState({});
   const navigate = useNavigate();
+  const [userEmail, setUserEmail] = useState('');
 
   useEffect(() => {
     // Check if user is authenticated
@@ -72,6 +74,24 @@ const Store = () => {
       navigate('/login');
       return;
     }
+
+      // Extract user email from token
+  try {
+    const decodedToken = jwtDecode(token);
+    // The email might be in different properties depending on your JWT structure
+    // Common ones include 'email', 'sub', or 'username'
+    if (decodedToken.email) {
+      setUserEmail(decodedToken.email);
+    } else if (decodedToken.sub) {
+      setUserEmail(decodedToken.sub);
+    } else if (decodedToken.username) {
+      setUserEmail(decodedToken.username);
+    } else {
+      console.warn('Could not find email in JWT token:', decodedToken);
+    }
+  } catch (error) {
+    console.error('Error decoding JWT token:', error);
+  }
 
     // Fetch stores from backend API
     const fetchStores = async () => {
@@ -89,11 +109,7 @@ const Store = () => {
         }
 
         // Make API request to fetch stores
-        const response = await axios.get('http://localhost:8080/api/stores/my-stores', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        const response = await api.get('/api/stores/my-stores');
 
         console.log('API Response:', response.data);
         
@@ -125,6 +141,7 @@ const Store = () => {
               url: "fashion-boutique.myshop.com",
               createdAt: "2024-12-15",
               active: true,
+              visible: true,
               products: 45,
               orders: 120,
               revenue: "$12,350"
@@ -137,6 +154,7 @@ const Store = () => {
               url: "tech-haven.myshop.com",
               createdAt: "2025-01-20",
               active: false,
+              visible: false,
               products: 87,
               orders: 210,
               revenue: "$32,780"
@@ -171,51 +189,31 @@ const Store = () => {
     setToggleLoading(prev => ({ ...prev, [storeId]: true }));
 
     try {
-      const token = localStorage.getItem('jwtToken');
-      if (!token) {
-        throw new Error('Authentication required');
-      }
-      
-      // // Send update to backend
-      // const response = await axios.patch(
-      //   `http://localhost:8080/api/stores/stores/${storeId}`, 
-      //   { visible: !currentStatus },
-      //   {
-      //     headers: {
-      //       'Authorization': `Bearer ${token}`,
-      //       'Content-Type': 'application/json'
-      //     }
-      //   }
-      // );
-      
-
-          
-    // Send update to backend - fixed URL structure
-    // const response = await axios.put(
-    //   `http://localhost:8080/api/stores/${storeId}/visibility`, 
-    //   {
-    //     params: { visible: !currentStatus }, // send as query parameter
-    //     headers: {
-    //       'Authorization': `Bearer ${token}`,
-    //       'Content-Type': 'application/json'
-    //     }
-    //   }
-    // );
-
-    const response = await api.put(`/api/stores/${storeId}/visibility?visible=${!currentStatus}`);
-    
-      // Update store in local state
+      // Toggle the store status immediately in UI for better responsiveness
       setStores(prevStores => 
         prevStores.map(store => 
           store.id === storeId 
-            ? { ...store, active: !currentStatus } 
+            ? { ...store, active: !currentStatus, visible: !currentStatus } 
             : store
         )
       );
       
-      console.log(`Store ${storeId} visibility updated:`, response.data);
+      // Send update to backend
+      await api.put(`/api/stores/${storeId}/visibility?visible=${!currentStatus}`);
+      
+      console.log(`Store ${storeId} visibility updated successfully`);
     } catch (error) {
       console.error('Error updating store status:', error);
+      
+      // Revert the change if there was an error
+      setStores(prevStores => 
+        prevStores.map(store => 
+          store.id === storeId 
+            ? { ...store, active: currentStatus, visible: currentStatus } 
+            : store
+        )
+      );
+      
       // More detailed error handling
       if (error.message === 'Network Error') {
         alert('Failed to update store status: Connection to server failed. Please check if the backend is running.');
@@ -234,6 +232,13 @@ const Store = () => {
     store.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Calculate state based on both active and visible properties
+  const getStoreState = (store) => {
+    // If both properties exist, use visible, otherwise fall back
+    return store.visible !== undefined ? store.visible : 
+           store.active !== undefined ? store.active : false;
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       {/* Header */}
@@ -245,7 +250,10 @@ const Store = () => {
               <h1 className="ml-2 text-2xl font-bold text-gray-900 dark:text-white">MyShop</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-gray-600 dark:text-gray-300">{userEmail}</span>
+              {/* <span className="text-gray-600 dark:text-gray-300">{userEmail}</span> */}
+              <span className="text-gray-600 dark:text-gray-300">
+                {userEmail || 'Welcome'}
+              </span>
               <button 
                 onClick={handleLogout}
                 className="flex items-center px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-primary-600 hover:bg-primary-700"
@@ -346,72 +354,76 @@ const Store = () => {
               </div>
             ) : viewMode === 'grid' ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredStores.map((store) => (
-                  <div
-                    key={store.id}
-                    className="relative block transition duration-150 ease-in-out transform hover:-translate-y-1 hover:shadow-lg"
-                  >
-                    {/* Status Toggle in top-right */}
-                    <div className="absolute top-3 right-3 z-10 flex items-center space-x-2 bg-white dark:bg-gray-800 rounded-full px-2 py-1 shadow">
-                      <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                        {store.visible ? 'Active' : 'Inactive'}
-                      </span>
-                      <ToggleSwitch
-                        isActive={store.visible || false}
-                        onChange={() => handleToggleActive(store.id, store.visible)}
-                        loading={toggleLoading[store.id] || false}
-                        size="sm"
-                      />
-                    </div>
-                    
-                    <Link to={`/store-dashboard/${store.id}`}>
-                      <div className="h-full border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:border-primary-500 dark:hover:border-primary-500">
-                        <div className={`h-24 flex items-center justify-center ${
-                          store.visible !== false
-                            ? 'bg-gradient-to-r from-primary-500 to-primary-700'
-                            : 'bg-gradient-to-r from-gray-400 to-gray-600'
-                        }`}>
-                          <span className="text-white text-xl font-bold">{store.name ? store.name.charAt(0) : 'S'}</span>
-                        </div>
-                        <div className="p-5">
-                          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                            {store.name || 'Unnamed Store'}
-                            {store.visible === false && (
-                              <span className="ml-2 text-xs font-medium text-red-500 dark:text-red-400">
-                                (Inactive)
-                              </span>
-                            )}
-                          </h3>
-                          <p className="text-gray-600 dark:text-gray-400 text-sm mb-3 line-clamp-2">{store.description || 'No description available'}</p>
-                          <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                            {store.createdAt && <p>Created: {store.createdAt}</p>}
-                            {store.url && <p>URL: {store.url}</p>}
-                          </div>
-                          <div className="grid grid-cols-3 gap-2 mt-4 text-center">
-                            {store.products !== undefined && (
-                              <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded">
-                                <p className="text-xs text-gray-500 dark:text-gray-400">Products</p>
-                                <p className="font-bold text-gray-900 dark:text-white">{store.products}</p>
-                              </div>
-                            )}
-                            {store.orders !== undefined && (
-                              <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded">
-                                <p className="text-xs text-gray-500 dark:text-gray-400">Orders</p>
-                                <p className="font-bold text-gray-900 dark:text-white">{store.orders}</p>
-                              </div>
-                            )}
-                            {store.revenue !== undefined && (
-                              <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded">
-                                <p className="text-xs text-gray-500 dark:text-gray-400">Revenue</p>
-                                <p className="font-bold text-gray-900 dark:text-white">{store.revenue}</p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
+                {filteredStores.map((store) => {
+                  const isStoreActive = getStoreState(store);
+                  
+                  return (
+                    <div
+                      key={store.id}
+                      className="relative block transition duration-150 ease-in-out transform hover:-translate-y-1 hover:shadow-lg"
+                    >
+                      {/* Status Toggle in top-right */}
+                      <div className="absolute top-3 right-3 z-10 flex items-center space-x-2 bg-white dark:bg-gray-800 rounded-full px-2 py-1 shadow">
+                        <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
+                          {isStoreActive ? 'Active' : 'Inactive'}
+                        </span>
+                        <ToggleSwitch
+                          isActive={isStoreActive}
+                          onChange={() => handleToggleActive(store.id, isStoreActive)}
+                          loading={toggleLoading[store.id] || false}
+                          size="sm"
+                        />
                       </div>
-                    </Link>
-                  </div>
-                ))}
+                      
+                      <Link to={`/store-dashboard/${store.id}`}>
+                        <div className="h-full border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:border-primary-500 dark:hover:border-primary-500">
+                          <div className={`h-24 flex items-center justify-center ${
+                            isStoreActive
+                              ? 'bg-gradient-to-r from-primary-500 to-primary-700'
+                              : 'bg-gradient-to-r from-gray-400 to-gray-600'
+                          }`}>
+                            <span className="text-white text-xl font-bold">{store.name ? store.name.charAt(0) : 'S'}</span>
+                          </div>
+                          <div className="p-5">
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                              {store.name || 'Unnamed Store'}
+                              {!isStoreActive && (
+                                <span className="ml-2 text-xs font-medium text-red-500 dark:text-red-400">
+                                  (Inactive)
+                                </span>
+                              )}
+                            </h3>
+                            <p className="text-gray-600 dark:text-gray-400 text-sm mb-3 line-clamp-2">{store.description || 'No description available'}</p>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                              {store.createdAt && <p>Created: {store.createdAt}</p>}
+                              {store.url && <p>URL: {store.url}</p>}
+                            </div>
+                            <div className="grid grid-cols-3 gap-2 mt-4 text-center">
+                              {store.products !== undefined && (
+                                <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">Products</p>
+                                  <p className="font-bold text-gray-900 dark:text-white">{store.products}</p>
+                                </div>
+                              )}
+                              {store.orders !== undefined && (
+                                <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">Orders</p>
+                                  <p className="font-bold text-gray-900 dark:text-white">{store.orders}</p>
+                                </div>
+                              )}
+                              {store.revenue !== undefined && (
+                                <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">Revenue</p>
+                                  <p className="font-bold text-gray-900 dark:text-white">{store.revenue}</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </Link>
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -438,66 +450,70 @@ const Store = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    {filteredStores.map((store) => (
-                      <tr 
-                        key={store.id} 
-                        className="hover:bg-gray-50 dark:hover:bg-gray-700/30"
-                      >
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <Link 
-                              to={`/store-dashboard/${store.id}`}
-                              className="flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center text-white font-bold"
-                              style={{
-                                background: store.visible !== false 
-                                  ? 'linear-gradient(to right, rgb(99, 102, 241), rgb(79, 70, 229))'
-                                  : 'linear-gradient(to right, rgb(156, 163, 175), rgb(107, 114, 128))'
-                              }}
-                            >
-                              {store.name ? store.name.charAt(0) : 'S'}
-                            </Link>
-                            <div className="ml-4">
+                    {filteredStores.map((store) => {
+                      const isStoreActive = getStoreState(store);
+                      
+                      return (
+                        <tr 
+                          key={store.id} 
+                          className="hover:bg-gray-50 dark:hover:bg-gray-700/30"
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
                               <Link 
                                 to={`/store-dashboard/${store.id}`}
-                                className="text-sm font-medium text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400"
+                                className="flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center text-white font-bold"
+                                style={{
+                                  background: isStoreActive 
+                                    ? 'linear-gradient(to right, rgb(99, 102, 241), rgb(79, 70, 229))'
+                                    : 'linear-gradient(to right, rgb(156, 163, 175), rgb(107, 114, 128))'
+                                }}
                               >
-                                {store.name || 'Unnamed Store'}
+                                {store.name ? store.name.charAt(0) : 'S'}
                               </Link>
-                              {store.description && (
-                                <div className="text-sm text-gray-500 dark:text-gray-400 line-clamp-1">{store.description}</div>
-                              )}
+                              <div className="ml-4">
+                                <Link 
+                                  to={`/store-dashboard/${store.id}`}
+                                  className="text-sm font-medium text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400"
+                                >
+                                  {store.name || 'Unnamed Store'}
+                                </Link>
+                                {store.description && (
+                                  <div className="text-sm text-gray-500 dark:text-gray-400 line-clamp-1">{store.description}</div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center space-x-2">
-                            <ToggleSwitch
-                              isActive={store.visible || false}
-                              onChange={() => handleToggleActive(store.id, store.visible)}
-                              loading={toggleLoading[store.id] || false}
-                            />
-                            <span className="text-sm text-gray-600 dark:text-gray-300">
-                              {store.visible ? 'Active' : 'Inactive'}
-                            </span>
-                          </div>
-                        </td>
-                        {filteredStores.some(s => s.url) && (
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{store.url || '-'}</td>
-                        )}
-                        {filteredStores.some(s => s.createdAt) && (
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{store.createdAt || '-'}</td>
-                        )}
-                        {filteredStores.some(s => s.products !== undefined) && (
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{store.products !== undefined ? store.products : '-'}</td>
-                        )}
-                        {filteredStores.some(s => s.orders !== undefined) && (
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{store.orders !== undefined ? store.orders : '-'}</td>
-                        )}
-                        {filteredStores.some(s => s.revenue !== undefined) && (
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{store.revenue || '-'}</td>
-                        )}
-                      </tr>
-                    ))}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center space-x-2">
+                              <ToggleSwitch
+                                isActive={isStoreActive}
+                                onChange={() => handleToggleActive(store.id, isStoreActive)}
+                                loading={toggleLoading[store.id] || false}
+                              />
+                              <span className="text-sm text-gray-600 dark:text-gray-300">
+                                {isStoreActive ? 'Active' : 'Inactive'}
+                              </span>
+                            </div>
+                          </td>
+                          {filteredStores.some(s => s.url) && (
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{store.url || '-'}</td>
+                          )}
+                          {filteredStores.some(s => s.createdAt) && (
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{store.createdAt || '-'}</td>
+                          )}
+                          {filteredStores.some(s => s.products !== undefined) && (
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{store.products !== undefined ? store.products : '-'}</td>
+                          )}
+                          {filteredStores.some(s => s.orders !== undefined) && (
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{store.orders !== undefined ? store.orders : '-'}</td>
+                          )}
+                          {filteredStores.some(s => s.revenue !== undefined) && (
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{store.revenue || '-'}</td>
+                          )}
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
