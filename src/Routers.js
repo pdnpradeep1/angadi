@@ -278,13 +278,12 @@ function AppRoutes() {
           <Route path="view/:orderId" element={<OrderDetail />} />
           <Route path="export" element={<OrderExport />} />
         </Route>
-        
 
                 {/* Delivery routes */}
         {/* <Route path="delivery" element={<DeliveryContainer />}>
           <Route index element={<DeliveryMainComponent />} />
-          <Route path="delivery/all" element={<DeliveryMainComponent />} />
-          <Route path="delivery/pending" element={<DeliveryMainComponent />} />
+          <Route path="all" element={<DeliveryMainComponent />} />
+          <Route path="pending" element={<DeliveryMainComponent />} />
           <Route path="intransit" element={<DeliveryMainComponent />} />
           <Route path="delivered" element={<DeliveryMainComponent />} />
           <Route path="cancelled" element={<DeliveryMainComponent />} />

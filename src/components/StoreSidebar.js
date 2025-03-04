@@ -251,11 +251,7 @@ const StoreSidebar = ({ store }) => {
   const menuItems = [
     { name: "Dashboard", icon: <FiHome />, path: `/store-dashboard/${storeId}` },
     { name: "Orders", icon: <FiShoppingBag />, path: `/store-dashboard/${storeId}/orders` },
-    { 
-      name: "Delivery", 
-      icon: <FiTruck />, 
-      path: `/store-dashboard/${storeId}/delivery`
-    },
+    { name: "Delivery", icon: <FiTruck />, path: `/store-dashboard/${storeId}/delivery` },
     { 
       name: "Products", 
       icon: <FiPackage />, 
