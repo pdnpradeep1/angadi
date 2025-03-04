@@ -4,17 +4,14 @@ import {
   FiSearch, 
   FiFilter, 
   FiDownload, 
-  FiChevronLeft, 
-  FiChevronRight,
-  FiEye,
   FiTruck,
   FiBox,
   FiCheck,
   FiXCircle,
   FiCalendar,
-  FiMapPin,
   FiClock,
-  FiRefreshCw
+  FiRefreshCw,
+  FiShoppingBag
 } from "react-icons/fi";
 import axios from "axios";
 
@@ -28,19 +25,16 @@ const DeliveryMainComponent = () => {
   const statusMatch = path.match(/\/delivery\/([^/]+)/);
   const status = statusMatch ? statusMatch[1] : 'all';
   
+  console.log("Current delivery status filter:", status);
+  
   const [deliveries, setDeliveries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [sorting, setSorting] = useState({ field: 'createdAt', direction: 'desc' });
   const [filterOpen, setFilterOpen] = useState(false);
   const [filters, setFilters] = useState({
     dateFrom: '',
     dateTo: '',
-    minAmount: '',
-    maxAmount: '',
     customerEmail: '',
     deliveryPartner: ''
   });
@@ -49,11 +43,13 @@ const DeliveryMainComponent = () => {
   useEffect(() => {
     fetchDeliveries();
     fetchDeliveryPartners();
-  }, [storeId, status, currentPage, sorting, location.pathname]);
+  }, [storeId, status, location.pathname]);
 
   const fetchDeliveryPartners = async () => {
     try {
       const token = localStorage.getItem('jwtToken');
+      /* 
+      // Real API call (commented out)
       const response = await axios.get(`http://localhost:8080/delivery/partners/${storeId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -61,18 +57,17 @@ const DeliveryMainComponent = () => {
       });
       
       setDeliveryPartners(response.data);
-    } catch (err) {
-      console.error('Error fetching delivery partners:', err);
+      */
       
       // For development, use mock data
-      if (process.env.NODE_ENV === 'development') {
-        setDeliveryPartners([
-          { id: 1, name: "Express Logistics" },
-          { id: 2, name: "Swift Delivery" },
-          { id: 3, name: "Metro Couriers" },
-          { id: 4, name: "City Express" },
-        ]);
-      }
+      setDeliveryPartners([
+        { id: 1, name: "Express Logistics" },
+        { id: 2, name: "Swift Delivery" },
+        { id: 3, name: "Metro Couriers" },
+        { id: 4, name: "City Express" },
+      ]);
+    } catch (err) {
+      console.error('Error fetching delivery partners:', err);
     }
   };
 
@@ -83,10 +78,10 @@ const DeliveryMainComponent = () => {
     try {
       const token = localStorage.getItem('jwtToken');
       
+      /* 
+      // Real API call (commented out)
       // Build API URL with parameters
       let url = `http://localhost:8080/delivery/store/${storeId}?`;
-      url += `page=${currentPage - 1}&size=10`; // API uses 0-based indexing
-      url += `&sort=${sorting.field},${sorting.direction}`;
       
       // Add status filter if not 'all'
       if (status !== 'all') {
@@ -98,34 +93,6 @@ const DeliveryMainComponent = () => {
         url += `&search=${searchTerm}`;
       }
       
-      // Add date filters if present
-      if (filters.dateFrom) {
-        url += `&dateFrom=${filters.dateFrom}T00:00:00`;
-      }
-      
-      if (filters.dateTo) {
-        url += `&dateTo=${filters.dateTo}T23:59:59`;
-      }
-      
-      // Add amount filters if present
-      if (filters.minAmount) {
-        url += `&minAmount=${filters.minAmount}`;
-      }
-      
-      if (filters.maxAmount) {
-        url += `&maxAmount=${filters.maxAmount}`;
-      }
-      
-      // Add customer email filter if present
-      if (filters.customerEmail) {
-        url += `&customerEmail=${filters.customerEmail}`;
-      }
-      
-      // Add delivery partner filter if present
-      if (filters.deliveryPartner) {
-        url += `&partnerId=${filters.deliveryPartner}`;
-      }
-
       const response = await axios.get(url, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -133,17 +100,15 @@ const DeliveryMainComponent = () => {
       });
       
       setDeliveries(response.data.content);
-      setTotalPages(response.data.totalPages);
+      */
+      
+      // For development, use mock data
+      const mockDeliveries = generateMockDeliveries(10, status);
+      setDeliveries(mockDeliveries);
+      
     } catch (err) {
       console.error('Error fetching deliveries:', err);
       setError('Failed to load deliveries. Please try again.');
-      
-      // For development, use mock data if API fails
-      if (process.env.NODE_ENV === 'development') {
-        const mockDeliveries = generateMockDeliveries(10, status);
-        setDeliveries(mockDeliveries);
-        setTotalPages(5);
-      }
     } finally {
       setLoading(false);
     }
@@ -153,6 +118,11 @@ const DeliveryMainComponent = () => {
   const generateMockDeliveries = (count, statusFilter) => {
     const statuses = ['PENDING', 'INTRANSIT', 'DELIVERED', 'CANCELLED', 'RETURNED'];
     const carriers = ["Express Logistics", "Swift Delivery", "Metro Couriers", "City Express"];
+    
+    // If we have a specific status filter, use it
+    const statusToUse = statusFilter && statusFilter !== 'all' 
+      ? statusFilter.toUpperCase() 
+      : null;
     
     return Array.from({ length: count }, (_, i) => ({
       id: i + 1,
@@ -165,35 +135,16 @@ const DeliveryMainComponent = () => {
       createdAt: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000).toISOString(),
       estimatedDelivery: new Date(Date.now() + Math.floor(Math.random() * 7) * 24 * 60 * 60 * 1000).toISOString(),
       amount: Math.floor(Math.random() * 500) + 50,
-      status: statusFilter !== 'all' ? statusFilter.toUpperCase() : statuses[Math.floor(Math.random() * statuses.length)],
+      status: statusToUse || statuses[Math.floor(Math.random() * statuses.length)],
       carrierName: carriers[Math.floor(Math.random() * carriers.length)],
       deliveryAddress: `${123 + i} Main St, City, State, 10000`,
+      currentLocation: {
+        latitude: 12.9716 + (Math.random() * 0.1 - 0.05),
+        longitude: 77.5946 + (Math.random() * 0.1 - 0.05),
+        address: `${100 + i} Main St, City, State`,
+        lastUpdated: new Date(Date.now() - Math.floor(Math.random() * 120) * 60 * 1000).toISOString()
+      }
     }));
-  };
-
-  const handlePageChange = (newPage) => {
-    setCurrentPage(newPage);
-  };
-
-  const handleSort = (field) => {
-    if (sorting.field === field) {
-      // Toggle direction if same field
-      setSorting({
-        ...sorting,
-        direction: sorting.direction === 'asc' ? 'desc' : 'asc'
-      });
-    } else {
-      // New field, default to desc
-      setSorting({
-        field,
-        direction: 'desc'
-      });
-    }
-  };
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    fetchDeliveries();
   };
 
   const handleFilterChange = (e) => {
@@ -208,8 +159,6 @@ const DeliveryMainComponent = () => {
     setFilters({
       dateFrom: '',
       dateTo: '',
-      minAmount: '',
-      maxAmount: '',
       customerEmail: '',
       deliveryPartner: ''
     });
@@ -221,14 +170,6 @@ const DeliveryMainComponent = () => {
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
     return new Date(dateString).toLocaleDateString(undefined, options);
-  };
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-IN', { 
-      style: 'currency', 
-      currency: 'INR',
-      maximumFractionDigits: 0
-    }).format(amount);
   };
 
   const getStatusBadge = (status) => {
@@ -273,6 +214,40 @@ const DeliveryMainComponent = () => {
     );
   };
 
+  const getTimeSinceUpdate = (dateString) => {
+    if (!dateString) return 'Unknown';
+    
+    const lastUpdate = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - lastUpdate;
+    
+    // Convert to minutes
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins === 1) return '1 minute ago';
+    if (diffMins < 60) return `${diffMins} minutes ago`;
+    
+    // Convert to hours
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours === 1) return '1 hour ago';
+    if (diffHours < 24) return `${diffHours} hours ago`;
+    
+    // If more than 24 hours, return formatted date
+    return formatDate(dateString);
+  };
+
+  // Filter deliveries based on search term
+  const filteredDeliveries = searchTerm
+    ? deliveries.filter(
+        delivery =>
+          delivery.trackingNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          delivery.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          delivery.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          delivery.carrierName.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : deliveries;
+
   return (
     <div className="h-screen overflow-auto bg-gray-50 dark:bg-gray-900">
       {/* Top Bar with Search and Filters */}
@@ -283,7 +258,7 @@ const DeliveryMainComponent = () => {
           </h1>
           
           <div className="flex items-center gap-2 w-full md:w-auto">
-            <form onSubmit={handleSearch} className="relative flex-1 md:w-auto">
+            <div className="relative flex-1 md:w-auto">
               <input
                 type="text"
                 placeholder="Search deliveries..."
@@ -294,8 +269,7 @@ const DeliveryMainComponent = () => {
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <FiSearch className="text-gray-400" />
               </div>
-              <button type="submit" className="hidden">Search</button>
-            </form>
+            </div>
             
             <button
               onClick={() => setFilterOpen(!filterOpen)}
@@ -305,10 +279,10 @@ const DeliveryMainComponent = () => {
             </button>
             
             <button
-              onClick={() => navigate(`/store-dashboard/${storeId}/delivery/export`)}
+              onClick={() => navigate(`/store-dashboard/${storeId}/delivery/map`)}
               className="px-4 py-2 bg-primary-600 text-white rounded-md flex items-center gap-2 text-sm hover:bg-primary-700"
             >
-              <FiDownload /> Export
+              <FiTruck /> Live Map
             </button>
           </div>
         </div>
@@ -334,7 +308,6 @@ const DeliveryMainComponent = () => {
                       value={filters.dateFrom}
                       onChange={handleFilterChange}
                       className="pl-8 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-                      placeholder="From"
                     />
                   </div>
                   <span className="text-gray-500">to</span>
@@ -344,7 +317,6 @@ const DeliveryMainComponent = () => {
                     value={filters.dateTo}
                     onChange={handleFilterChange}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-                    placeholder="To"
                   />
                 </div>
               </div>
@@ -397,12 +369,101 @@ const DeliveryMainComponent = () => {
                 Apply Filters
               </button>
             </div>
-            </div>
+          </div>
         )}
-        </div>
+      </div>
+
+      {/* Deliveries Content */}
+      <div className="p-4">
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+            <span className="ml-2 text-gray-600 dark:text-gray-400">Loading deliveries...</span>
+          </div>
+        ) : error ? (
+          <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 rounded-md">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <FiXCircle className="h-5 w-5 text-red-500" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+              </div>
+            </div>
+          </div>
+        ) : filteredDeliveries.length === 0 ? (
+          <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-8 text-center">
+            <FiShoppingBag className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-2 text-lg font-medium text-gray-900 dark:text-white">No deliveries found</h3>
+            <p className="mt-1 text-gray-500 dark:text-gray-400">
+              {searchTerm ? "Try a different search term or filter." : "There are no deliveries matching the current filters."}
+            </p>
+          </div>
+        ) : (
+          <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Tracking #
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Order #
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Customer
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Shipping Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Estimated Delivery
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Carrier
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Last Update
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  {filteredDeliveries.map((delivery) => (
+                    <tr key={delivery.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary-600 dark:text-primary-400">
+                        {delivery.trackingNumber}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        {delivery.carrierName}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        {getTimeSinceUpdate(delivery.currentLocation?.lastUpdated)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button
+                          onClick={() => navigate(`/store-dashboard/${storeId}/delivery/view/${delivery.id}`)}
+                          className="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300"
+                        >
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
-}
-export default DeliveryMainComponent;;
-        
-    
+};
+
+export default DeliveryMainComponent; 

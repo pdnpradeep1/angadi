@@ -11,7 +11,8 @@ import {
   FiCalendar,
   FiMapPin,
   FiFilter,
-  FiUsers
+  FiUsers,
+  FiRefreshCw
 } from "react-icons/fi";
 import axios from "axios";
 
@@ -41,26 +42,8 @@ const DeliverySidebar = () => {
   const fetchDeliveryStats = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('jwtToken');
-      
-      // Use query params for time filtering
-      let timeFilter = '';
-      if (dateRange !== 'all') {
-        timeFilter = `&timeRange=${dateRange}`;
-      }
-      
-      const response = await axios.get(`http://localhost:8080/delivery/stats/${storeId}?${timeFilter}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      setDeliveryStats(response.data);
-    } catch (err) {
-      console.error('Error fetching delivery stats:', err);
-      
       // For development, use mock data
-      if (process.env.NODE_ENV === 'development') {
+      setTimeout(() => {
         setDeliveryStats({
           total: 85,
           pending: 12,
@@ -69,8 +52,17 @@ const DeliverySidebar = () => {
           cancelled: 3,
           returned: 2
         });
-      }
-    } finally {
+        setLoading(false);
+      }, 600);
+      
+      // In a production environment, you would use:
+      // const token = localStorage.getItem('jwtToken');
+      // const response = await axios.get(`http://localhost:8080/delivery/stats/${storeId}`, {
+      //   headers: { 'Authorization': `Bearer ${token}` }
+      // });
+      // setDeliveryStats(response.data);
+    } catch (err) {
+      console.error('Error fetching delivery stats:', err);
       setLoading(false);
     }
   };
@@ -83,7 +75,9 @@ const DeliverySidebar = () => {
   };
 
   const isActive = (path) => {
-    return location.pathname === path;
+    return location.pathname === path || 
+           (path !== `/store-dashboard/${storeId}/delivery` && 
+            location.pathname.startsWith(path));
   };
 
   // Delivery status menu items
@@ -121,7 +115,7 @@ const DeliverySidebar = () => {
     { 
       name: "Returned", 
       path: `/store-dashboard/${storeId}/delivery/returned`,
-      icon: <FiAlertCircle />,
+      icon: <FiRefreshCw />,
       count: deliveryStats.returned
     }
   ];
@@ -133,8 +127,7 @@ const DeliverySidebar = () => {
     { name: "Last 7 days", value: "7days" },
     { name: "Last 30 days", value: "30days" },
     { name: "This month", value: "thisMonth" },
-    { name: "Last month", value: "lastMonth" },
-    { name: "Custom range", value: "custom" }
+    { name: "Last month", value: "lastMonth" }
   ];
 
   // Delivery partners menu items
@@ -294,7 +287,7 @@ const DeliverySidebar = () => {
       <div className="p-4 border-t border-secondary-200 dark:border-secondary-700">
         <Link
           to={`/store-dashboard/${storeId}/delivery/map`}
-          className="flex items-center justify-center w-full px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
+          className="flex items-center justify-center w-full px-4 py-2 text-sm text-white bg-primary-600 hover:bg-primary-700 rounded-md"
         >
           <FiMapPin className="mr-2" />
           Live Tracking Map

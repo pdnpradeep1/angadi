@@ -732,6 +732,6 @@ const DeliveryDetail = () => {
       </div>
     </div>
   );
-
+}
 
 export default DeliveryDetail;
