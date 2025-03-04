@@ -280,7 +280,7 @@ function AppRoutes() {
         </Route>
 
                 {/* Delivery routes */}
-        {/* <Route path="delivery" element={<DeliveryContainer />}>
+        <Route path="delivery" element={<DeliveryContainer />}>
           <Route index element={<DeliveryMainComponent />} />
           <Route path="all" element={<DeliveryMainComponent />} />
           <Route path="pending" element={<DeliveryMainComponent />} />
@@ -293,9 +293,9 @@ function AppRoutes() {
           <Route path="partners/settings" element={<DeliveryMainComponent />} />
           <Route path="view/:deliveryId" element={<DeliveryDetail />} />
         </Route>
-         */}
+        
         {/* Separate route for delivery map */}
-        {/* <Route path="delivery/map" element={<DeliveryMap />} /> */}
+        <Route path="delivery/map" element={<DeliveryMap />} />
       </Route>
 
       {/* Add the route for the AddProduct page */}
@@ -304,35 +304,6 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <AddProduct />
-          </ProtectedRoute>
-        }
-      />
-    <Route
-        path="/store-dashboard/:storeId/delivery"
-        element={
-          <ProtectedRoute>
-            <DeliveryContainer />
-          </ProtectedRoute>
-        }
-      >
-         <Route index element={<DeliveryMainComponent />} />
-          <Route path="all" element={<DeliveryMainComponent />} />
-          <Route path="pending" element={<DeliveryMainComponent />} />
-          <Route path="intransit" element={<DeliveryMainComponent />} />
-          <Route path="delivered" element={<DeliveryMainComponent />} />
-          <Route path="cancelled" element={<DeliveryMainComponent />} />
-          <Route path="returned" element={<DeliveryMainComponent />} />
-          <Route path="partners/all" element={<DeliveryMainComponent />} />
-          <Route path="partners/performance" element={<DeliveryMainComponent />} />
-          <Route path="partners/settings" element={<DeliveryMainComponent />} />
-          <Route path="view/:deliveryId" element={<DeliveryDetail />} />
-      </Route>
-        
-      <Route
-        path="/store-dashboard/:storeId/delivery/map"
-        element={
-          <ProtectedRoute>
-            <DeliveryMap />
           </ProtectedRoute>
         }
       />
