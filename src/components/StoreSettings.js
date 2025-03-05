@@ -1,27 +1,10 @@
 import React, { useState } from 'react';
-import {
-  FiShoppingBag,
-  FiGlobe,
-  FiUsers,
-  FiBell,
-  FiCreditCard,
-  FiShoppingCart,
-  FiHome,
-  FiTruck,
-  FiRefreshCw,
-  FiPercent,
-  FiDollarSign,
-  FiSearch,
-  FiGlobe as FiLanguage,
-  FiHelpCircle,
-  FiFileText,
-  FiClock,
-  FiX,
-  FiChevronLeft,
-  FiMoreVertical
-} from 'react-icons/fi';
+import { FiShoppingBag, FiGlobe, FiUsers, FiBell, FiCreditCard, FiShoppingCart, 
+  FiHome, FiTruck, FiRefreshCw, FiPercent, FiDollarSign, FiSearch, 
+  FiGlobe as FiLanguage, FiHelpCircle, FiFileText, FiClock } from 'react-icons/fi';
+import ExtraChargesSection from './sections/ExtraChargesSection';
 
-// Import all section components
+// Import all other section components as needed
 import StoreTimings from './sections/StoreTimings';
 import StoreDetails from './sections/StoreDetails';
 import Domains from './sections/Domains';
@@ -34,15 +17,14 @@ import Delivery from './sections/Delivery';
 import Returns from './sections/Returns';
 import Tax from './sections/Tax';
 import SupportSocial from './sections/SupportSocial';
+import ReturnsSection from './sections/ReturnsSection';
 
-// Import modals
-import AddStaffModal from './modals/AddStaffModal';
-import AddWarehouseModal from './modals/AddWarehouseModal';
 
 const StoreSettings = () => {
-  const [activeSetting, setActiveSetting] = useState('support-social'); // Set support-social as the default active tab
+  const [activeSetting, setActiveSetting] = useState('extra-charges'); // Set extra-charges as the default active tab
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState(null);
+  // const [activeSetting, setActiveSetting] = useState('returns');
 
   // Open modal with specific type
   const openModal = (type) => {
@@ -101,9 +83,11 @@ const StoreSettings = () => {
       case 'delivery':
         return <Delivery />;
       case 'returns':
-        return <Returns />;
+        return <ReturnsSection  />;
       case 'tax':
         return <Tax />;
+      case 'extra-charges':
+        return <ExtraChargesSection />;
       case 'support-social':
         return <SupportSocial />;
       case 'store-timings':
@@ -113,20 +97,8 @@ const StoreSettings = () => {
     }
   };
 
-  // Render appropriate modal based on type
-  const renderModal = () => {
-    if (!showModal) return null;
-    
-    switch (modalType) {
-      case 'add-staff':
-        return <AddStaffModal closeModal={closeModal} />;
-      case 'add-warehouse':
-        return <AddWarehouseModal closeModal={closeModal} />;
-      default:
-        return null;
-    }
-  };
   
+
   return (
     <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900">
       {/* Sidebar */}
@@ -156,9 +128,6 @@ const StoreSettings = () => {
       <div className="flex-1 overflow-auto bg-white dark:bg-gray-900">
         {renderContent()}
       </div>
-      
-      {/* Modal */}
-      {renderModal()}
     </div>
   );
 };
