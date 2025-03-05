@@ -83,7 +83,11 @@ const StoreDashboard = () => {
 
   const hasOutlet = window.location.pathname.includes('all-products') || 
                  window.location.pathname.includes('inventory') ||
-                 window.location.pathname.includes('orders') || window.location.pathname.includes('delivery');
+                 window.location.pathname.includes('orders') ||
+                window.location.pathname.includes('delivery') ||
+                window.location.pathname.includes('audience') ||
+                window.location.pathname.includes('payments') ||
+                window.location.pathname.includes('analytics');
 
   const renderOverviewTab = () => (
     <div className="space-y-6">
