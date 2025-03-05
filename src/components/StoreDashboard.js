@@ -87,6 +87,8 @@ const StoreDashboard = () => {
                 window.location.pathname.includes('delivery') ||
                 window.location.pathname.includes('audience') ||
                 window.location.pathname.includes('payments') ||
+                window.location.pathname.includes('abandoned') ||
+                window.location.pathname.includes('settings') ||
                 window.location.pathname.includes('analytics');
 
   const renderOverviewTab = () => (

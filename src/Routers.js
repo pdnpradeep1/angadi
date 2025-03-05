@@ -22,6 +22,9 @@ import DeliveryMap from './components/DeliveryMap';
 import Audience from './components/Audience';
 import PaymentsPage from './components/PaymentsPage';
 import StoreAnalytics from './components/StoreAnalytics';
+import AbandonedOrders from './components/AbandonedOrders';
+import StoreSettings from './components/StoreSettings';
+
 
 // Auth guard component
 const ProtectedRoute = ({ children }) => {
@@ -120,8 +123,8 @@ function AppRoutes() {
 
         {/* Orders routes using the updated OrdersContainer component */}
         <Route path="orders" element={<OrdersContainer />}>
-          <Route index element={<OrdersMainComponent />} />
-          <Route path="all" element={<OrdersMainComponent />} />
+          {/* <Route index element={<OrdersMainComponent />} /> */}
+          <Route index path="all" element={<OrdersMainComponent />} />
           <Route path="pending" element={<OrdersMainComponent />} />
           <Route path="processing" element={<OrdersMainComponent />} />
           <Route path="shipped" element={<OrdersMainComponent />} />
@@ -132,6 +135,7 @@ function AppRoutes() {
           <Route path="view/:orderId" element={<OrderDetail />} />
           <Route path="export" element={<OrderExport />} />
         </Route>
+        <Route path="orders/abandoned" element={<AbandonedOrders />} />
 
         {/* Delivery routes */}
         <Route path="delivery" element={<DeliveryContainer />}>
@@ -157,6 +161,7 @@ function AppRoutes() {
         <Route path="audience" element={<Audience />} />
         <Route path="payments" element={<PaymentsPage />} />
         <Route path="analytics" element={<StoreAnalytics />} />
+        <Route path="settings" element={<StoreSettings />} />
         
       </Route>
 
