@@ -1,45 +1,103 @@
-import React from 'react';
+// src/components/sections/Payments.js
+import React, { useState } from 'react';
 import { FiCreditCard } from 'react-icons/fi';
+import BaseSection from './BaseSection';
+import { Card } from '../ui/Card';
+import { Button } from '../ui/Button';
+import { ToggleSwitch } from '../ui/ToggleSwitch';
+import Modal from '../ui/Modal';
+import { FormField } from '../ui/FormField';
+import useForm from '../../hooks/useForm';
 
 const Payments = () => {
+  const [showSetupModal, setShowSetupModal] = useState(false);
+  const [activePayment, setActivePayment] = useState('cod');
+  const [setupProvider, setSetupProvider] = useState(null);
+
+  const handleSetupProvider = (provider) => {
+    setSetupProvider(provider);
+    setShowSetupModal(true);
+  };
+
+  const togglePaymentMethod = (method) => {
+    if (method === activePayment) {
+      setActivePayment(null);
+    } else {
+      setActivePayment(method);
+    }
+  };
+
+  // Payment provider setup form
+  const PaymentSetupForm = () => {
+    const { values, handleChange, handleSubmit } = useForm(
+      { accountId: '', apiKey: '', secretKey: '' },
+      null,
+      (data) => {
+        console.log('Setting up payment provider:', setupProvider, data);
+        setShowSetupModal(false);
+      }
+    );
+
+    return (
+      <form onSubmit={handleSubmit}>
+        <FormField label="Account ID" required={true}>
+          <input
+            type="text"
+            name="accountId"
+            value={values.accountId}
+            onChange={handleChange}
+            placeholder="Enter your account ID"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          />
+        </FormField>
+
+        <FormField label="API Key" required={true}>
+          <input
+            type="text"
+            name="apiKey"
+            value={values.apiKey}
+            onChange={handleChange}
+            placeholder="Enter your API key"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          />
+        </FormField>
+
+        <FormField label="Secret Key" required={true}>
+          <input
+            type="password"
+            name="secretKey"
+            value={values.secretKey}
+            onChange={handleChange}
+            placeholder="Enter your secret key"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          />
+        </FormField>
+      </form>
+    );
+  };
+
   return (
-    <div className="p-6">
+    <BaseSection>
       <div className="mb-8">
         <img src="/api/placeholder/120/40" alt="Razorpay" className="h-8" />
-        <div className="mt-6 p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
-          <div className="grid grid-cols-4 gap-4 mb-6">
-            <div className="flex flex-col">
-              <div className="flex items-center mb-2">
-                <div className="bg-blue-100 dark:bg-blue-900/20 p-2 rounded-md">
-                  <FiCreditCard className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                </div>
-              </div>
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Super-fast payments set-up</p>
-            </div>
-            <div className="flex flex-col">
-              <div className="flex items-center mb-2">
-                <div className="bg-blue-100 dark:bg-blue-900/20 p-2 rounded-md">
-                  <FiCreditCard className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                </div>
-              </div>
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">International & Domestic Payment modes like UPI, Cards, NetBanking, Wallets</p>
-            </div>
-            <div className="flex flex-col">
-              <div className="flex items-center mb-2">
-                <div className="bg-blue-100 dark:bg-blue-900/20 p-2 rounded-md">
-                  <FiCreditCard className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                </div>
-              </div>
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Best-in-industry success rates</p>
-            </div>
-            <div className="flex flex-col">
-              <div className="flex items-center mb-2">
-                <div className="bg-blue-100 dark:bg-blue-900/20 p-2 rounded-md">
-                  <FiCreditCard className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                </div>
-              </div>
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Prompt round-the-clock support</p>
-            </div>
+        <Card className="mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <PaymentFeatureItem 
+              icon={<FiCreditCard className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
+              text="Super-fast payments set-up"
+            />
+            <PaymentFeatureItem 
+              icon={<FiCreditCard className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
+              text="International & Domestic Payment modes like UPI, Cards, NetBanking, Wallets"
+            />
+            <PaymentFeatureItem 
+              icon={<FiCreditCard className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
+              text="Best-in-industry success rates"
+            />
+            <PaymentFeatureItem 
+              icon={<FiCreditCard className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
+              text="Prompt round-the-clock support"
+            />
           </div>
 
           <div>
@@ -55,41 +113,96 @@ const Payments = () => {
           </div>
           
           <div className="mt-4 flex justify-end">
-            <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Set up</button>
+            <Button onClick={() => handleSetupProvider('razorpay')}>Set up</Button>
           </div>
-        </div>
+        </Card>
       </div>
 
       <section className="mb-8">
         <h2 className="text-lg font-medium mb-2 text-gray-900 dark:text-white">Payment providers</h2>
         <p className="text-gray-600 dark:text-gray-400 mb-4">Manage payment providers to accept payments from your customers.</p>
 
-        <div className="flex justify-between items-center p-4 border border-gray-200 dark:border-gray-700 rounded-lg mb-4 bg-white dark:bg-gray-800">
-          <div className="flex items-center">
-            <img src="/api/placeholder/40/40" alt="Cashfree" className="h-10 w-10 mr-3" />
-            <span className="font-medium text-gray-900 dark:text-white">Cashfree Payments</span>
-          </div>
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Set up</button>
-        </div>
+        <PaymentProviderCard 
+          name="Cashfree Payments"
+          logo="/api/placeholder/40/40"
+          description=""
+          onSetup={() => handleSetupProvider('cashfree')}
+        />
 
-        <div className="flex justify-between items-center p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800">
-          <div className="flex items-center">
-            <div className="bg-orange-100 dark:bg-orange-900/30 h-10 w-10 flex items-center justify-center rounded-md mr-3">
-              <span className="text-orange-600 dark:text-orange-400 font-bold">COD</span>
-            </div>
-            <div>
-              <p className="font-medium text-gray-900 dark:text-white">Cash on delivery</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Receive payments in cash upon delivery.</p>
-            </div>
-          </div>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" defaultChecked={true} className="sr-only peer" />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-          </label>
+        <div className="mt-4">
+          <PaymentProviderCard 
+            name="Cash on delivery"
+            logo={
+              <div className="bg-orange-100 dark:bg-orange-900/30 h-10 w-10 flex items-center justify-center rounded-md mr-3">
+                <span className="text-orange-600 dark:text-orange-400 font-bold">COD</span>
+              </div>
+            }
+            description="Receive payments in cash upon delivery."
+            toggle={
+              <ToggleSwitch 
+                checked={activePayment === 'cod'} 
+                onChange={() => togglePaymentMethod('cod')}
+                labelPosition="none"
+              />
+            }
+          />
         </div>
       </section>
-    </div>
+
+      {/* Payment Provider Setup Modal */}
+      <Modal
+        isOpen={showSetupModal}
+        onClose={() => setShowSetupModal(false)}
+        title={`Set up ${setupProvider?.charAt(0).toUpperCase() + setupProvider?.slice(1)}`}
+        footer={
+          <div className="flex justify-end space-x-3">
+            <Button variant="secondary" onClick={() => setShowSetupModal(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" onClick={() => setShowSetupModal(false)}>
+              Connect
+            </Button>
+          </div>
+        }
+      >
+        <PaymentSetupForm />
+      </Modal>
+    </BaseSection>
   );
 };
+
+// Helper component for payment features
+const PaymentFeatureItem = ({ icon, text }) => (
+  <div className="flex flex-col">
+    <div className="flex items-center mb-2">
+      <div className="bg-blue-100 dark:bg-blue-900/20 p-2 rounded-md">
+        {icon}
+      </div>
+    </div>
+    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{text}</p>
+  </div>
+);
+
+// Helper component for payment provider cards
+const PaymentProviderCard = ({ name, logo, description, onSetup, toggle }) => (
+  <Card className="flex justify-between items-center p-4 mb-4">
+    <div className="flex items-center">
+      {typeof logo === 'string' ? (
+        <img src={logo} alt={name} className="h-10 w-10 mr-3" />
+      ) : (
+        logo
+      )}
+      <div>
+        <p className="font-medium text-gray-900 dark:text-white">{name}</p>
+        {description && <p className="text-sm text-gray-600 dark:text-gray-400">{description}</p>}
+      </div>
+    </div>
+    {toggle || (
+      <Button onClick={onSetup}>
+        Set up
+      </Button>
+    )}
+  </Card>
+);
 
 export default Payments;

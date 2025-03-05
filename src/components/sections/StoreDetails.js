@@ -1,50 +1,99 @@
-import React from 'react';
+// src/components/sections/StoreDetails.js
+import React, { useState } from 'react';
+import BaseSection from './BaseSection';
+import { FormField } from '../ui/FormField';
+import { Button } from '../ui/Button';
+import { ConfirmDialog } from '../ui/Modal';
+import useForm from '../../hooks/useForm';
 
 const StoreDetails = () => {
-  return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">Store details</h2>
-        <p className="text-gray-600 dark:text-gray-400">Update and customize your store's information.</p>
-      </div>
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  // Form validation function
+  const validateStoreForm = (values) => {
+    const errors = {};
+    if (!values.name?.trim()) {
+      errors.name = 'Store name is required';
+    }
+    return errors;
+  };
+
+  // Initial form values
+  const initialValues = {
+    storeUrl: 'harintiruchulu',
+    name: 'Hari Inti Ruchulu',
+    mobile: '0123456789',
+    country: 'India (₹)',
+    email: 'pdnpradeep1@gmail.com',
+    address: ''
+  };
+
+  // Form handling
+  const { 
+    values, 
+    errors, 
+    touched, 
+    handleChange, 
+    handleBlur, 
+    handleSubmit,
+    isDirty,
+    isSubmitting
+  } = useForm(
+    initialValues, 
+    validateStoreForm, 
+    (formData) => {
+      console.log('Saving store details:', formData);
+      // API call would go here
+    }
+  );
+
+  const handleDeleteStore = () => {
+    console.log('Deleting store...');
+    // API call would go here
+    setShowDeleteConfirm(false);
+  };
+
+  return (
+    <BaseSection
+      title="Store details"
+      description="Update and customize your store's information."
+    >
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Store Link
-            </label>
+          <FormField label="Store Link">
             <div className="flex">
               <span className="inline-flex items-center px-3 py-2 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 sm:text-sm">
                 mydukaan.io/
               </span>
               <input
                 type="text"
-                name="url"
-                defaultValue="harintiruchulu"
+                name="storeUrl"
+                value={values.storeUrl}
+                onChange={handleChange}
+                onBlur={handleBlur}
                 className="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               />
             </div>
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Store Name <span className="text-red-500">*</span>
-            </label>
+          <FormField 
+            label="Store Name" 
+            required={true}
+            error={touched.name && errors.name}
+          >
             <input
               type="text"
               name="name"
-              defaultValue="Hari Inti Ruchulu"
+              value={values.name}
+              onChange={handleChange}
+              onBlur={handleBlur}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             />
-          </div>
+          </FormField>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Mobile Number
-            </label>
+          <FormField label="Mobile Number">
             <div className="flex">
               <span className="inline-flex items-center px-3 py-2 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 sm:text-sm">
                 <div className="flex items-center">
@@ -54,67 +103,77 @@ const StoreDetails = () => {
               </span>
               <input
                 type="text"
-                name="phone"
-                defaultValue="0123456789"
+                name="mobile"
+                value={values.mobile}
+                onChange={handleChange}
                 className="flex-1 min-w-0 block w-full px-3 py-2 rounded-none border border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               />
               <span className="inline-flex items-center px-3 py-2 rounded-r-md border border-l-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-primary-600 dark:text-primary-400 sm:text-sm">
                 VERIFY
               </span>
             </div>
-          </div>
+          </FormField>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Country <span className="text-red-500">*</span>
-            </label>
+          <FormField label="Country" required={true}>
             <input
               type="text"
               name="country"
-              defaultValue="India (₹)"
+              value={values.country}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               readOnly
             />
-          </div>
+          </FormField>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Email Address
-          </label>
+        <FormField label="Email Address">
           <input
             type="email"
             name="email"
-            defaultValue="pdnpradeep1@gmail.com"
+            value={values.email}
+            onChange={handleChange}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           />
-        </div>
+        </FormField>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Store Address
-          </label>
+        <FormField label="Store Address">
           <textarea
             name="address"
+            value={values.address}
+            onChange={handleChange}
             rows={3}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           />
-        </div>
+        </FormField>
 
         <div className="pt-4 flex justify-end">
-          <button 
-            className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 text-sm mr-4"
+          <Button 
+            variant="danger" 
+            onClick={() => setShowDeleteConfirm(true)}
+            className="mr-4"
+            size="sm"
           >
             Delete my store
-          </button>
-          <button
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={!isDirty || isSubmitting}
           >
-            Save
-          </button>
+            {isSubmitting ? 'Saving...' : 'Save'}
+          </Button>
         </div>
       </div>
-    </div>
+
+      {/* Delete Store Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDeleteStore}
+        title="Delete Store"
+        message="Are you sure you want to delete your store? This action cannot be undone."
+        confirmText="Delete"
+        confirmVariant="danger"
+      />
+    </BaseSection>
   );
 };
 

@@ -1,12 +1,24 @@
+// src/components/sections/Warehouse.js
 import React from 'react';
 import { FiSearch, FiMoreVertical } from 'react-icons/fi';
+import BaseSection from './BaseSection';
 
 const Warehouse = ({ openModal }) => {
-  return (
-    <div className="p-6">
-      <h2 className="text-lg font-medium mb-2 text-gray-900 dark:text-white">Warehouses</h2>
-      <p className="text-gray-600 dark:text-gray-400 mb-6">Organize and oversee your inventory storage details.</p>
+  // Actions component for the header
+  const WarehouseActions = () => (
+    <button 
+      onClick={() => openModal('add-warehouse')}
+      className="ml-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+    >
+      Add warehouse
+    </button>
+  );
 
+  return (
+    <BaseSection
+      title="Warehouses"
+      description="Organize and oversee your inventory storage details."
+    >
       <div className="flex justify-between items-center mb-6">
         <div className="relative w-full max-w-xs">
           <input
@@ -18,12 +30,7 @@ const Warehouse = ({ openModal }) => {
             <FiSearch className="text-gray-400" />
           </div>
         </div>
-        <button 
-          onClick={() => openModal('add-warehouse')}
-          className="ml-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-        >
-          Add warehouse
-        </button>
+        <WarehouseActions />
       </div>
 
       <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 relative bg-white dark:bg-gray-800">
@@ -36,7 +43,7 @@ const Warehouse = ({ openModal }) => {
         </div>
         <p className="text-sm text-gray-600 dark:text-gray-400">Block-A, AJANTHA ROYAL, Lavakusha Nagar, Konappana Agrahara,, Bangalore, Karnataka 560100</p>
       </div>
-    </div>
+    </BaseSection>
   );
 };
 

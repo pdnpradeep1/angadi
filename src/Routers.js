@@ -23,7 +23,7 @@ import Audience from './components/Audience';
 import PaymentsPage from './components/PaymentsPage';
 import StoreAnalytics from './components/StoreAnalytics';
 import AbandonedOrders from './components/AbandonedOrders';
-import StoreSettings from './components/StoreSettings';
+import StoreSettings from './components/StoreSettings/index';
 
 
 // Auth guard component
