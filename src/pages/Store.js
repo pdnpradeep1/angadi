@@ -11,8 +11,8 @@ import {
   FiCheck,
   FiX
 } from 'react-icons/fi';
-import CreateStore from './create-store';
-import api from '../utils/apiConfig';
+import CreateStore from '../features/store/create-store';
+import api from '../api/config';
 import { jwtDecode } from 'jwt-decode';
 
 const ToggleSwitch = ({ isActive, onChange, loading, size = "md" }) => {

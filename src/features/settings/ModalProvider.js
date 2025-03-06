@@ -2,8 +2,8 @@
 import React, { Suspense, lazy } from 'react';
 
 // Lazy load modal components
-const AddWarehouseModal = lazy(() => import('../modals/AddWarehouseModal'));
-const AddStaffModal = lazy(() => import('../modals/AddStaffModal'));
+const AddWarehouseModal = lazy(() => import('../../components/modals/AddWarehouseModal'));
+const AddStaffModal = lazy(() => import('../../components/modals/AddStaffModal'));
 // Import other modals as needed
 
 const ModalProvider = ({ children, modalState, closeModal }) => {

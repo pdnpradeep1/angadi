@@ -1,7 +1,7 @@
 // src/components/sections/Domains.js
 import React, { useState } from 'react';
 import { FiX } from 'react-icons/fi';
-import BaseSection from './BaseSection';
+import BaseSection from '../ui/BaseSection';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import Modal from '../ui/Modal';

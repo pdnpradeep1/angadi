@@ -12,7 +12,7 @@ import {
   FiDownload
 } from "react-icons/fi";
 import axios from "axios";
-import ProductImportExport from './ProductImportExport';
+import ProductImportExport from '../importexport/ProductImportExport';
 
 
 const ProductList = () => {

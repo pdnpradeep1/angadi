@@ -4,7 +4,7 @@ import { settingsComponentMap } from './settingsConfig';
 
 // Lazy load section components to improve performance
 const lazyLoad = (componentName) => {
-  return lazy(() => import(`../sections/${componentName}`));
+  return lazy(() => import(`../../components/sections/${componentName}`));
 };
 
 // Create a mapping of lazy-loaded components

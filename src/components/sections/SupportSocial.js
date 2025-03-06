@@ -1,6 +1,6 @@
 // src/components/sections/SupportSocial.js
 import React from 'react';
-import BaseSection from './BaseSection';
+import BaseSection from '../ui/BaseSection';
 import { FormField } from '../ui/FormField';
 import { Button } from '../ui/Button';
 import useForm from '../../hooks/useForm';

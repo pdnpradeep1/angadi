@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useTheme } from "./ThemeProvider";
+import { useTheme } from "../../contexts/ThemeProvider";
 import { FiSun, FiMoon, FiMenu, FiX, FiShoppingBag, FiUser, FiDollarSign } from "react-icons/fi";
 
 const Navbar = () => {

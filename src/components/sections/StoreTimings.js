@@ -1,7 +1,7 @@
 // src/components/sections/StoreTimings.js
 import React, { useState } from 'react';
 import { FiSave, FiChevronDown } from 'react-icons/fi';
-import BaseSection from './BaseSection';
+import BaseSection from '../ui/BaseSection';
 import { Button } from '../ui/Button';
 import { ToggleSwitch } from '../ui/ToggleSwitch';
 import useForm from '../../hooks/useForm';

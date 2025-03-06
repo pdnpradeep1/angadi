@@ -1,6 +1,6 @@
 // src/components/sections/StaffAccounts.js
 import React, { useState } from 'react';
-import BaseSection from './BaseSection';
+import BaseSection from '../ui/BaseSection';
 import { Button } from '../ui/Button';
 import EmptyState from '../ui/EmptyState';
 import AddStaffModal from '../modals/AddStaffModal';

@@ -1,7 +1,7 @@
 // src/components/sections/Payments.js
 import React, { useState } from 'react';
 import { FiCreditCard } from 'react-icons/fi';
-import BaseSection from './BaseSection';
+import BaseSection from '../ui/BaseSection';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { ToggleSwitch } from '../ui/ToggleSwitch';

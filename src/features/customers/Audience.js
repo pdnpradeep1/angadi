@@ -17,7 +17,7 @@ import {
   FiClock
 } from "react-icons/fi";
 import axios from "axios";
-import AddCustomerModal from "./AddCustomerModal";
+import AddCustomerModal from "../../components/modals/AddCustomerModal";
 
 const Audience = () => {
   const { storeId } = useParams();

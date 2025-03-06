@@ -1,29 +1,29 @@
 import React from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
-import Home from "./components/Home";
-import Login from "./components/Login";
-import Signup from "./components/signup";
-import Dashboard from "./components/Dashboard";
-import ForgetPassword from './components/ForgetPassword';
-import Store from './components/Store';
-import StoreDashboard from './components/StoreDashboard';
-import ProductList from "./components/ProductList";
-import AddProduct from "./components/AddProduct";
-import InventoryManagement from "./components/InventoryManagement";
-import OrdersContainer from './components/OrdersContainer'; // Updated component
-import OrdersMainComponent from './components/OrdersMainComponent';
-import OrderDetail from './components/OrderDetail';
-import OrderExport from './components/OrderExport';
-import PricingPage from './components/PricingPage';
-import DeliveryContainer from './components/DeliveryContainer';
-import DeliveryMainComponent from './components/DeliveryMainComponent';
-import DeliveryDetail from './components/DeliveryDetail';
-import DeliveryMap from './components/DeliveryMap';
-import Audience from './components/Audience';
-import PaymentsPage from './components/PaymentsPage';
-import StoreAnalytics from './components/StoreAnalytics';
-import AbandonedOrders from './components/AbandonedOrders';
-import StoreSettings from './components/StoreSettings/index';
+import Home from "../pages/Home";
+import Login from "../pages/Login";
+import Signup from "../pages/Signup";
+import Dashboard from "../pages/Dashboard";
+import ForgetPassword from '../pages/ForgetPassword';
+import Store from '../pages/Store';
+import StoreDashboard from '../pages/StoreDashboard';
+import ProductList from "../features/products/ProductList";
+import AddProduct from "../features/products/AddProduct";
+import InventoryManagement from "../features/products/InventoryManagement";
+import OrdersContainer from '../features/orders/OrdersContainer'; // Updated component
+import OrdersMainComponent from '../features/orders/OrdersMainComponent';
+import OrderDetail from '../features/orders/OrderDetail';
+import OrderExport from '../features/orders/OrderExport';
+import PricingPage from '../pages/PricingPage';
+import DeliveryContainer from '../features/delivery/DeliveryContainer';
+import DeliveryMainComponent from '../features/delivery/DeliveryMainComponent';
+import DeliveryDetail from '../features/delivery/DeliveryDetail';
+import DeliveryMap from '../features/delivery/DeliveryMap';
+import Audience from '../features/customers/Audience';
+import PaymentsPage from '../pages/PaymentsPage';
+import StoreAnalytics from '../features/analytics/StoreAnalytics';
+import AbandonedOrders from '../features/orders/AbandonedOrders';
+import StoreSettings from '../features/settings/index';
 
 
 // Auth guard component

@@ -1,7 +1,7 @@
 // src/components/sections/ExtraChargesSection.js
 import React, { useState } from 'react';
 import { FiMoreVertical, FiX } from 'react-icons/fi';
-import BaseSection from './BaseSection';
+import BaseSection from '../ui/BaseSection';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import EmptyState from '../ui/EmptyState';

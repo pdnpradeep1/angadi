@@ -1,6 +1,6 @@
 // src/components/sections/Tax.js
 import React, { useState } from 'react';
-import BaseSection from './BaseSection';
+import BaseSection from '../ui/BaseSection';
 import { ToggleSwitch } from '../ui/ToggleSwitch';
 import { FormField } from '../ui/FormField';
 import { Button } from '../ui/Button';

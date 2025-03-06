@@ -1,6 +1,6 @@
 import React from "react";
 import { Outlet, useParams } from "react-router-dom";
-import OrdersHeader from "./OrdersHeader"; // Import the new component instead of OrdersSidebar
+import OrdersHeader from "./OrdersHeader";
 
 const OrdersContainer = () => {
   const { storeId } = useParams();

@@ -1,6 +1,6 @@
 // src/components/sections/StoreDetails.js
 import React, { useState } from 'react';
-import BaseSection from './BaseSection';
+import BaseSection from '../ui/BaseSection';
 import { FormField } from '../ui/FormField';
 import { Button } from '../ui/Button';
 import { ConfirmDialog } from '../ui/Modal';

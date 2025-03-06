@@ -1,7 +1,7 @@
 // src/components/sections/Warehouse.js
 import React from 'react';
 import { FiSearch, FiMoreVertical } from 'react-icons/fi';
-import BaseSection from './BaseSection';
+import BaseSection from '../ui/BaseSection';
 
 const Warehouse = ({ openModal }) => {
   // Actions component for the header

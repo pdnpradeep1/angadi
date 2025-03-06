@@ -1,9 +1,9 @@
 import React from "react";
 import { BrowserRouter as Router, useLocation } from "react-router-dom";
-import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
-import { ThemeProvider } from "./components/ThemeProvider";
-import AppRoutes from "./Routers";
+import Navbar from "./components/layouts/Navbar";
+import Footer from "./components/layouts/Footer";
+import { ThemeProvider } from "./contexts/ThemeProvider";
+import AppRoutes from "./routes/index";
 import "./index.css"; // Import your updated CSS with Tailwind
 
 // This component determines whether to show navbar based on current route

@@ -11,7 +11,7 @@ import {
   FiLayers
 } from 'react-icons/fi';
 import axios from 'axios';
-import '../styles/AddProduct.css';
+import '../../styles/AddProduct.css';
 
 const AddProduct = () => {
   const navigate = useNavigate();

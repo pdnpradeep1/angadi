@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Outlet, useNavigate, Link } from "react-router-dom";
-import StoreSidebar from "./StoreSidebar";
-import ProductList from "./ProductList";
+import StoreSidebar from "../components/layouts/StoreSidebar";
+import ProductList from "../features/products/ProductList";
 import { FiPackage, FiTruck, FiBarChart2, FiUsers, FiSettings, FiLoader } from "react-icons/fi";
 import axios from "axios";
 
