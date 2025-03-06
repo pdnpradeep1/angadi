@@ -3,6 +3,7 @@ import { FiShoppingBag, FiAlertCircle, FiCheck } from 'react-icons/fi';
 import axios from 'axios';
 import api from '../../api/config';
 import { isAuthenticated } from '../../utils/jwtUtils';
+import {validateStoreForm } from '../../utils/form-validation-utils';
 
 const CreateStore = ({ onStoreCreated }) => {
   const [storeName, setStoreName] = useState('');
@@ -11,19 +12,19 @@ const CreateStore = ({ onStoreCreated }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+
   const validateForm = () => {
-    if (!storeName.trim()) {
-      setError('Store name is required');
+    const values = { name: storeName, description, address };
+    const errors = validateStoreForm(values);
+    
+    if (Object.keys(errors).length > 0) {
+      // Set specific errors
+      if (errors.name) setError(errors.name);
+      if (errors.description) setError(errors.description);
+      if (errors.address) setError(errors.address);
       return false;
     }
-    if (!description.trim()) {
-      setError('Description is required');
-      return false;
-    }
-    if (!address.trim()) {
-      setError('Address is required');
-      return false;
-    }
+    
     return true;
   };
 

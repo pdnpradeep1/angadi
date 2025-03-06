@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { FiX, FiUser, FiMail, FiPhone, FiMapPin } from "react-icons/fi";
+import { validateUserForm } from '../../utils/form-validation-utils';
 
 const AddCustomerModal = ({ isOpen, onClose, onAddCustomer }) => {
   const [formData, setFormData] = useState({
@@ -28,39 +29,13 @@ const AddCustomerModal = ({ isOpen, onClose, onAddCustomer }) => {
     }
   };
 
-  const validateForm = () => {
-    const newErrors = {};
-    
-    // Name validation
-    if (!formData.name.trim()) {
-      newErrors.name = "Name is required";
-    }
-    
-    // Email validation (if provided)
-    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email is invalid";
-    }
-    
-    // Phone validation
-    if (!formData.phone) {
-      newErrors.phone = "Phone number is required";
-    } else if (!/^(\+\d{1,3}[-\s]?)?(\d{10,12})$/.test(formData.phone.replace(/\s/g, ''))) {
-      newErrors.phone = "Invalid phone number format";
-    }
-    
-    // City validation
-    if (!formData.city.trim()) {
-      newErrors.city = "City is required";
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!validateForm()) {
+    const validationErrors = validateUserForm(formData);
+    
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
     

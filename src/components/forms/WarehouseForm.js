@@ -4,42 +4,11 @@ import { FormField } from '../ui/FormField';
 import { Button } from '../ui/Button';
 import useForm from '../../hooks/useForm';
 import { FiChevronDown } from 'react-icons/fi';
+import { validateWarehouseForm } from '../../utils/form-validation-utils';
 
 // Validation function
 const validateWarehouseForm = (values) => {
-  let errors = {};
-  
-  if (!values.name?.trim()) {
-    errors.name = 'Warehouse name is required';
-  }
-  
-  if (!values.contactPerson?.trim()) {
-    errors.contactPerson = 'Contact person is required';
-  }
-  
-  if (!values.mobile?.trim()) {
-    errors.mobile = 'Mobile number is required';
-  } else if (!/^[0-9]{10}$/.test(values.mobile)) {
-    errors.mobile = 'Mobile number must be 10 digits';
-  }
-  
-  if (!values.address?.trim()) {
-    errors.address = 'Address is required';
-  }
-  
-  if (!values.pincode?.trim()) {
-    errors.pincode = 'Pin code is required';
-  }
-  
-  if (!values.city?.trim()) {
-    errors.city = 'City is required';
-  }
-  
-  if (!values.state?.trim()) {
-    errors.state = 'State is required';
-  }
-  
-  return errors;
+  return validateWarehouseForm(values);
 };
 
 const WarehouseForm = ({ onSubmit, initialValues = {}, submitLabel = 'Save' }) => {

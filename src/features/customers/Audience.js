@@ -5,22 +5,16 @@ import {
   FiSearch, 
   FiFilter, 
   FiDownload, 
-  FiPlus,
-  FiChevronDown,
-  FiChevronUp,
-  FiCalendar,
-  FiMail,
-  FiPhone,
-  FiMapPin,
-  FiShoppingBag,
-  FiDollarSign,
-  FiClock
+  FiPlus
 } from "react-icons/fi";
 import { apiService } from '../../api/config';
 import { isAuthenticated } from '../../utils/jwtUtils';
 import AddCustomerModal from "../../components/modals/AddCustomerModal";
 import { formatCurrency } from '../../utils/currencyUtils';
 import { formatDate } from '../../utils/date-utils';
+import { LoadingState, ErrorState, EmptyStates } from '../../utils/loading-error-states';
+import Table from '../../components/ui/Table';
+import FilterPanel from '../../components/ui/FilterPanel';
 
 const Audience = () => {
   const { storeId } = useParams();
@@ -121,12 +115,11 @@ const Audience = () => {
   };
 
   // Handle filter change
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters({
-      ...filters,
-      [name]: value
-    });
+  const handleFilterChange = (key, value) => {
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      [key]: value
+    }));
   };
 
   // Clear all filters
@@ -267,6 +260,127 @@ const Audience = () => {
     console.log("Customer added successfully");
   };
 
+  // Define table columns
+  const columns = [
+    {
+      key: 'select',
+      title: '',
+      render: (row) => (
+        <input
+          type="checkbox"
+          className="focus:ring-primary-500 h-4 w-4 text-primary-600 border-gray-300 rounded"
+          checked={selectedCustomers.includes(row.id)}
+          onChange={(e) => {
+            e.stopPropagation(); // Prevent row click
+            handleSelectCustomer(row.id);
+          }}
+        />
+      )
+    },
+    {
+      key: 'name',
+      title: 'Customer Name',
+      sortable: true,
+      isSorted: sortField === 'name',
+      sortDirection: sortDirection,
+      onSort: () => handleSort('name'),
+      render: (row) => (
+        <div className="text-sm font-medium text-gray-900 dark:text-white">
+          {row.name}
+        </div>
+      )
+    },
+    {
+      key: 'phone',
+      title: 'Mobile Number',
+      render: (row) => (
+        <div className="text-sm text-gray-900 dark:text-white">
+          {row.phone}
+        </div>
+      )
+    },
+    {
+      key: 'email',
+      title: 'Email',
+      render: (row) => (
+        <div className="text-sm text-gray-900 dark:text-white">
+          {row.email}
+        </div>
+      )
+    },
+    {
+      key: 'city',
+      title: 'City',
+      render: (row) => (
+        <div className="text-sm text-gray-900 dark:text-white">
+          {row.city}
+        </div>
+      )
+    },
+    {
+      key: 'totalOrders',
+      title: 'Total Orders',
+      sortable: true,
+      isSorted: sortField === 'totalOrders',
+      sortDirection: sortDirection,
+      onSort: () => handleSort('totalOrders'),
+      render: (row) => (
+        <div className="text-sm text-gray-900 dark:text-white">
+          {row.totalOrders}
+        </div>
+      )
+    },
+    {
+      key: 'totalSales',
+      title: 'Total Sales',
+      sortable: true,
+      isSorted: sortField === 'totalSales',
+      sortDirection: sortDirection,
+      onSort: () => handleSort('totalSales'),
+      render: (row) => (
+        <div className="text-sm text-gray-900 dark:text-white">
+          {formatCurrency(row.totalSales)}
+        </div>
+      )
+    }
+  ];
+
+  // Filter configuration
+  const filterConfig = {
+    dateRange: {
+      type: 'date-range',
+      label: 'Registration Date',
+      from: filters.dateFrom,
+      to: filters.dateTo
+    },
+    orderCount: {
+      type: 'number-range',
+      label: 'Order Count',
+      from: filters.minOrders,
+      to: filters.maxOrders
+    },
+    amountSpent: {
+      type: 'number-range',
+      label: 'Amount Spent (₹)',
+      from: filters.minSpent,
+      to: filters.maxSpent
+    },
+    city: {
+      type: 'text',
+      label: 'City',
+      value: filters.city,
+      placeholder: 'Filter by city'
+    }
+  };
+
+  if (loading) {
+    return <LoadingState message="Loading customers..." />;
+  }
+
+  if (error) {
+    return <ErrorState error={error} onRetry={fetchCustomers} />;
+  }
+
   return (
     <div className="h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
@@ -352,272 +466,29 @@ const Audience = () => {
             Imported ({tabCounts.imported})
           </button>
         </div>
+        
+        {/* Filter Panel */}
+        <FilterPanel
+          isOpen={filterOpen}
+          filters={filterConfig}
+          onFilterChange={handleFilterChange}
+          onApply={() => {}}
+          onClear={clearFilters}
+        />
       </div>
-
-      {/* Filters Panel */}
-      {filterOpen && (
-        <div className="bg-white dark:bg-gray-800 p-4 border-t border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">Filter Customers</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Registration Date
-              </label>
-              <div className="flex gap-2 items-center">
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FiCalendar className="text-gray-400" size={14} />
-                  </div>
-                  <input
-                    type="date"
-                    name="dateFrom"
-                    value={filters.dateFrom}
-                    onChange={handleFilterChange}
-                    className="pl-8 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-                  />
-                </div>
-                <span className="text-gray-500">to</span>
-                <input
-                  type="date"
-                  name="dateTo"
-                  value={filters.dateTo}
-                  onChange={handleFilterChange}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-                />
-              </div>
-            </div>
-            
-            <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Order Count
-              </label>
-              <div className="flex gap-2 items-center">
-                <input
-                  type="number"
-                  name="minOrders"
-                  value={filters.minOrders}
-                  onChange={handleFilterChange}
-                  placeholder="Min"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-                />
-                <span className="text-gray-500">to</span>
-                <input
-                  type="number"
-                  name="maxOrders"
-                  value={filters.maxOrders}
-                  onChange={handleFilterChange}
-                  placeholder="Max"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-                />
-              </div>
-            </div>
-            
-            <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Amount Spent (₹)
-              </label>
-              <div className="flex gap-2 items-center">
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FiDollarSign className="text-gray-400" size={14} />
-                  </div>
-                  <input
-                    type="number"
-                    name="minSpent"
-                    value={filters.minSpent}
-                    onChange={handleFilterChange}
-                    placeholder="Min"
-                    className="pl-8 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-                  />
-                </div>
-                <span className="text-gray-500">to</span>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FiDollarSign className="text-gray-400" size={14} />
-                  </div>
-                  <input
-                    type="number"
-                    name="maxSpent"
-                    value={filters.maxSpent}
-                    onChange={handleFilterChange}
-                    placeholder="Max"
-                    className="pl-8 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-                  />
-                </div>
-              </div>
-            </div>
-            
-            <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                City
-              </label>
-              <input
-                type="text"
-                name="city"
-                value={filters.city}
-                onChange={handleFilterChange}
-                placeholder="Filter by city"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-              />
-            </div>
-          </div>
-          
-          <div className="flex justify-end mt-4 gap-2">
-            <button
-              onClick={clearFilters}
-              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
-            >
-              Clear Filters
-            </button>
-            <button
-              onClick={() => setFilterOpen(false)}
-              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700"
-            >
-              Apply Filters
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Customers Table */}
       <div className="p-4">
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-600"></div>
-            <span className="ml-2 text-gray-600 dark:text-gray-400">Loading customers...</span>
-          </div>
-        ) : (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="bg-gray-50 dark:bg-gray-700">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          className="focus:ring-primary-500 h-4 w-4 text-primary-600 border-gray-300 rounded"
-                          checked={selectedCustomers.length === filteredCustomers.length && filteredCustomers.length > 0}
-                          onChange={handleSelectAll}
-                        />
-                      </div>
-                    </th>
-                    <th 
-                      scope="col" 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer"
-                      onClick={() => handleSort("name")}
-                    >
-                      <div className="flex items-center">
-                        Customer Name
-                        {sortField === "name" && (
-                          sortDirection === "asc" ? (
-                            <FiChevronUp className="ml-1" />
-                          ) : (
-                            <FiChevronDown className="ml-1" />
-                          )
-                        )}
-                      </div>
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Mobile Number
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Email
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      City
-                    </th>
-                    <th 
-                      scope="col" 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer"
-                      onClick={() => handleSort("totalOrders")}
-                    >
-                      <div className="flex items-center">
-                        Total Orders
-                        {sortField === "totalOrders" && (
-                          sortDirection === "asc" ? (
-                            <FiChevronUp className="ml-1" />
-                          ) : (
-                            <FiChevronDown className="ml-1" />
-                          )
-                        )}
-                      </div>
-                    </th>
-                    <th 
-                      scope="col" 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer"
-                      onClick={() => handleSort("totalSales")}
-                    >
-                      <div className="flex items-center">
-                        Total Sales
-                        {sortField === "totalSales" && (
-                          sortDirection === "asc" ? (
-                            <FiChevronUp className="ml-1" />
-                          ) : (
-                            <FiChevronDown className="ml-1" />
-                          )
-                        )}
-                      </div>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                  {sortedCustomers.length === 0 ? (
-                    <tr>
-                      <td colSpan="7" className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
-                        No customers found
-                      </td>
-                    </tr>
-                  ) : (
-                    sortedCustomers.map((customer) => (
-                      <tr key={customer.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <input
-                            type="checkbox"
-                            className="focus:ring-primary-500 h-4 w-4 text-primary-600 border-gray-300 rounded"
-                            checked={selectedCustomers.includes(customer.id)}
-                            onChange={() => handleSelectCustomer(customer.id)}
-                          />
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900 dark:text-white">
-                            {customer.name}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900 dark:text-white">
-                            {customer.phone}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900 dark:text-white">
-                            {customer.email}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900 dark:text-white">
-                            {customer.city}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900 dark:text-white">
-                            {customer.totalOrders}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900 dark:text-white">
-                            {formatCurrency(customer.totalSales)}
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+        <Table
+          columns={columns}
+          data={sortedCustomers}
+          isLoading={loading}
+          emptyState={
+            <EmptyStates.Customers 
+              onAction={() => setIsAddModalOpen(true)} 
+            />
+          }
+        />
       </div>
       
       {/* Add Customer Modal */}

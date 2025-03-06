@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiMail, FiArrowLeft, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
+import { validateEmail } from '../utils/form-validation-utils';
+
 
 const ForgetPassword = () => {
   const [email, setEmail] = useState('');
@@ -14,9 +16,11 @@ const ForgetPassword = () => {
     setLoading(true);
     
     try {
+      
       // Validate email before sending
-      if (!email.includes('@')) {
-        throw new Error('Please enter a valid email address');
+      if (!validateEmail(email)) {
+        setError('Please enter a valid email address');
+        return;
       }
       
       const url = new URL('http://localhost:8080/auth/forgot-password');
