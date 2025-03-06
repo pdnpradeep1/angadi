@@ -13,7 +13,7 @@ import {
 } from 'react-icons/fi';
 import CreateStore from '../features/store/create-store';
 import api from '../api/config';
-import { jwtDecode } from 'jwt-decode';
+import { isAuthenticated, getUserEmail } from '../utils/jwtUtils';;
 
 const ToggleSwitch = ({ isActive, onChange, loading, size = "md" }) => {
   // Define the track (background) styles
@@ -69,29 +69,16 @@ const Store = () => {
 
   useEffect(() => {
     // Check if user is authenticated
-    const token = localStorage.getItem('jwtToken');
-    if (!token) {
+    if (!isAuthenticated()) {
       navigate('/login');
       return;
     }
-
-      // Extract user email from token
-  try {
-    const decodedToken = jwtDecode(token);
-    // The email might be in different properties depending on your JWT structure
-    // Common ones include 'email', 'sub', or 'username'
-    if (decodedToken.email) {
-      setUserEmail(decodedToken.email);
-    } else if (decodedToken.sub) {
-      setUserEmail(decodedToken.sub);
-    } else if (decodedToken.username) {
-      setUserEmail(decodedToken.username);
-    } else {
-      console.warn('Could not find email in JWT token:', decodedToken);
+    // Extract user email from token
+    const token = localStorage.getItem('jwtToken');
+    const email = getUserEmail(token);
+    if (email) {
+      setUserEmail(email);
     }
-  } catch (error) {
-    console.error('Error decoding JWT token:', error);
-  }
 
     // Fetch stores from backend API
     const fetchStores = async () => {

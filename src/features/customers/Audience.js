@@ -16,7 +16,8 @@ import {
   FiDollarSign,
   FiClock
 } from "react-icons/fi";
-import axios from "axios";
+import { apiService } from '../../api/config';
+import { isAuthenticated } from '../../utils/jwtUtils';
 import AddCustomerModal from "../../components/modals/AddCustomerModal";
 
 const Audience = () => {
@@ -50,8 +51,7 @@ const Audience = () => {
   const fetchCustomers = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("jwtToken");
-      if (!token) {
+      if (!isAuthenticated()) {
         navigate("/login");
         return;
       }

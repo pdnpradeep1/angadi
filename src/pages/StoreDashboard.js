@@ -3,7 +3,8 @@ import { useParams, Outlet, useNavigate, Link } from "react-router-dom";
 import StoreSidebar from "../components/layouts/StoreSidebar";
 import ProductList from "../features/products/ProductList";
 import { FiPackage, FiTruck, FiBarChart2, FiUsers, FiSettings, FiLoader } from "react-icons/fi";
-import axios from "axios";
+import { apiService } from '../api/config';
+import { isAuthenticated } from '../utils/jwtUtils';
 
 const StoreDashboard = () => {
   const { storeId } = useParams();
@@ -15,8 +16,7 @@ const StoreDashboard = () => {
 
   useEffect(() => {
     // Check if user is authenticated
-    const token = localStorage.getItem('jwtToken');
-    if (!token) {
+    if (!isAuthenticated()) {
       navigate('/login');
       return;
     }
@@ -28,12 +28,7 @@ const StoreDashboard = () => {
       
       try {
         // Make API request to get store details
-        const response = await axios.get(`http://localhost:8080/api/stores/stores/${storeId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
+        const response = await apiService.get(`/api/stores/stores/${storeId}`);
         console.log('Store details:', response.data);
         setStore(response.data);
       } catch (error) {

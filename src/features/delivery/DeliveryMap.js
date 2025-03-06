@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { FiTruck, FiFilter, FiPackage, FiRefreshCw, FiSearch } from "react-icons/fi";
-import axios from "axios";
+import { apiService } from '../../api/config';
 
 const DeliveryMap = () => {
   const { storeId } = useParams();
@@ -41,16 +41,9 @@ const DeliveryMap = () => {
   const fetchActiveDeliveries = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('jwtToken');
-      
-      const response = await axios.get(
-        `http://localhost:8080/delivery/store/${storeId}/map?status=${filterStatus}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
+
+      const response = await apiService.get(`/orders/stats/${storeId}/map?status=${filterStatus}`);
+
       
       setDeliveries(response.data);
       

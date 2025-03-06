@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { FiShoppingBag, FiAlertCircle, FiCheck } from 'react-icons/fi';
 import axios from 'axios';
+import api from '../../api/config';
+import { isAuthenticated } from '../../utils/jwtUtils';
 
 const CreateStore = ({ onStoreCreated }) => {
   const [storeName, setStoreName] = useState('');
@@ -35,8 +37,7 @@ const CreateStore = ({ onStoreCreated }) => {
 
     try {
       // Get JWT token
-      const token = localStorage.getItem('jwtToken');
-      if (!token) {
+      if (!isAuthenticated()) {
         throw new Error('Authentication required. Please log in again.');
       }
 
@@ -47,13 +48,8 @@ const CreateStore = ({ onStoreCreated }) => {
         address
       };
 
-      // Send data to backend API
-      const response = await axios.post('http://localhost:8080/api/stores', storeData, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
+     // Send data to backend API
+      const response = await api.post('/api/stores', storeData);
 
       console.log('Store created successfully:', response.data);
       

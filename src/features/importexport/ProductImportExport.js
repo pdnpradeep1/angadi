@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import { apiService } from '../../api/config';
 import { 
   FiUpload, 
   FiDownload, 
@@ -34,26 +34,13 @@ const ProductImportExport = ({ storeId }) => {
     
     setLoading(true);
     try {
-      const token = localStorage.getItem('jwtToken');
-      
-      // Determine endpoint based on file extension
       const isExcel = selectedFile.name.toLowerCase().endsWith('.xlsx') || 
-                      selectedFile.name.toLowerCase().endsWith('.xls');
-      
+      selectedFile.name.toLowerCase().endsWith('.xls');
+
       const endpoint = isExcel ? '/products/import-export/import/excel' : '/products/import-export/import/csv';
-      
-      const response = await axios.post(
-        endpoint,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${token}`,
-            'Owner-Email': JSON.parse(atob(token.split('.')[1])).sub
-          }
-        }
-      );
-      
+
+      const response = await apiService.uploadFile(endpoint, formData);
+
       setResult(response.data);
     } catch (err) {
       console.error('Error importing products:', err);

@@ -15,7 +15,7 @@ import {
   FiDollarSign,
   FiShoppingBag
 } from "react-icons/fi";
-import axios from "axios";
+import { apiService } from '../../api/config';
 
 const OrdersMainComponent = () => {
   const { storeId } = useParams();
@@ -55,7 +55,7 @@ const OrdersMainComponent = () => {
       const token = localStorage.getItem('jwtToken');
       
       // Build API URL with parameters
-      let url = `http://localhost:8080/orders/store/${storeId}?`;
+      let url = `/orders/store/${storeId}?`;
       url += `page=${currentPage - 1}&size=10`; // API uses 0-based indexing
       url += `&sort=${sorting.field},${sorting.direction}`;
       
@@ -92,11 +92,7 @@ const OrdersMainComponent = () => {
         url += `&customerEmail=${filters.customerEmail}`;
       }
 
-      const response = await axios.get(url, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await apiService.get(url);
       
       setOrders(response.data.content);
       setTotalPages(response.data.totalPages);

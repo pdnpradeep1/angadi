@@ -48,6 +48,8 @@ const Signup = () => {
         },
         body: JSON.stringify({ name, email, password })
       });
+
+      
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

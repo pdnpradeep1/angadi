@@ -24,13 +24,11 @@ import PaymentsPage from '../pages/PaymentsPage';
 import StoreAnalytics from '../features/analytics/StoreAnalytics';
 import AbandonedOrders from '../features/orders/AbandonedOrders';
 import StoreSettings from '../features/settings/index';
-
+import { isAuthenticated } from '../utils/jwtUtils';
 
 // Auth guard component
 const ProtectedRoute = ({ children }) => {
-  const isAuthenticated = localStorage.getItem('jwtToken') !== null;
-  
-  if (!isAuthenticated) {
+  if (!isAuthenticated()) {
     return <Navigate to="/login" replace />;
   }
   
@@ -39,9 +37,7 @@ const ProtectedRoute = ({ children }) => {
 
 // Redirect if already authenticated
 const RedirectIfAuthenticated = ({ children }) => {
-  const isAuthenticated = localStorage.getItem('jwtToken') !== null;
-  
-  if (isAuthenticated) {
+  if (isAuthenticated()) {
     return <Navigate to="/stores" replace />;
   }
   

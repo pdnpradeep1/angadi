@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { FiUser, FiLock, FiAlertCircle, FiMail } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import { getRolesFromToken } from "../utils/jwtUtils";
+import apiService from "../api/config";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -19,22 +20,15 @@ function Login() {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:8080/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, password })
-      });
 
-      if (!response.ok) {
+      const response = await apiService.post('/auth/login',{ email, password });
+      if (response.status !== 200) {
         if (response.status === 401) {
           throw new Error('Invalid username or password');
         }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
-      const data = await response.json();
+      const data = response.data;
       localStorage.setItem('jwtToken', data.token);
       
       // Always navigate to stores page after successful login
@@ -43,7 +37,11 @@ function Login() {
       
     } catch (error) {
       console.error('Error logging in:', error);
-      setError(error.message || 'An unexpected error occurred');
+      if (error.status === 401) {
+        setError('Invalid username or password');
+      }else{
+        setError(error.message || 'An unexpected error occurred');
+      }
     } finally {
       setLoading(false);
     }

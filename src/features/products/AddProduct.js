@@ -10,7 +10,8 @@ import {
   FiTag,
   FiLayers
 } from 'react-icons/fi';
-import axios from 'axios';
+import { apiService } from '../../api/config';
+import { isAuthenticated } from '../../utils/jwtUtils';
 import '../../styles/AddProduct.css';
 
 const AddProduct = () => {
@@ -132,24 +133,11 @@ const AddProduct = () => {
     
     try {
       setUploadProgress(0);
-      const token = localStorage.getItem('jwtToken');
-      const response = await axios.post(
-        'http://localhost:8080/products/upload-image',
+      const response = await apiService.uploadFile(
+        '/products/upload-image',
         formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${token}`
-          },
-          onUploadProgress: (progressEvent) => {
-            const percentCompleted = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total
-            );
-            setUploadProgress(percentCompleted);
-          }
-        }
+        (percentCompleted) => setUploadProgress(percentCompleted)
       );
-      
       return response.data; // Should return the image URL
     } catch (err) {
       console.error('Error uploading image:', err);

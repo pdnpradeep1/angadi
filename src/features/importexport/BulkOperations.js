@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { apiService } from '../../common/api/apiConfig';
+import { getAuthHeaders } from '../../common/auth/jwtUtils';
+
 
 const BulkOperations = ({ selectedProducts, onOperationComplete }) => {
   const [loading, setLoading] = useState(false);
@@ -8,18 +11,8 @@ const BulkOperations = ({ selectedProducts, onOperationComplete }) => {
   const handleBulkPublish = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('jwtToken');
-      const response = await axios.post(
-        '/products/bulk/publish',
-        selectedProducts,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-            'Owner-Email': JSON.parse(atob(token.split('.')[1])).sub
-          }
-        }
-      );
+      const headers = getAuthHeaders(true); // true includes Owner-Email
+      const response = await apiService.post('/products/bulk/publish', selectedProducts, { headers });
       
       setResult(response.data);
       onOperationComplete('publish', response.data);
