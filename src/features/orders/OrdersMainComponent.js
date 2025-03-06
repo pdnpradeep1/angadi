@@ -51,8 +51,6 @@ const OrdersMainComponent = () => {
     setError(null);
     
     try {
-      const token = localStorage.getItem('jwtToken');
-      
       // Build API URL with parameters
       let url = `/orders/store/${storeId}?`;
       url += `page=${currentPage - 1}&size=10`; // API uses 0-based indexing
