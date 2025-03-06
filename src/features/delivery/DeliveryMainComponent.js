@@ -169,11 +169,6 @@ const DeliveryMainComponent = () => {
     fetchDeliveries();
   };
 
-  // const formatDate = (dateString) => {
-  //   const options = { year: 'numeric', month: 'short', day: 'numeric' };
-  //   return new Date(dateString).toLocaleDateString(undefined, options);
-  // };
-
   const getStatusBadge = (status) => {
     let bgColor, textColor, icon;
     
@@ -215,29 +210,6 @@ const DeliveryMainComponent = () => {
       </div>
     );
   };
-
-  // const getTimeSinceUpdate = (dateString) => {
-  //   if (!dateString) return 'Unknown';
-    
-  //   const lastUpdate = new Date(dateString);
-  //   const now = new Date();
-  //   const diffMs = now - lastUpdate;
-    
-  //   // Convert to minutes
-  //   const diffMins = Math.floor(diffMs / 60000);
-    
-  //   if (diffMins < 1) return 'Just now';
-  //   if (diffMins === 1) return '1 minute ago';
-  //   if (diffMins < 60) return `${diffMins} minutes ago`;
-    
-  //   // Convert to hours
-  //   const diffHours = Math.floor(diffMins / 60);
-  //   if (diffHours === 1) return '1 hour ago';
-  //   if (diffHours < 24) return `${diffHours} hours ago`;
-    
-  //   // If more than 24 hours, return formatted date
-  //   return formatDate(dateString);
-  // };
 
   // Filter deliveries based on search term
   const filteredDeliveries = searchTerm

@@ -179,61 +179,6 @@ const OrdersMainComponent = () => {
     fetchOrders();
   };
 
-  // const formatDate = (dateString) => {
-  //   const options = { year: 'numeric', month: 'short', day: 'numeric' };
-  //   return new Date(dateString).toLocaleDateString(undefined, options);
-  // };
-
-  // const formatCurrency = (amount) => {
-  //   return new Intl.NumberFormat('en-IN', { 
-  //     style: 'currency', 
-  //     currency: 'INR',
-  //     maximumFractionDigits: 0
-  //   }).format(amount);
-  // };
-
-  // const getStatusBadge = (status) => {
-  //   let bgColor, textColor, icon;
-    
-  //   switch (status) {
-  //     case 'PENDING':
-  //       bgColor = 'bg-yellow-100 dark:bg-yellow-900/30';
-  //       textColor = 'text-yellow-800 dark:text-yellow-300';
-  //       icon = <FiClipboard className="mr-1" />;
-  //       break;
-  //     case 'PROCESSING':
-  //       bgColor = 'bg-blue-100 dark:bg-blue-900/30';
-  //       textColor = 'text-blue-800 dark:text-blue-300';
-  //       icon = <FiClipboard className="mr-1" />;
-  //       break;
-  //     case 'SHIPPED':
-  //       bgColor = 'bg-indigo-100 dark:bg-indigo-900/30';
-  //       textColor = 'text-indigo-800 dark:text-indigo-300';
-  //       icon = <FiTruck className="mr-1" />;
-  //       break;
-  //     case 'DELIVERED':
-  //       bgColor = 'bg-green-100 dark:bg-green-900/30';
-  //       textColor = 'text-green-800 dark:text-green-300';
-  //       icon = <FiCheck className="mr-1" />;
-  //       break;
-  //     case 'CANCELLED':
-  //       bgColor = 'bg-red-100 dark:bg-red-900/30';
-  //       textColor = 'text-red-800 dark:text-red-300';
-  //       icon = <FiXCircle className="mr-1" />;
-  //       break;
-  //     default:
-  //       bgColor = 'bg-gray-100 dark:bg-gray-900/30';
-  //       textColor = 'text-gray-800 dark:text-gray-300';
-  //       icon = <FiClipboard className="mr-1" />;
-  //   }
-    
-  //   return (
-  //     <div className={`flex items-center px-3 py-1 rounded-full text-xs font-medium ${bgColor} ${textColor}`}>
-  //       {icon} {status.charAt(0) + status.slice(1).toLowerCase()}
-  //     </div>
-  //   );
-  // };
-
   return (
     <div className="h-screen overflow-auto bg-gray-50 dark:bg-gray-900">
       {/* Top Bar with Search and Filters */}
