@@ -118,22 +118,11 @@ const StoreAnalytics = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-      </div>
-    );
+    return <LoadingState message="Loading data..." />;
   }
 
   if (error) {
-    return (
-      <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 rounded-md">
-        <div className="flex items-center">
-          <FiAlertCircle className="text-red-500 mr-2" size={20} />
-          <span className="text-red-700 dark:text-red-400">{error}</span>
-        </div>
-      </div>
-    );
+    return <ErrorState error={error} onRetry={fetchData} />;
   }
 
   if (!analyticsData) {

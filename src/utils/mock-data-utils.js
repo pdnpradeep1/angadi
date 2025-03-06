@@ -298,3 +298,35 @@ export const generateMockDeliveries = (count, statusFilter) => {
   
     return customers;
   };
+
+  /**
+ * Generate mock products
+ * @param {number} count - Number of products to generate
+ * @returns {Array} Array of mock product objects
+ */
+export const generateMockProducts = (count) => {
+    const categories = ['Sweets', 'Snacks', 'Dry Fruits'];
+    const inventoryStatuses = ['Unlimited', 'Limited', 'Out of Stock'];
+    const productStatuses = ['Active', 'Inactive'];
+  
+    return Array.from({ length: count }, (_, i) => ({
+      id: i + 1,
+      name: [
+        'Karapu Boondi', 
+        'Kaju Chikki', 
+        'Sajja Buralu', 
+        'Ghee Jaggery Laddu', 
+        'Dry Fruits Bar', 
+        'Cashew Mix', 
+        'Almond Barfi'
+      ][i % 7],
+      price: Math.floor(Math.random() * 500) + 50,
+      originalPrice: Math.floor(Math.random() * 600) + 100,
+      category: categories[Math.floor(Math.random() * categories.length)],
+      inventory: inventoryStatuses[Math.floor(Math.random() * inventoryStatuses.length)],
+      status: productStatuses[Math.floor(Math.random() * productStatuses.length)],
+      image: `/api/placeholder/50/50?text=${i + 1}`,
+      description: 'A delicious traditional Indian sweet/snack',
+      stockQuantity: Math.floor(Math.random() * 100) + 10
+    }));
+  };
