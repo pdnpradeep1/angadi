@@ -293,7 +293,7 @@ const OrdersMainComponent = () => {
   return (
     <div className="h-screen overflow-auto bg-gray-50 dark:bg-gray-900">
       {/* Top Bar with Search and Filters */}
-      <div className="p-4 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+      {/* <div className="p-4 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">
             {status === 'all' ? 'All Orders' : status.charAt(0).toUpperCase() + status.slice(1) + ' Orders'}
@@ -337,7 +337,6 @@ const OrdersMainComponent = () => {
           </div>
         </div>
         
-        {/* Filters Panel */}
         <FilterPanel
           isOpen={filterOpen}
           filters={filterConfig}
@@ -345,7 +344,7 @@ const OrdersMainComponent = () => {
           onApply={fetchOrders}
           onClear={clearFilters}
         />
-      </div>
+      </div> */}
 
       {/* Orders Table */}
       <div className="p-4">

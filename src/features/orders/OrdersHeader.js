@@ -230,7 +230,7 @@ const OrdersHeader = () => {
 
         {/* Export Button */}
         <div className="relative">
-          <button
+          <button onClick={() => navigate(`/store-dashboard/${storeId}/orders/export`)}
             className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 flex items-center hover:bg-gray-50 dark:hover:bg-gray-600"
           >
             <FiDownload className="mr-2" /> Export
