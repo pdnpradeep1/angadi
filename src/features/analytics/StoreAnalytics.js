@@ -14,6 +14,8 @@ import {
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
+import { formatCurrency } from '../../utils/currencyUtils';
+
 
 const StoreAnalytics = () => {
   const { storeId } = useParams();
@@ -105,14 +107,6 @@ const StoreAnalytics = () => {
       ],
       trafficSources: [] // Not enough data for this calculation
     };
-  };
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-IN', { 
-      style: 'currency', 
-      currency: 'INR',
-      maximumFractionDigits: 0
-    }).format(amount);
   };
 
   const formatPercentage = (value) => {

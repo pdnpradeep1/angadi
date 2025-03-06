@@ -17,6 +17,9 @@ import {
   FiEye
 } from "react-icons/fi";
 import { apiService } from '../../api/config';
+import { formatCurrency } from '../../utils/currencyUtils';
+import { formatDate } from '../../utils/date-utils';
+import { getStatusBadge } from '../../utils/status-badge-utils';
 
 const OrderDetail = () => {
   const { storeId, orderId } = useParams();
@@ -168,60 +171,60 @@ const OrderDetail = () => {
     }
   };
   
-  const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-  };
+  // const formatDate = (dateString) => {
+  //   const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+  //   return new Date(dateString).toLocaleDateString(undefined, options);
+  // };
   
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-IN', { 
-      style: 'currency', 
-      currency: 'INR',
-      maximumFractionDigits: 0
-    }).format(amount);
-  };
+  // const formatCurrency = (amount) => {
+  //   return new Intl.NumberFormat('en-IN', { 
+  //     style: 'currency', 
+  //     currency: 'INR',
+  //     maximumFractionDigits: 0
+  //   }).format(amount);
+  // };
   
-  const getStatusBadge = (status) => {
-    let bgColor, textColor, icon;
+  // const getStatusBadge = (status) => {
+  //   let bgColor, textColor, icon;
     
-    switch (status) {
-      case 'PENDING':
-        bgColor = 'bg-yellow-100 dark:bg-yellow-900/30';
-        textColor = 'text-yellow-800 dark:text-yellow-300';
-        icon = <FiPackage className="mr-2" />;
-        break;
-      case 'PROCESSING':
-        bgColor = 'bg-blue-100 dark:bg-blue-900/30';
-        textColor = 'text-blue-800 dark:text-blue-300';
-        icon = <FiPackage className="mr-2" />;
-        break;
-      case 'SHIPPED':
-        bgColor = 'bg-indigo-100 dark:bg-indigo-900/30';
-        textColor = 'text-indigo-800 dark:text-indigo-300';
-        icon = <FiTruck className="mr-2" />;
-        break;
-      case 'DELIVERED':
-        bgColor = 'bg-green-100 dark:bg-green-900/30';
-        textColor = 'text-green-800 dark:text-green-300';
-        icon = <FiCheckCircle className="mr-2" />;
-        break;
-      case 'CANCELLED':
-        bgColor = 'bg-red-100 dark:bg-red-900/30';
-        textColor = 'text-red-800 dark:text-red-300';
-        icon = <FiAlertCircle className="mr-2" />;
-        break;
-      default:
-        bgColor = 'bg-gray-100 dark:bg-gray-900/30';
-        textColor = 'text-gray-800 dark:text-gray-300';
-        icon = <FiPackage className="mr-2" />;
-    }
+  //   switch (status) {
+  //     case 'PENDING':
+  //       bgColor = 'bg-yellow-100 dark:bg-yellow-900/30';
+  //       textColor = 'text-yellow-800 dark:text-yellow-300';
+  //       icon = <FiPackage className="mr-2" />;
+  //       break;
+  //     case 'PROCESSING':
+  //       bgColor = 'bg-blue-100 dark:bg-blue-900/30';
+  //       textColor = 'text-blue-800 dark:text-blue-300';
+  //       icon = <FiPackage className="mr-2" />;
+  //       break;
+  //     case 'SHIPPED':
+  //       bgColor = 'bg-indigo-100 dark:bg-indigo-900/30';
+  //       textColor = 'text-indigo-800 dark:text-indigo-300';
+  //       icon = <FiTruck className="mr-2" />;
+  //       break;
+  //     case 'DELIVERED':
+  //       bgColor = 'bg-green-100 dark:bg-green-900/30';
+  //       textColor = 'text-green-800 dark:text-green-300';
+  //       icon = <FiCheckCircle className="mr-2" />;
+  //       break;
+  //     case 'CANCELLED':
+  //       bgColor = 'bg-red-100 dark:bg-red-900/30';
+  //       textColor = 'text-red-800 dark:text-red-300';
+  //       icon = <FiAlertCircle className="mr-2" />;
+  //       break;
+  //     default:
+  //       bgColor = 'bg-gray-100 dark:bg-gray-900/30';
+  //       textColor = 'text-gray-800 dark:text-gray-300';
+  //       icon = <FiPackage className="mr-2" />;
+  //   }
     
-    return (
-      <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${bgColor} ${textColor}`}>
-        {icon} {status.charAt(0) + status.slice(1).toLowerCase()}
-      </div>
-    );
-  };
+  //   return (
+  //     <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${bgColor} ${textColor}`}>
+  //       {icon} {status.charAt(0) + status.slice(1).toLowerCase()}
+  //     </div>
+  //   );
+  // };
 
   const getPaymentStatusBadge = (status) => {
     let bgColor, textColor;

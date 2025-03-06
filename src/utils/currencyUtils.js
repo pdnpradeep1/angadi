@@ -198,3 +198,67 @@ export const formatPrice = (price, currencyCode) => {
       `${formatted} ${config.symbol}`;
   }
 };
+
+
+
+
+
+
+/**
+ * Format price according to currency conventions
+ * @param {number} price - Price to format
+ * @param {string} [currencyCode='INR'] - Currency code
+ * @returns {string} Formatted currency string
+ */
+export const formatCurrency = (price, currencyCode = 'INR') => {
+  try {
+    return new Intl.NumberFormat('en-IN', { 
+      style: 'currency', 
+      currency: currencyCode,
+      maximumFractionDigits: currencyCode === 'JPY' ? 0 : 2
+    }).format(price);
+  } catch (error) {
+    // Fallback formatting
+    const symbol = currencyCode === 'INR' ? '₹' : '$';
+    return `${symbol}${price.toFixed(2)}`;
+  }
+};
+
+/**
+ * Convert price from one currency to another
+ * @param {number} price - Price to convert
+ * @param {string} [fromCurrency='INR'] - Source currency
+ * @param {string} [toCurrency='INR'] - Target currency
+ * @returns {Promise<number>} Converted price
+ */
+export const convertCurrency = async (price, fromCurrency = 'INR', toCurrency = 'INR') => {
+  // In a real-world scenario, this would use an exchange rate API
+  if (fromCurrency === toCurrency) return price;
+
+  // Fallback exchange rates (for development)
+  const fallbackRates = {
+    INR: 1,
+    USD: 0.012,
+    EUR: 0.011,
+    GBP: 0.0094,
+    // Add more rates as needed
+  };
+
+  try {
+    // In production, you'd fetch real-time rates
+    const rate = fallbackRates[toCurrency] / fallbackRates[fromCurrency];
+    return Math.round(price * rate * 100) / 100;
+  } catch (error) {
+    console.error('Currency conversion error:', error);
+    return price;
+  }
+};
+
+/**
+ * Get currency symbol and formatting details
+ * @param {string} [currencyCode='INR'] - Currency code
+ * @returns {Object} Currency details
+ */
+export const getCurrencyDetails = (currencyCode = 'INR') => {
+  return currencyConfig[currencyCode] || currencyConfig['INR'];
+};

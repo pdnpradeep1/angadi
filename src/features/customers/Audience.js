@@ -19,6 +19,8 @@ import {
 import { apiService } from '../../api/config';
 import { isAuthenticated } from '../../utils/jwtUtils';
 import AddCustomerModal from "../../components/modals/AddCustomerModal";
+import { formatCurrency } from '../../utils/currencyUtils';
+import { formatDate } from '../../utils/date-utils';
 
 const Audience = () => {
   const { storeId } = useParams();
@@ -169,21 +171,6 @@ const Audience = () => {
     } else {
       setSelectedCustomers(filteredCustomers.map(customer => customer.id));
     }
-  };
-
-  // Format date
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric"
-    });
-  };
-
-  // Format currency
-  const formatCurrency = (amount) => {
-    return `₹${amount.toLocaleString('en-IN')}`;
   };
 
   // Filter customers based on active tab, search term, and filters

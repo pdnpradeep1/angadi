@@ -14,6 +14,8 @@ import {
   FiShoppingBag
 } from "react-icons/fi";
 import axios from "axios";
+import { formatDate, getTimeSince } from '../../utils/date-utils';
+import { getStatusBadge } from '../../utils/status-badge-utils';
 
 const DeliveryMainComponent = () => {
   const { storeId } = useParams();
@@ -167,10 +169,10 @@ const DeliveryMainComponent = () => {
     fetchDeliveries();
   };
 
-  const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'short', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-  };
+  // const formatDate = (dateString) => {
+  //   const options = { year: 'numeric', month: 'short', day: 'numeric' };
+  //   return new Date(dateString).toLocaleDateString(undefined, options);
+  // };
 
   const getStatusBadge = (status) => {
     let bgColor, textColor, icon;
@@ -214,28 +216,28 @@ const DeliveryMainComponent = () => {
     );
   };
 
-  const getTimeSinceUpdate = (dateString) => {
-    if (!dateString) return 'Unknown';
+  // const getTimeSinceUpdate = (dateString) => {
+  //   if (!dateString) return 'Unknown';
     
-    const lastUpdate = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - lastUpdate;
+  //   const lastUpdate = new Date(dateString);
+  //   const now = new Date();
+  //   const diffMs = now - lastUpdate;
     
-    // Convert to minutes
-    const diffMins = Math.floor(diffMs / 60000);
+  //   // Convert to minutes
+  //   const diffMins = Math.floor(diffMs / 60000);
     
-    if (diffMins < 1) return 'Just now';
-    if (diffMins === 1) return '1 minute ago';
-    if (diffMins < 60) return `${diffMins} minutes ago`;
+  //   if (diffMins < 1) return 'Just now';
+  //   if (diffMins === 1) return '1 minute ago';
+  //   if (diffMins < 60) return `${diffMins} minutes ago`;
     
-    // Convert to hours
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours === 1) return '1 hour ago';
-    if (diffHours < 24) return `${diffHours} hours ago`;
+  //   // Convert to hours
+  //   const diffHours = Math.floor(diffMins / 60);
+  //   if (diffHours === 1) return '1 hour ago';
+  //   if (diffHours < 24) return `${diffHours} hours ago`;
     
-    // If more than 24 hours, return formatted date
-    return formatDate(dateString);
-  };
+  //   // If more than 24 hours, return formatted date
+  //   return formatDate(dateString);
+  // };
 
   // Filter deliveries based on search term
   const filteredDeliveries = searchTerm
@@ -444,7 +446,7 @@ const DeliveryMainComponent = () => {
                         {delivery.carrierName}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                        {getTimeSinceUpdate(delivery.currentLocation?.lastUpdated)}
+                        {getTimeSince(delivery.currentLocation?.lastUpdated)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button
