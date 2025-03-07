@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { 
-  FiSearch, 
-  FiFilter, 
-  FiDownload, 
-  FiEye,
-  FiPlus
+  FiEye
 } from "react-icons/fi";
 import { apiService } from '../../api/config';
 import { formatCurrency } from '../../utils/currencyUtils';
@@ -13,103 +9,70 @@ import { formatDate } from '../../utils/date-utils';
 import { getStatusBadge } from '../../utils/status-badge-utils';
 import { LoadingState, ErrorState, EmptyStates } from '../../utils/loading-error-states';
 import Table from '../../components/ui/Table';
-import FilterPanel from '../../components/ui/FilterPanel';
 import Pagination from '../../components/ui/Pagination';
+import { OrderStatusContext } from './OrdersHeader';
+
+// Import for mock data generation
+import { generateMockOrders } from '../../utils/mock-data-utils';
 
 const OrdersMainComponent = () => {
   const { storeId } = useParams();
-  const location = useLocation();
   const navigate = useNavigate();
   
-  // Get the status from the URL path
-  const path = location.pathname;
-  const statusMatch = path.match(/\/orders\/([^/]+)/);
-  const status = statusMatch ? statusMatch[1] : 'all';
+  // Get the current status from context
+  const { currentStatus } = React.useContext(OrderStatusContext);
   
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [sorting, setSorting] = useState({ field: 'createdAt', direction: 'desc' });
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [filters, setFilters] = useState({
-    dateFrom: '',
-    dateTo: '',
-    minAmount: '',
-    maxAmount: '',
-    customerEmail: ''
-  });
 
+  // Reset page and fetch data when status or sorting changes
+  useEffect(() => {
+    setCurrentPage(1);
+    fetchOrders();
+  }, [storeId, currentStatus, sorting]);
+
+  // Fetch data when page changes without resetting to page 1
   useEffect(() => {
     fetchOrders();
-  }, [storeId, status, currentPage, sorting, location.pathname]);
+  }, [currentPage]);
 
   const fetchOrders = async () => {
     setLoading(true);
     setError(null);
     
     try {
-      // Build API URL with parameters
-      let url = `/orders/store/${storeId}?`;
-      url += `page=${currentPage - 1}&size=10`; // API uses 0-based indexing
-      url += `&sort=${sorting.field},${sorting.direction}`;
+      // In a production environment, you would make a real API call:
+      // const response = await apiService.get(`/orders/store/${storeId}?page=${currentPage-1}&status=${currentStatus}`);
+      // setOrders(response.data.content);
+      // setTotalPages(response.data.totalPages);
       
-      // Add status filter if not 'all'
-      if (status !== 'all') {
-        url += `&status=${status.toUpperCase()}`;
-      }
-      
-      // Add search term if present
-      if (searchTerm) {
-        url += `&search=${searchTerm}`;
-      }
-      
-      // Add date filters if present
-      if (filters.dateFrom) {
-        url += `&dateFrom=${filters.dateFrom}T00:00:00`;
-      }
-      
-      if (filters.dateTo) {
-        url += `&dateTo=${filters.dateTo}T23:59:59`;
-      }
-      
-      // Add amount filters if present
-      if (filters.minAmount) {
-        url += `&minAmount=${filters.minAmount}`;
-      }
-      
-      if (filters.maxAmount) {
-        url += `&maxAmount=${filters.maxAmount}`;
-      }
-      
-      // Add customer email filter if present
-      if (filters.customerEmail) {
-        url += `&customerEmail=${filters.customerEmail}`;
-      }
-
-      const response = await apiService.get(url);
-      
-      setOrders(response.data.content);
-      setTotalPages(response.data.totalPages);
+      // For development, use mock data
+      setTimeout(() => {
+        // Use the mock data utility if available, otherwise fallback to inline function
+        let mockOrders;
+        if (typeof generateMockOrders === 'function') {
+          mockOrders = generateMockOrders(10, currentStatus);
+        } else {
+          mockOrders = createMockOrders(10, currentStatus);
+        }
+        
+        setOrders(mockOrders);
+        setTotalPages(5);
+        setLoading(false);
+      }, 300); // Short timeout for fast feedback in development
     } catch (err) {
       console.error('Error fetching orders:', err);
       setError('Failed to load orders. Please try again.');
-      
-      // For development, use mock data if API fails
-      if (process.env.NODE_ENV === 'development') {
-        const mockOrders = generateMockOrders(10, status);
-        setOrders(mockOrders);
-        setTotalPages(5);
-      }
-    } finally {
       setLoading(false);
     }
   };
 
-  // Helper function to generate mock order data for development
-  const generateMockOrders = (count, statusFilter) => {
+  // Fallback mock data function if utils aren't available
+  const createMockOrders = (count, statusFilter) => {
     const statuses = ['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
     
     return Array.from({ length: count }, (_, i) => ({
@@ -147,31 +110,6 @@ const OrdersMainComponent = () => {
     }
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    fetchOrders();
-  };
-
-  const handleFilterChange = (key, value) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value
-    }));
-  };
-
-  const clearFilters = () => {
-    setFilters({
-      dateFrom: '',
-      dateTo: '',
-      minAmount: '',
-      maxAmount: '',
-      customerEmail: ''
-    });
-    
-    // Trigger a refetch
-    fetchOrders();
-  };
-
   // Define table columns with sorting and custom renders
   const columns = [
     {
@@ -180,7 +118,7 @@ const OrdersMainComponent = () => {
       sortable: true,
       isSorted: sorting.field === 'orderNumber',
       sortDirection: sorting.direction,
-      onSort: handleSort,
+      onSort: () => handleSort('orderNumber'),
       render: (row) => (
         <span className="text-sm font-medium text-primary-600 dark:text-primary-400">
           {row.orderNumber}
@@ -207,7 +145,7 @@ const OrdersMainComponent = () => {
       sortable: true,
       isSorted: sorting.field === 'createdAt',
       sortDirection: sorting.direction,
-      onSort: handleSort,
+      onSort: () => handleSort('createdAt'),
       render: (row) => (
         <span className="text-sm text-gray-500 dark:text-gray-400">
           {formatDate(row.createdAt)}
@@ -220,7 +158,7 @@ const OrdersMainComponent = () => {
       sortable: true,
       isSorted: sorting.field === 'totalAmount',
       sortDirection: sorting.direction,
-      onSort: handleSort,
+      onSort: () => handleSort('totalAmount'),
       render: (row) => (
         <span className="text-sm font-medium text-gray-900 dark:text-white">
           {formatCurrency(row.totalAmount)}
@@ -260,28 +198,6 @@ const OrdersMainComponent = () => {
     }
   ];
 
-  // Filter configuration
-  const filterConfig = {
-    dateRange: {
-      type: 'date-range',
-      label: 'Date Range',
-      from: filters.dateFrom,
-      to: filters.dateTo
-    },
-    amountRange: {
-      type: 'number-range',
-      label: 'Amount Range',
-      from: filters.minAmount,
-      to: filters.maxAmount
-    },
-    customerEmail: {
-      type: 'email',
-      label: 'Customer Email',
-      value: filters.customerEmail,
-      placeholder: 'customer@example.com'
-    }
-  };
-
   if (loading) {
     return <LoadingState message="Loading orders..." />;
   }
@@ -292,60 +208,6 @@ const OrdersMainComponent = () => {
 
   return (
     <div className="h-screen overflow-auto bg-gray-50 dark:bg-gray-900">
-      {/* Top Bar with Search and Filters */}
-      {/* <div className="p-4 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-            {status === 'all' ? 'All Orders' : status.charAt(0).toUpperCase() + status.slice(1) + ' Orders'}
-          </h1>
-          
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            <form onSubmit={handleSearch} className="relative flex-1 md:w-auto">
-              <input
-                type="text"
-                placeholder="Search orders..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm pl-10"
-              />
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiSearch className="text-gray-400" />
-              </div>
-              <button type="submit" className="hidden">Search</button>
-            </form>
-            
-            <button
-              onClick={() => setFilterOpen(!filterOpen)}
-              className="px-4 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-md flex items-center gap-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-600"
-            >
-              <FiFilter /> Filters
-            </button>
-            
-            <button
-              onClick={() => navigate(`/store-dashboard/${storeId}/orders/export`)}
-              className="px-4 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-md flex items-center gap-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-600"
-            >
-              <FiDownload /> Export
-            </button>
-            
-            <button
-              onClick={() => navigate(`/store-dashboard/${storeId}/add-order`)}
-              className="px-4 py-2 bg-primary-600 text-white rounded-md flex items-center gap-2 text-sm hover:bg-primary-700"
-            >
-              <FiPlus /> Create Order
-            </button>
-          </div>
-        </div>
-        
-        <FilterPanel
-          isOpen={filterOpen}
-          filters={filterConfig}
-          onFilterChange={handleFilterChange}
-          onApply={fetchOrders}
-          onClear={clearFilters}
-        />
-      </div> */}
-
       {/* Orders Table */}
       <div className="p-4">
         <Table

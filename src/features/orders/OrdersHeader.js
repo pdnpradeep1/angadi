@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation, useParams, useNavigate } from "react-router-dom";
+import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { 
   FiSearch, 
   FiFilter, 
@@ -13,10 +13,20 @@ import {
 } from "react-icons/fi";
 import axios from "axios";
 
+// Create a context for order status
+export const OrderStatusContext = React.createContext({
+  currentStatus: 'all',
+  setCurrentStatus: () => {}
+});
+
 const OrdersHeader = () => {
   const { storeId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  
+  // Use the context
+  const { currentStatus, setCurrentStatus } = React.useContext(OrderStatusContext);
+  
   const [orderStats, setOrderStats] = useState({
     total: 0,
     pending: 0,
@@ -44,12 +54,6 @@ const OrdersHeader = () => {
     try {
       const token = localStorage.getItem('jwtToken');
       
-      // In a production environment, you would use:
-      // const response = await axios.get(`http://localhost:8080/orders/stats/${storeId}`, {
-      //   headers: { 'Authorization': `Bearer ${token}` }
-      // });
-      // setOrderStats(response.data);
-      
       // For development, use mock data
       setTimeout(() => {
         setOrderStats({
@@ -69,15 +73,6 @@ const OrdersHeader = () => {
       setLoading(false);
     }
   };
-
-  // Get the status from the URL path
-  const getStatusFromPath = () => {
-    const path = location.pathname;
-    const statusMatch = path.match(/\/orders\/([^/]+)/);
-    return statusMatch ? statusMatch[1] : 'all';
-  };
-  
-  const currentStatus = getStatusFromPath();
 
   // Order status tabs
   const statusTabs = [
@@ -169,6 +164,16 @@ const OrdersHeader = () => {
     setSortDropdownOpen(false);
   };
 
+  // Handle status tab click without page refresh
+  const handleStatusTabClick = (statusId, e) => {
+    e.preventDefault(); // Prevent default link behavior
+    setCurrentStatus(statusId);
+    
+    // Update URL without full page navigation
+    const newPath = `/store-dashboard/${storeId}/orders/${statusId}`;
+    window.history.pushState(null, '', newPath);
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
       {/* Title and action buttons */}
@@ -179,28 +184,29 @@ const OrdersHeader = () => {
         </h1>
         
         <div className="flex items-center gap-2 w-full md:w-auto">
-          <Link
-            to={`/store-dashboard/${storeId}/orders/export`}
+          <button
+            onClick={() => navigate(`/store-dashboard/${storeId}/orders/export`)}
             className="px-4 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-md flex items-center text-sm hover:bg-gray-50 dark:hover:bg-gray-600"
           >
             <FiDownload className="mr-2" /> Bulk ship
-          </Link>
+          </button>
           
-          <Link
-            to={`/store-dashboard/${storeId}/add-order`}
+          <button
+            onClick={() => navigate(`/store-dashboard/${storeId}/add-order`)}
             className="px-4 py-2 bg-primary-600 text-white rounded-md flex items-center text-sm hover:bg-primary-700"
           >
             <FiPlus className="mr-2" /> Create order
-          </Link>
+          </button>
         </div>
       </div>
 
       {/* Status tabs */}
       <div className="px-4 flex overflow-x-auto">
         {statusTabs.map((tab) => (
-          <Link
+          <a
             key={tab.id}
-            to={tab.path}
+            href={tab.path}
+            onClick={(e) => handleStatusTabClick(tab.id, e)}
             className={`px-4 py-2 whitespace-nowrap mb-0 ${
               currentStatus === tab.id 
                 ? "bg-primary-100 text-primary-700 dark:bg-primary-900/20 dark:text-primary-300 font-medium border border-primary-200 dark:border-primary-800 rounded-t-md"
@@ -208,7 +214,7 @@ const OrdersHeader = () => {
             }`}
           >
             {tab.name} {tab.count > 0 && <span className="ml-1 font-normal text-xs bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded-full">{tab.count}</span>}
-          </Link>
+          </a>
         ))}
       </div>
 
@@ -230,7 +236,8 @@ const OrdersHeader = () => {
 
         {/* Export Button */}
         <div className="relative">
-          <button onClick={() => navigate(`/store-dashboard/${storeId}/orders/export`)}
+          <button 
+            onClick={() => navigate(`/store-dashboard/${storeId}/orders/export`)}
             className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 flex items-center hover:bg-gray-50 dark:hover:bg-gray-600"
           >
             <FiDownload className="mr-2" /> Export
@@ -372,7 +379,7 @@ const OrdersHeader = () => {
             onClick={toggleLifetimeDropdown}
             className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 flex items-center hover:bg-gray-50 dark:hover:bg-gray-600"
           >
-            <FiCalendar className="mr-2" /> Lifetime {lifetimeDropdownOpen ? <FiChevronDown className="ml-2" /> : <FiChevronDown className="ml-2" />}
+            <FiCalendar className="mr-2" /> Lifetime <FiChevronDown className="ml-2" />
           </button>
           
           {lifetimeDropdownOpen && (
