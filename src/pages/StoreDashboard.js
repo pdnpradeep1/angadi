@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Outlet, useNavigate, Link } from "react-router-dom";
 import StoreSidebar from "../components/layouts/StoreSidebar";
-import ProductList from "../features/products/ProductList";
 import { FiPackage, FiTruck, FiBarChart2, FiUsers, FiSettings, FiLoader } from "react-icons/fi";
-import { apiService } from '../api/config';
-import { isAuthenticated } from '../utils/jwtUtils';
+import axios from "axios";
 
 const StoreDashboard = () => {
   const { storeId } = useParams();
@@ -13,10 +11,13 @@ const StoreDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
+  
 
   useEffect(() => {
     // Check if user is authenticated
-    if (!isAuthenticated()) {
+    const token = localStorage.getItem('jwtToken');
+    
+    if (!token) {
       navigate('/login');
       return;
     }
@@ -27,8 +28,17 @@ const StoreDashboard = () => {
       setError(null);
       
       try {
+        const currentStore = localStorage.getItem('currentStore');
+        if(currentStore == storeId){
+          return;
+        }
         // Make API request to get store details
-        const response = await apiService.get(`/api/stores/stores/${storeId}`);
+        const response = await axios.get(`http://localhost:8080/api/stores/stores/${storeId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
         console.log('Store details:', response.data);
         setStore(response.data);
       } catch (error) {
@@ -68,8 +78,10 @@ const StoreDashboard = () => {
         setLoading(false);
       }
     };
-
-    fetchStoreData();
+    const isMainDashboard = location.pathname === `/store-dashboard/${storeId}`;
+    if (isMainDashboard) {
+      fetchStoreData();
+    }
   }, [storeId, navigate]);
 
   // If outlet is rendered, show that instead of dashboard content
@@ -84,6 +96,7 @@ const StoreDashboard = () => {
                 window.location.pathname.includes('payments') ||
                 window.location.pathname.includes('abandoned') ||
                 window.location.pathname.includes('settings') ||
+                window.location.pathname.includes('all-products/add-product') ||
                 window.location.pathname.includes('analytics');
 
   const renderOverviewTab = () => (

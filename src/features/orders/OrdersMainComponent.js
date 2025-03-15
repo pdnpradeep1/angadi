@@ -46,24 +46,26 @@ const OrdersMainComponent = () => {
     
     try {
       // In a production environment, you would make a real API call:
-      // const response = await apiService.get(`/orders/store/${storeId}?page=${currentPage-1}&status=${currentStatus}`);
-      // setOrders(response.data.content);
-      // setTotalPages(response.data.totalPages);
+      const response = await apiService.get(`/orders/store/${storeId}?page=${currentPage-1}&status=${currentStatus}`);
+      setOrders(response.data.content);
+      setTotalPages(response.data.totalPages);
+      setLoading(false);
       
       // For development, use mock data
-      setTimeout(() => {
-        // Use the mock data utility if available, otherwise fallback to inline function
-        let mockOrders;
-        if (typeof generateMockOrders === 'function') {
-          mockOrders = generateMockOrders(10, currentStatus);
-        } else {
-          mockOrders = createMockOrders(10, currentStatus);
-        }
+      // setTimeout(() => {
+      //   // Use the mock data utility if available, otherwise fallback to inline function
+      //   let mockOrders;
+      //   if (typeof generateMockOrders === 'function') {
+      //     mockOrders = generateMockOrders(10, currentStatus);
+      //   } else {
+      //     mockOrders = createMockOrders(10, currentStatus);
+          
+      //   }
         
-        setOrders(mockOrders);
-        setTotalPages(5);
-        setLoading(false);
-      }, 300); // Short timeout for fast feedback in development
+      //   setOrders(mockOrders);
+      //   setTotalPages(5);
+      //   setLoading(false);
+      // }, 300); // Short timeout for fast feedback in development
     } catch (err) {
       console.error('Error fetching orders:', err);
       setError('Failed to load orders. Please try again.');

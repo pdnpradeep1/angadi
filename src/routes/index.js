@@ -117,6 +117,15 @@ function AppRoutes() {
         <Route path="all-products" element={<ProductList />} />
         <Route path="inventory" element={<InventoryManagement />} />
 
+        <Route
+        path="all-products/add-product"
+        element={
+          // <ProtectedRoute>
+            <AddProduct />
+          // </ProtectedRoute>
+        }
+      />
+
         {/* Orders routes using the updated OrdersContainer component */}
         <Route path="orders" element={<OrdersContainer />}>
           {/* <Route index element={<OrdersMainComponent />} /> */}
@@ -159,17 +168,26 @@ function AppRoutes() {
         <Route path="analytics" element={<StoreAnalytics />} />
         <Route path="settings" element={<StoreSettings />} />
         
+        
       </Route>
 
       {/* Add the route for the AddProduct page */}
-      <Route
+      {/* <Route
         path="/store-dashboard/:storeId/add-product"
         element={
           <ProtectedRoute>
             <AddProduct />
           </ProtectedRoute>
         }
-      />
+      /> */}
+      <Route
+          path="/store-dashboard/:storeId/edit-product/:productId"
+          element={
+            <ProtectedRoute>
+              <AddProduct />
+            </ProtectedRoute>
+          }
+        />
       
       {/* Catch-all route for 404 */}
       <Route path="*" element={<NotFoundPage />} />

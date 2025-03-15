@@ -11,7 +11,7 @@ import {
   FiClock,
   FiBarChart2
 } from "react-icons/fi";
-import axios from "axios";
+import { apiService } from '../../api/config';
 
 // Create a context for order status
 export const OrderStatusContext = React.createContext({
@@ -53,21 +53,24 @@ const OrdersHeader = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('jwtToken');
+      const response = await apiService.get(`/orders/stats/${storeId}`);
+      setOrderStats(response.data);
+      setLoading(false);
       
       // For development, use mock data
-      setTimeout(() => {
-        setOrderStats({
-          total: 128,
-          pending: 15,
-          processing: 22,
-          shipped: 38,
-          delivered: 43,
-          cancelled: 5,
-          refunded: 3,
-          returned: 2
-        });
-        setLoading(false);
-      }, 600);
+      // setTimeout(() => {
+      //   setOrderStats({
+      //     total: 128,
+      //     pending: 15,
+      //     processing: 22,
+      //     shipped: 38,
+      //     delivered: 43,
+      //     cancelled: 5,
+      //     refunded: 3,
+      //     returned: 2
+      //   });
+      //   setLoading(false);
+      // }, 600);
     } catch (err) {
       console.error('Error fetching order stats:', err);
       setLoading(false);

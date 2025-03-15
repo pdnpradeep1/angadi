@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { getAuthHeaders, isAuthenticated } from '../utils/jwtUtils';
+import { jwtDecode } from 'jwt-decode'; // Add this import
 
 // Base API configuration
 const API_BASE_URL = 'http://localhost:8080';
@@ -14,15 +15,43 @@ const api = axios.create({
 });
 
 // Request interceptor to add auth token
+// api.interceptors.request.use(
+//   config => {
+//     // Add auth headers if user is logged in
+//     if (isAuthenticated()) {
+//       const authHeaders = getAuthHeaders();
+//       config.headers = { 
+//         ...config.headers,
+//         ...authHeaders
+//       };
+//     }
+//     return config;
+//   },
+//   error => {
+//     return Promise.reject(error);
+//   }
+// );
+
+// Request interceptor to add auth token
 api.interceptors.request.use(
   config => {
     // Add auth headers if user is logged in
     if (isAuthenticated()) {
-      const authHeaders = getAuthHeaders();
-      config.headers = { 
-        ...config.headers,
-        ...authHeaders
-      };
+      const token = localStorage.getItem('jwtToken');
+      if (token) {
+        try {
+          const decoded = jwtDecode(token);
+          const email = decoded.email || decoded.sub;
+          
+          config.headers = { 
+            ...config.headers,
+            'Authorization': `Bearer ${token}`,
+            'Owner-Email': email // Add this header
+          };
+        } catch (error) {
+          console.error("Error decoding token:", error);
+        }
+      }
     }
     return config;
   },
