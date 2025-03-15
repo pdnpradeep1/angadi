@@ -13,7 +13,8 @@ import {
 } from 'react-icons/fi';
 import CreateStore from '../features/store/create-store';
 import api from '../api/config';
-import { isAuthenticated, getUserEmail } from '../utils/jwtUtils';;
+import { isAuthenticated, getUserEmail } from '../utils/jwtUtils';
+import { useStore } from '../contexts/StoreContext';
 
 const ToggleSwitch = ({ isActive, onChange, loading, size = "md" }) => {
   // Define the track (background) styles
@@ -56,7 +57,6 @@ const ToggleSwitch = ({ isActive, onChange, loading, size = "md" }) => {
 };
 
 const Store = () => {
-  // const [userEmail, setUserEmail] = useState('user@example.com');
   const [stores, setStores] = useState([]);
   const [loadingStores, setLoadingStores] = useState(true);
   const [error, setError] = useState(null);
@@ -64,8 +64,9 @@ const Store = () => {
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [searchTerm, setSearchTerm] = useState('');
   const [toggleLoading, setToggleLoading] = useState({});
-  const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState('');
+  const navigate = useNavigate();
+  const { clearStoreData } = useStore();
 
   useEffect(() => {
     // Check if user is authenticated
@@ -73,6 +74,7 @@ const Store = () => {
       navigate('/login');
       return;
     }
+    
     // Extract user email from token
     const token = localStorage.getItem('jwtToken');
     const email = getUserEmail(token);
@@ -80,82 +82,71 @@ const Store = () => {
       setUserEmail(email);
     }
 
+    // Clear any existing store data when visiting the stores page
+    clearStoreData();
+
     // Fetch stores from backend API
-    const fetchStores = async () => {
-      setLoadingStores(true);
-      setError(null);
-      try {
-        // Get user email/info from token if needed
-        try {
-          const decoded = JSON.parse(atob(token.split('.')[1]));
-          if (decoded.email) {
-            setUserEmail(decoded.email);
-          }
-        } catch (e) {
-          console.log('Could not decode token for user info');
-        }
-
-        // Make API request to fetch stores
-        const response = await api.get('/api/stores/my-stores');
-
-        console.log('API Response:', response.data);
-        
-        // Check if the response data is in the expected format
-        if (Array.isArray(response.data)) {
-          setStores(response.data);
-        } else if (response.data && Array.isArray(response.data.data)) {
-          // Some APIs wrap the data in a data property
-          setStores(response.data.data);
-        } else {
-          // If the data structure is different, log it for debugging
-          console.warn('Unexpected data structure:', response.data);
-          setStores([]); // Set empty array as fallback
-          setError('Received unexpected data structure from the server');
-        }
-      } catch (error) {
-        console.error('Error fetching stores:', error);
-        setError(error.response?.data?.message || 'Failed to load stores. Please try again.');
-        
-        // For development/testing, use mock data as fallback if API fails
-        if (process.env.NODE_ENV === 'development') {
-          console.log('Using mock data as fallback in development mode');
-          const mockStores = [
-            {
-              id: 1,
-              name: "Fashion Boutique",
-              description: "A boutique for trendy fashion items.",
-              address: "123 Fashion Street",
-              url: "fashion-boutique.myshop.com",
-              createdAt: "2024-12-15",
-              active: true,
-              visible: true,
-              products: 45,
-              orders: 120,
-              revenue: "$12,350"
-            },
-            {
-              id: 2,
-              name: "Tech Haven",
-              description: "The ultimate gadget store.",
-              address: "456 Tech Avenue",
-              url: "tech-haven.myshop.com",
-              createdAt: "2025-01-20",
-              active: false,
-              visible: false,
-              products: 87,
-              orders: 210,
-              revenue: "$32,780"
-            }
-          ];
-          setStores(mockStores);
-        }
-      } finally {
-        setLoadingStores(false);
-      }
-    };
-
     fetchStores();
-  }, [navigate]);
+  }, [navigate, clearStoreData]);
+
+  const fetchStores = async () => {
+    setLoadingStores(true);
+    setError(null);
+    try {
+      // Make API request to fetch stores
+      const response = await api.get('/api/stores/my-stores');
+      
+      // Set stores data
+      if (Array.isArray(response.data)) {
+        setStores(response.data);
+      } else if (response.data && Array.isArray(response.data.data)) {
+        setStores(response.data.data);
+      } else {
+        console.warn('Unexpected data structure:', response.data);
+        setStores([]); // Set empty array as fallback
+        setError('Received unexpected data structure from the server');
+      }
+    } catch (err) {
+      console.error('Error fetching stores:', err);
+      setError(err.response?.data?.message || 'Failed to load stores. Please try again.');
+      
+      // For development/testing, use mock data as fallback if API fails
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Using mock data as fallback in development mode');
+        const mockStores = [
+          {
+            id: 1,
+            name: "Fashion Boutique",
+            description: "A boutique for trendy fashion items.",
+            address: "123 Fashion Street",
+            url: "fashion-boutique.myshop.com",
+            createdAt: "2024-12-15",
+            active: true,
+            visible: true,
+            products: 45,
+            orders: 120,
+            revenue: "$12,350"
+          },
+          {
+            id: 2,
+            name: "Tech Haven",
+            description: "The ultimate gadget store.",
+            address: "456 Tech Avenue",
+            url: "tech-haven.myshop.com",
+            createdAt: "2025-01-20",
+            active: false,
+            visible: false,
+            products: 87,
+            orders: 210,
+            revenue: "$32,780"
+          }
+        ];
+        setStores(mockStores);
+      }
+    } finally {
+      setLoadingStores(false);
+    }
+  };
 
   const handleStoreCreated = (newStore) => {
     setStores((prevStores) => [newStore, ...prevStores]);
@@ -167,6 +158,7 @@ const Store = () => {
   };
 
   const handleLogout = () => {
+    clearStoreData();
     localStorage.removeItem('jwtToken');
     navigate('/login');
   };
@@ -237,7 +229,6 @@ const Store = () => {
               <h1 className="ml-2 text-2xl font-bold text-gray-900 dark:text-white">MyShop</h1>
             </div>
             <div className="flex items-center space-x-4">
-              {/* <span className="text-gray-600 dark:text-gray-300">{userEmail}</span> */}
               <span className="text-gray-600 dark:text-gray-300">
                 {userEmail || 'Welcome'}
               </span>

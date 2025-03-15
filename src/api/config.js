@@ -1,6 +1,6 @@
 import axios from 'axios';
-import { getAuthHeaders, isAuthenticated } from '../utils/jwtUtils';
-import { jwtDecode } from 'jwt-decode'; // Add this import
+import { jwtDecode } from 'jwt-decode';
+import { isAuthenticated } from '../utils/jwtUtils';
 
 // Base API configuration
 const API_BASE_URL = 'http://localhost:8080';
@@ -13,24 +13,6 @@ const api = axios.create({
     'Content-Type': 'application/json',
   }
 });
-
-// Request interceptor to add auth token
-// api.interceptors.request.use(
-//   config => {
-//     // Add auth headers if user is logged in
-//     if (isAuthenticated()) {
-//       const authHeaders = getAuthHeaders();
-//       config.headers = { 
-//         ...config.headers,
-//         ...authHeaders
-//       };
-//     }
-//     return config;
-//   },
-//   error => {
-//     return Promise.reject(error);
-//   }
-// );
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
@@ -46,7 +28,7 @@ api.interceptors.request.use(
           config.headers = { 
             ...config.headers,
             'Authorization': `Bearer ${token}`,
-            'Owner-Email': email // Add this header
+            'Owner-Email': email
           };
         } catch (error) {
           console.error("Error decoding token:", error);
@@ -70,6 +52,9 @@ api.interceptors.response.use(
     if (response && response.status === 401) {
       // Clear token and redirect to login
       localStorage.removeItem('jwtToken');
+      localStorage.removeItem('currentStoreId');
+      
+      // Only redirect if not already on login page
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }

@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { 
   FiHome, 
   FiPackage, 
@@ -15,14 +15,32 @@ import {
   FiChevronRight,
   FiLogOut
 } from "react-icons/fi";
+import { useStore } from "../../contexts/StoreContext";
 
-const StoreSidebar = ({ store }) => {
+const StoreSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { storeId } = useParams();
+  const { currentStore, clearStoreData } = useStore();
+  
   const [isProductsOpen, setIsProductsOpen] = useState(false);
   const [isDeliveryOpen, setIsDeliveryOpen] = useState(false);
   const [isOrdersOpen, setIsOrdersOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Initialize sidebar accordions based on current route
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.includes('/products') || path.includes('/inventory')) {
+      setIsProductsOpen(true);
+    }
+    if (path.includes('/delivery')) {
+      setIsDeliveryOpen(true);
+    }
+    if (path.includes('/orders')) {
+      setIsOrdersOpen(true);
+    }
+  }, [location.pathname]);
 
   const toggleProducts = () => {
     setIsProductsOpen(!isProductsOpen);
@@ -37,18 +55,10 @@ const StoreSidebar = ({ store }) => {
   };
 
   const handleLogout = () => {
+    clearStoreData();
     localStorage.removeItem('jwtToken');
     navigate('/login');
   };
-
-  const getStoreId = () => {
-    // Extract store ID from URL
-    const pathParts = location.pathname.split('/');
-    const storeIdIndex = pathParts.findIndex(part => part === 'store-dashboard') + 1;
-    return pathParts[storeIdIndex] || '';
-  };
-
-  const storeId = getStoreId();
 
   const menuItems = [
     { name: "Dashboard", icon: <FiHome />, path: `/store-dashboard/${storeId}` },
@@ -89,10 +99,10 @@ const StoreSidebar = ({ store }) => {
         {/* Store Info */}
         <div className="flex items-center space-x-3 mb-6">
           <div className="w-10 h-10 rounded-full bg-primary-600 flex items-center justify-center text-white font-bold">
-            {store?.name?.charAt(0) || 'S'}
+            {currentStore?.name?.charAt(0) || 'S'}
           </div>
           <div>
-            <h2 className="text-lg font-semibold truncate max-w-[180px]">{store?.name || 'Store'}</h2>
+            <h2 className="text-lg font-semibold truncate max-w-[180px]">{currentStore?.name || 'Store'}</h2>
             <Link 
               to="/stores" 
               className="text-xs text-secondary-400 hover:text-white transition duration-150"

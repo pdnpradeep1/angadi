@@ -10,7 +10,7 @@ import StoreDashboard from '../pages/StoreDashboard';
 import ProductList from "../features/products/ProductList";
 import AddProduct from "../features/products/AddProduct";
 import InventoryManagement from "../features/products/InventoryManagement";
-import OrdersContainer from '../features/orders/OrdersContainer'; // Updated component
+import OrdersContainer from '../features/orders/OrdersContainer';
 import OrdersMainComponent from '../features/orders/OrdersMainComponent';
 import OrderDetail from '../features/orders/OrderDetail';
 import OrderExport from '../features/orders/OrderExport';
@@ -25,6 +25,8 @@ import StoreAnalytics from '../features/analytics/StoreAnalytics';
 import AbandonedOrders from '../features/orders/AbandonedOrders';
 import StoreSettings from '../features/settings/index';
 import { isAuthenticated } from '../utils/jwtUtils';
+import CategoriesPage from '../features/categories/CategoriesPage';
+
 
 // Auth guard component
 const ProtectedRoute = ({ children }) => {
@@ -94,6 +96,15 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      {/* Categories page route */}
+      <Route 
+        path="categories" 
+        element={
+          <ProtectedRoute>
+            <CategoriesPage />
+          </ProtectedRoute>
+        } 
+      />
       
       <Route
         path="/stores"
@@ -115,21 +126,14 @@ function AppRoutes() {
       >
         {/* Product routes */}
         <Route path="all-products" element={<ProductList />} />
+        <Route path="all-products/add-product" element={<AddProduct />} />
+        <Route path="edit-product/:productId" element={<AddProduct />} />
         <Route path="inventory" element={<InventoryManagement />} />
+        <Route path="categories" element={<CategoriesPage />} />
 
-        <Route
-        path="all-products/add-product"
-        element={
-          // <ProtectedRoute>
-            <AddProduct />
-          // </ProtectedRoute>
-        }
-      />
-
-        {/* Orders routes using the updated OrdersContainer component */}
+        {/* Orders routes */}
         <Route path="orders" element={<OrdersContainer />}>
-          {/* <Route index element={<OrdersMainComponent />} /> */}
-          <Route index path="all" element={<OrdersMainComponent />} />
+          <Route path="all" element={<OrdersMainComponent />} />
           <Route path="pending" element={<OrdersMainComponent />} />
           <Route path="processing" element={<OrdersMainComponent />} />
           <Route path="shipped" element={<OrdersMainComponent />} />
@@ -160,34 +164,12 @@ function AppRoutes() {
         {/* Separate route for delivery map */}
         <Route path="delivery/map" element={<DeliveryMap />} />
 
-
-        <Route path="inventory" element={<InventoryManagement />} />
-
+        {/* Other routes */}
         <Route path="audience" element={<Audience />} />
         <Route path="payments" element={<PaymentsPage />} />
         <Route path="analytics" element={<StoreAnalytics />} />
         <Route path="settings" element={<StoreSettings />} />
-        
-        
       </Route>
-
-      {/* Add the route for the AddProduct page */}
-      {/* <Route
-        path="/store-dashboard/:storeId/add-product"
-        element={
-          <ProtectedRoute>
-            <AddProduct />
-          </ProtectedRoute>
-        }
-      /> */}
-      <Route
-          path="/store-dashboard/:storeId/edit-product/:productId"
-          element={
-            <ProtectedRoute>
-              <AddProduct />
-            </ProtectedRoute>
-          }
-        />
       
       {/* Catch-all route for 404 */}
       <Route path="*" element={<NotFoundPage />} />

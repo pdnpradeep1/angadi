@@ -3,11 +3,11 @@ import { BrowserRouter as Router, useLocation } from "react-router-dom";
 import Navbar from "./components/layouts/Navbar";
 import Footer from "./components/layouts/Footer";
 import { ThemeProvider } from "./contexts/ThemeProvider";
+import { StoreProvider } from "./contexts/StoreContext";
 import AppRoutes from "./routes/index";
-import "./index.css"; // Import your updated CSS with Tailwind
+import "./index.css";
 
 // This component determines whether to show navbar based on current route
-// without causing infinite re-renders
 const AppContent = () => {
   const location = useLocation();
   
@@ -32,6 +32,7 @@ const AppContent = () => {
   };
 
   const hideNavbar = shouldHideNavbar();
+  const hideFooter = hideNavbar; // Hide footer on the same routes as navbar
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100 dark:bg-gray-900">
@@ -39,7 +40,7 @@ const AppContent = () => {
       <main className="flex-grow">
         <AppRoutes />
       </main>
-      <Footer />
+      {!hideFooter && <Footer />}
     </div>
   );
 };
@@ -48,7 +49,9 @@ function App() {
   return (
     <Router>
       <ThemeProvider>
-        <AppContent />
+        <StoreProvider>
+          <AppContent />
+        </StoreProvider>
       </ThemeProvider>
     </Router>
   );

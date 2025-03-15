@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FiUser, FiLock, FiAlertCircle, FiMail } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
-import { getRolesFromToken } from "../utils/jwtUtils";
 import apiService from "../api/config";
 
 function Login() {
@@ -12,34 +11,33 @@ function Login() {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // No useEffect check for authentication - we're using RedirectIfAuthenticated instead
-
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
-
-      const response = await apiService.post('/auth/login',{ email, password });
+      const response = await apiService.post('/auth/login', { email, password });
+      
       if (response.status !== 200) {
         if (response.status === 401) {
           throw new Error('Invalid username or password');
         }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
+      
+      // Save token to localStorage
       const data = response.data;
       localStorage.setItem('jwtToken', data.token);
       
       // Always navigate to stores page after successful login
-      // Use navigate with 'replace: true' to prevent history issues
       navigate('/stores', { replace: true });
-      
     } catch (error) {
       console.error('Error logging in:', error);
+      
       if (error.status === 401) {
         setError('Invalid username or password');
-      }else{
+      } else {
         setError(error.message || 'An unexpected error occurred');
       }
     } finally {
