@@ -39,6 +39,7 @@ const ProductList = () => {
   const [showImportExport, setShowImportExport] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState({});
+  const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
 
   // Filters state
   const [filters, setFilters] = useState({
@@ -658,7 +659,7 @@ const ProductList = () => {
         </div>
       )}
       
-      <GenericDataList
+      {/* <GenericDataList
         title="Products"
         data={products}
         columns={columns}
@@ -680,7 +681,7 @@ const ProductList = () => {
         viewMode="list"
         onViewModeChange={mode => console.log(`View mode changed to ${mode}`)}
         showViewModeToggle={true}
-        renderGridView={renderGridView}
+        renderGridView={data => renderGridView(data)}
         bulkActions={bulkActions}
         selectedItems={selectedProducts}
         onItemSelect={(id) => {
@@ -695,7 +696,45 @@ const ProductList = () => {
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         entityName="product"
-      />
+      /> */}
+      <GenericDataList
+          title="Products"
+          data={products}
+          columns={columns}
+          filters={filterConfig}
+          onSearch={handleSearch}
+          onFilterChange={handleFilterChange}
+          onApplyFilters={applyFilters}
+          onClearFilters={clearFilters}
+          onDelete={handleDeleteProduct}
+          onAdd={() => navigate(`/store-dashboard/${storeId}/all-products/add-product`)}
+          loading={loading}
+          error={error}
+          emptyState={
+            <EmptyStates.Products 
+              onAction={() => navigate(`/store-dashboard/${storeId}/all-products/add-product`)}
+            />
+          }
+          actionButtons={actionButtons}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          showViewModeToggle={true}
+          renderGridView={renderGridView}
+          bulkActions={bulkActions}
+          selectedItems={selectedProducts}
+          onItemSelect={(id) => {
+            setSelectedProducts(prev => 
+              prev.includes(id) 
+                ? prev.filter(itemId => itemId !== id)
+                : [...prev, id]
+            );
+          }}
+          filterOpen={filterOpen}
+          setFilterOpen={setFilterOpen}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          entityName="product"
+        />
     </>
   );
 };

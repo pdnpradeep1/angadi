@@ -545,16 +545,19 @@ const CategoriesPage = () => {
 
   // Render hierarchical content
   const renderHierarchicalContent = () => {
+    // Make sure we're using the full hierarchy data, not the filtered flat list
     return (
-      <HierarchicalDataView
-        data={categoryHierarchy}
-        expandedItems={expandedCategories}
-        onToggleExpand={toggleCategoryExpanded}
-        renderItem={renderCategoryItem}
-        onSelect={handleCategorySelection}
-        selectedIds={selectedCategories}
-        shouldShowItem={shouldShowCategory}
-      />
+      <div className="overflow-auto max-h-[calc(100vh-300px)]">
+        <HierarchicalDataView
+          data={categoryHierarchy} // Use categoryHierarchy instead of filtered categories
+          expandedItems={expandedCategories}
+          onToggleExpand={toggleCategoryExpanded}
+          renderItem={renderCategoryItem}
+          onSelect={handleCategorySelection}
+          selectedIds={selectedCategories}
+          shouldShowItem={shouldShowCategory}
+        />
+      </div>
     );
   };
 
@@ -612,6 +615,53 @@ const CategoriesPage = () => {
 
   return (
     <>
+      {/* <GenericDataList
+        title="Categories"
+        data={applyFilters(categories)}
+        columns={columns}
+        filters={filterConfig}
+        onSearch={(term) => {
+          setSearchTerm(term);
+          fetchCategories();
+        }}
+        onFilterChange={handleFilterChange}
+        onApplyFilters={() => {
+          fetchCategories();
+          setFilterOpen(false);
+        }}
+        onClearFilters={() => {
+          setFilters({ status: 'all', parentId: 'all' });
+          setSearchTerm('');
+          setFilterOpen(false);
+          fetchCategories();
+        }}
+        onDelete={handleDeleteCategory}
+        onAdd={handleAddCategory}
+        loading={loading}
+        error={error}
+        emptyState={{
+          title: "No categories found",
+          message: searchTerm 
+            ? "Try adjusting your search or filters" 
+            : "Get started by creating your first category",
+          actionText: "Add Category",
+          onAction: handleAddCategory
+        }}
+        actionButtons={actionButtons}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        showViewModeToggle={true}
+        renderGridView={viewMode === 'hierarchy' ? () => renderHierarchicalContent() : null}
+        bulkActions={bulkActions}
+        selectedItems={selectedCategories}
+        onItemSelect={handleCategorySelection}
+        filterOpen={filterOpen}
+        setFilterOpen={setFilterOpen}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        entityName="category"
+      /> */}
+
       <GenericDataList
         title="Categories"
         data={applyFilters(categories)}
@@ -648,7 +698,7 @@ const CategoriesPage = () => {
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         showViewModeToggle={true}
-        renderGridView={viewMode === 'hierarchy' ? renderHierarchicalContent : null}
+        renderGridView={data => renderHierarchicalContent(data)}
         bulkActions={bulkActions}
         selectedItems={selectedCategories}
         onItemSelect={handleCategorySelection}

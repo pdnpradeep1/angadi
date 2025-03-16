@@ -236,22 +236,24 @@ const GenericDataList = ({
 
       {/* Content - Either Table or Grid */}
       <Card className="overflow-hidden">
-        {viewMode === 'list' ? (
-          <Table
+        {loading ? (
+            <div className="flex justify-center items-center p-8">
+            <div className="animate-spin h-8 w-8 border-4 border-primary-500 rounded-full border-t-transparent"></div>
+            </div>
+        ) : viewMode === 'grid' && renderGridView ? (
+            <div className="p-4">
+            {renderGridView(data)}
+            </div>
+        ) : (
+            <Table
             columns={columns}
             data={data}
             isLoading={loading}
             emptyState={emptyState}
-          />
-        ) : renderGridView ? (
-          renderGridView(data)
-        ) : (
-          <div className="p-4 text-center text-gray-500 dark:text-gray-400">
-            Grid view is not available for this content
-          </div>
+            />
         )}
-      </Card>
-
+        </Card>
+        
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         isOpen={showDeleteConfirm}
