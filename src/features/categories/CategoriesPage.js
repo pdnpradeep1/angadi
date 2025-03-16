@@ -1,33 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { 
   FiEdit2, 
   FiEye, 
   FiTrash2,
-  FiMoreVertical,
   FiPlus,
-  FiChevronRight,
-  FiChevronDown,
   FiList,
   FiGrid,
   FiSearch,
-  FiFilter
+  FiFilter,
+  FiAlertCircle,
+  FiChevronDown,
+  FiChevronRight
 } from 'react-icons/fi';
-import Table from '../../components/ui/Table';
-import FilterPanel from '../../components/ui/FilterPanel';
-import { EmptyStates } from '../../utils/loading-error-states';
-import { Button } from '../../components/ui/Button';
-import { ConfirmDialog } from '../../components/ui/Modal';
+import { apiService } from '../../api/config';
+import { renderCategoryImage, getCategoryColor } from '../../utils/category-image-utils';
 import AddCategoryModal from './AddCategoryModal';
 import EditCategoryModal from './EditCategoryModal';
 import CategoryDetailsModal from './CategoryDetailsModal';
 import ReorderCategoriesModal from './ReorderCategoriesModal';
-import { apiService } from '../../api/config';
-import { 
-  renderCategoryImage, 
-  getCategoryColor,
-  getCategoryBreadcrumb 
-} from '../../utils/category-image-utils';
+import ConfirmDialog from '../../components/ui/Modal';
 
 const CategoriesPage = () => {
   const { storeId } = useParams();
@@ -436,30 +428,27 @@ const CategoriesPage = () => {
       title: 'Action',
       render: (row) => (
         <div className="flex items-center space-x-2">
-          <Button 
-            variant="secondary" 
-            size="sm"
+          <button 
+            className="px-2 py-1 bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-xs font-medium hover:bg-gray-200 dark:hover:bg-gray-600"
             onClick={() => handleEditCategory(row)}
             title="Edit Category"
           >
             <FiEdit2 size={16} />
-          </Button>
-          <Button 
-            variant="secondary" 
-            size="sm"
+          </button>
+          <button 
+            className="px-2 py-1 bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-xs font-medium hover:bg-gray-200 dark:hover:bg-gray-600"
             onClick={() => handleViewCategory(row)}
             title="View Category Details"
           >
             <FiEye size={16} />
-          </Button>
-          <Button 
-            variant="danger" 
-            size="sm"
+          </button>
+          <button 
+            className="px-2 py-1 bg-gray-100 text-red-600 dark:bg-gray-700 dark:text-red-400 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-xs font-medium hover:bg-gray-200 dark:hover:bg-gray-600"
             onClick={() => handleDeleteCategory(row)}
             title="Delete Category"
           >
             <FiTrash2 size={16} />
-          </Button>
+          </button>
         </div>
       )
     }
@@ -620,18 +609,18 @@ const CategoriesPage = () => {
               <FiGrid className="mr-1" /> Hierarchy
             </button>
           </div>
-          <Button 
-            variant="secondary" 
+          <button 
+            className="px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700"
             onClick={handleReorderCategories}
           >
             Reorder Categories
-          </Button>
-          <Button 
-            variant="primary" 
+          </button>
+          <button 
+            className="px-4 py-2 bg-primary-600 text-white rounded-md shadow-sm text-sm font-medium hover:bg-primary-700"
             onClick={handleAddCategory}
           >
-            <FiPlus className="mr-2" /> Add New Category
-          </Button>
+            <FiPlus className="mr-2 inline" /> Add New Category
+          </button>
         </div>
       </div>
 
@@ -648,93 +637,269 @@ const CategoriesPage = () => {
             className="pl-10 pr-3 py-2 w-full border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           />
         </div>
-        <Button 
-          variant="secondary" 
+        <button 
+          className="px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700"
           onClick={() => setFilterOpen(!filterOpen)}
         >
-          <FiFilter className="mr-2" /> Filter
-        </Button>
+          <FiFilter className="mr-2 inline" /> Filter
+        </button>
       </div>
 
-      <FilterPanel
-        isOpen={filterOpen}
-        filters={filterConfig}
-        onFilterChange={handleFilterChange}
-        onApply={() => setFilterOpen(false)}
-        onClear={() => {
-          setFilters({
-            status: 'all',
-            parentId: 'all'
-          });
-          setFilterOpen(false);
-        }}
-      />
-
-      {/* Main Content Area - Either Table or Hierarchy View */}
-      {viewMode === 'list' ? (
-        <Table
-          columns={columns}
-          data={applyFilters(categories)}
-          isLoading={loading}
-          emptyState={
-            <EmptyStates.Products 
-              onAction={handleAddCategory}
-              title="No categories found"
-              message="There are no categories matching your criteria. Try adjusting your filters or add a new category."
-            />
-          }
-        />
-      ) : (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-          <div className="border-b border-gray-200 dark:border-gray-700 px-4 py-3">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white">Category Hierarchy</h3>
+      {filterOpen && (
+        <div className="mb-6 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+          <h3 className="text-sm font-medium mb-3 text-gray-700 dark:text-gray-300">Filters</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Status
+              </label>
+              <select
+                value={filters.status}
+                onChange={(e) => handleFilterChange('status', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+              >
+                <option value="all">All Categories</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Parent Category
+              </label>
+              <select
+                value={filters.parentId}
+                onChange={(e) => handleFilterChange('parentId', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+              >
+                <option value="all">All Categories</option>
+                <option value="root">Root Categories Only</option>
+                {getParentCategories().map(cat => (
+                  <option key={cat.value} value={cat.value}>{cat.label}</option>
+                ))}
+              </select>
+            </div>
           </div>
           
-          {loading ? (
-            <div className="p-6 text-center">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600 mx-auto"></div>
-              <p className="mt-2 text-gray-600 dark:text-gray-400">Loading categories...</p>
-            </div>
-          ) : categories.length === 0 ? (
-            <div className="p-6 text-center">
-              <p className="text-gray-600 dark:text-gray-400">No categories found</p>
-              <Button 
-                variant="primary"
-                className="mt-4"
-                onClick={handleAddCategory}
-              >
-                <FiPlus className="mr-2" /> Add Category
-              </Button>
-            </div>
-          ) : (
-            <div className="overflow-auto max-h-[calc(100vh-280px)]">
-              {renderCategoryTree(categories)}
-            </div>
-          )}
+          <div className="flex justify-end mt-4 space-x-2">
+            <button
+              onClick={() => {
+                setFilters({ status: 'all', parentId: 'all' });
+                setFilterOpen(false);
+              }}
+              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+            >
+              Clear
+            </button>
+            <button
+              onClick={() => setFilterOpen(false)}
+              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            >
+              Apply Filters
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Delete Confirmation Dialog */}
-      <ConfirmDialog
-        isOpen={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={confirmDeleteCategory}
-        title="Delete Category"
-        message={
-          categoryToDelete && hasChildren(categoryToDelete.id)
-            ? `Warning: "${categoryToDelete?.name}" has subcategories that will also be deleted. Are you sure you want to continue?`
-            : `Are you sure you want to delete "${categoryToDelete?.name}"? This action cannot be undone.`
-        }
-        confirmText="Delete"
-        confirmVariant="danger"
-      />
-      
+      {/* Error message */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-md">
+          <div className="flex items-center">
+            <FiAlertCircle className="text-red-500 mr-2" size={20} />
+            <span className="text-red-700 dark:text-red-400">{error}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Main Content Area - Either Table or Hierarchy View */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
+            <span className="ml-3 text-lg text-gray-600 dark:text-gray-400">Loading categories...</span>
+          </div>
+        ) : viewMode === 'list' ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    <input
+                      type="checkbox"
+                      checked={selectedCategories.length > 0 && selectedCategories.length === categories.length}
+                      onChange={() => {
+                        if (selectedCategories.length === categories.length) {
+                          setSelectedCategories([]);
+                        } else {
+                          setSelectedCategories(categories.map(c => c.id));
+                        }
+                      }}
+                      className="h-4 w-4 text-primary-600 border-gray-300 rounded"
+                    />
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Category</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Products</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Type</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                {applyFilters(categories).map((category) => (
+                  <tr key={category.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <input
+                        type="checkbox"
+                        checked={selectedCategories.includes(category.id)}
+                        onChange={() => handleCategorySelection(category.id)}
+                        className="h-4 w-4 text-primary-600 border-gray-300 rounded"
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        {renderCategoryImage(category.image, category.name)}
+                        <div className="ml-3">
+                          <span className="font-medium">{category.name}</span>
+                          {category.parentId && (
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              Parent: {categories.find(c => c.id === category.parentId)?.name || 'Unknown'}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {category.productCount !== undefined && (
+                        <span className="px-2 py-1 inline-flex text-xs leading-5 font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                          {category.productCount}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <span className={`inline-block h-3 w-3 rounded-full mr-2 ${
+                          category.status === 'Active' ? 'bg-green-400' : 'bg-red-400'
+                        }`}></span>
+                        <span className="text-sm">{category.status}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      {hasChildren(category.id) ? 'Parent' : 'Leaf'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleEditCategory(category)}
+                          className="text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300"
+                        >
+                          <FiEdit2 className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => handleViewCategory(category)}
+                          className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                        >
+                          <FiEye className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteCategory(category)}
+                          className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                        >
+                          <FiTrash2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div>
+          <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-3">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white">Category Hierarchy</h3>
+          </div>
+          <div className="overflow-auto max-h-[calc(100vh-280px)]">
+            {categories.length === 0 ? (
+              <div className="p-6 text-center">
+                <p className="text-gray-600 dark:text-gray-400">No categories found</p>
+                <button 
+                  onClick={handleAddCategory}
+                  className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-md shadow-sm text-sm font-medium hover:bg-primary-700"
+                >
+                  <FiPlus className="inline mr-2" /> Add Category
+                </button>
+              </div>
+            ) : (
+              renderCategoryTree(categories)
+            )}
+          </div>
+          </div>
+        )}
+      </div>
+
+      {/* Bulk actions - visible when categories are selected */}
+      {selectedCategories.length > 0 && (
+        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg px-6 py-3 flex items-center space-x-4">
+          <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">
+            {selectedCategories.length} {selectedCategories.length === 1 ? 'category' : 'categories'} selected
+          </span>
+          <div className="flex space-x-2">
+            <button 
+              className="px-4 py-2 bg-primary-600 text-white rounded-md shadow-sm text-sm font-medium hover:bg-primary-700"
+              onClick={() => {
+                // Bulk status update to active
+                const updatedCategories = categories.map(category => 
+                  selectedCategories.includes(category.id) 
+                    ? { ...category, status: 'Active' } 
+                    : category
+                );
+                setCategories(updatedCategories);
+                setSelectedCategories([]);
+              }}
+            >
+              Set Active
+            </button>
+            <button 
+              className="px-4 py-2 bg-gray-600 text-white rounded-md shadow-sm text-sm font-medium hover:bg-gray-700"
+              onClick={() => {
+                // Bulk status update to inactive
+                const updatedCategories = categories.map(category => 
+                  selectedCategories.includes(category.id) 
+                    ? { ...category, status: 'Inactive' } 
+                    : category
+                );
+                setCategories(updatedCategories);
+                setSelectedCategories([]);
+              }}
+            >
+              Set Inactive
+            </button>
+            <button 
+              className="px-4 py-2 bg-red-600 text-white rounded-md shadow-sm text-sm font-medium hover:bg-red-700"
+              onClick={() => {
+                // Confirm bulk delete
+                setCategoryToDelete({
+                  id: 'bulk',
+                  name: `${selectedCategories.length} categories`
+                });
+                setShowDeleteConfirm(true);
+              }}
+            >
+              Delete Selected
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modals */}
       {/* Add Category Modal */}
       <AddCategoryModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onAdd={handleCategoryAdded}
-        categories={categories} // Pass all categories for parent selection
+        categories={categories}
         storeId={storeId}
       />
       
@@ -743,7 +908,7 @@ const CategoriesPage = () => {
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
         category={categoryToEdit}
-        categories={categories} // Pass all categories for parent selection
+        categories={categories}
         onUpdate={handleCategoryUpdated}
         storeId={storeId}
       />
@@ -763,6 +928,33 @@ const CategoriesPage = () => {
         categories={categories}
         onSave={saveNewCategoryOrder}
         storeId={storeId}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={() => {
+          if (categoryToDelete?.id === 'bulk') {
+            // Bulk delete
+            setCategories(categories.filter(c => !selectedCategories.includes(c.id)));
+            setSelectedCategories([]);
+          } else {
+            // Single category delete
+            confirmDeleteCategory();
+          }
+          setShowDeleteConfirm(false);
+        }}
+        title="Delete Category"
+        message={
+          categoryToDelete?.id === 'bulk'
+            ? `Are you sure you want to delete ${selectedCategories.length} categories? This action cannot be undone.`
+            : categoryToDelete && hasChildren(categoryToDelete.id)
+              ? `Warning: "${categoryToDelete?.name}" has subcategories that will also be deleted. Are you sure you want to continue?`
+              : `Are you sure you want to delete "${categoryToDelete?.name}"? This action cannot be undone.`
+        }
+        confirmText="Delete"
+        confirmVariant="danger"
       />
     </div>
   );
