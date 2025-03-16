@@ -5,11 +5,12 @@ import { Button } from '../../components/ui/Button';
 import { FiImage, FiX } from 'react-icons/fi';
 import { getDefaultCategoryImage } from '../../utils/category-image-utils';
 
-const AddCategoryModal = ({ isOpen, onClose, onAdd }) => {
+const AddCategoryModal = ({ isOpen, onClose, onAdd, categories = [], storeId }) => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    status: 'Active'
+    status: 'Active',
+    parentCategoryId: '' // Added parentCategoryId field
   });
   
   const [imageFile, setImageFile] = useState(null);
@@ -62,6 +63,7 @@ const AddCategoryModal = ({ isOpen, onClose, onAdd }) => {
           name: formData.name,
           description: formData.description,
           status: formData.status,
+          parentCategoryId: formData.parentCategoryId ? parseInt(formData.parentCategoryId) : null,
           productCount: 0,
           image: imagePreview || getDefaultCategoryImage(formData.name)
         };
@@ -73,7 +75,8 @@ const AddCategoryModal = ({ isOpen, onClose, onAdd }) => {
         setFormData({
           name: '',
           description: '',
-          status: 'Active'
+          status: 'Active',
+          parentCategoryId: ''
         });
         setImageFile(null);
         setImagePreview('');
@@ -86,6 +89,28 @@ const AddCategoryModal = ({ isOpen, onClose, onAdd }) => {
       setLoading(false);
     }
   };
+
+  // Recursively flatten categories for select dropdown
+  const flattenCategories = (cats, level = 0, result = []) => {
+    if (!cats || !Array.isArray(cats)) return result;
+    
+    cats.forEach(cat => {
+      result.push({
+        id: cat.id,
+        name: cat.name,
+        level,
+        parentId: cat.parentId
+      });
+      
+      if (cat.children && cat.children.length > 0) {
+        flattenCategories(cat.children, level + 1, result);
+      }
+    });
+    
+    return result;
+  };
+
+  const flatCategories = flattenCategories(categories);
 
   return (
     <Modal
@@ -176,6 +201,30 @@ const AddCategoryModal = ({ isOpen, onClose, onAdd }) => {
             className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           />
         </FormField>
+        
+        {/* Parent Category - New Field */}
+        {categories.length > 0 && (
+          <FormField 
+            label="Parent Category"
+            helpText="Leave empty for a top-level category"
+          >
+            <select
+              name="parentCategoryId"
+              value={formData.parentCategoryId}
+              onChange={handleChange}
+              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            >
+              <option value="">None (Top Level)</option>
+              {flatCategories.map(cat => (
+                <option key={cat.id} value={cat.id}>
+                  {/* Use non-breaking spaces for indentation */}
+                  {Array(cat.level).fill('\u00A0\u00A0').join('')}
+                  {cat.level > 0 ? '↳ ' : ''}{cat.name}
+                </option>
+              ))}
+            </select>
+          </FormField>
+        )}
         
         {/* Description */}
         <FormField 
