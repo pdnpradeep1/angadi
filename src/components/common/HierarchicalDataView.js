@@ -1,18 +1,18 @@
-// src/components/common/HierarchicalDataView.js
-import React, { useState } from 'react';
+import React from 'react';
 import { FiChevronDown, FiChevronRight } from 'react-icons/fi';
 
 /**
- * Component for displaying hierarchical data like categories with expand/collapse functionality
+ * Reusable component for displaying hierarchical data with proper indentation and expand/collapse functionality
  * 
  * @param {Object} props
- * @param {Array} props.data - Array of hierarchical data items
+ * @param {Array} props.data - Array of hierarchical data items with children property
  * @param {Object} props.expandedItems - Object mapping item IDs to expanded state
  * @param {Function} props.onToggleExpand - Function to handle expand/collapse
- * @param {Function} props.renderItem - Function to render each item
- * @param {Function} props.onSelect - Function to handle item selection
- * @param {Array} props.selectedIds - Array of selected item IDs
+ * @param {Function} props.renderItem - Function to render each item's content
+ * @param {Function} props.onSelect - Function to handle item selection (optional)
+ * @param {Array} props.selectedIds - Array of selected item IDs (optional)
  * @param {Function} props.shouldShowItem - Function to determine if an item should be shown (for filtering)
+ * @param {boolean} props.showCheckboxes - Whether to show selection checkboxes
  */
 const HierarchicalDataView = ({
   data = [],
@@ -22,6 +22,7 @@ const HierarchicalDataView = ({
   onSelect,
   selectedIds = [],
   shouldShowItem = () => true,
+  showCheckboxes = true,
 }) => {
   // Helper function to recursively render items
   const renderItems = (items, level = 0) => {
@@ -35,16 +36,18 @@ const HierarchicalDataView = ({
       const hasChildren = item.children && item.children.length > 0;
       const isSelected = selectedIds.includes(item.id);
       
+      // Calculate indentation based on level
+      const indentSize = level * 20; // 20px per level
+      
       return (
-        <div key={item.id} className="category-node">
+        <div key={item.id} className="hierarchical-item">
           <div 
-            className={`flex items-center p-3 ${
-              level > 0 ? `ml-${level * 6}` : ''
-            } hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-200 dark:border-gray-700`}
+            className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-200 dark:border-gray-700"
+            style={{ paddingLeft: `${indentSize + 12}px` }}
           >
             {/* Checkbox if selection is enabled */}
-            {onSelect && (
-              <div className="w-6 flex justify-center">
+            {showCheckboxes && onSelect && (
+              <div className="w-6 flex justify-center mr-2">
                 <input
                   type="checkbox"
                   checked={isSelected}
@@ -55,7 +58,7 @@ const HierarchicalDataView = ({
             )}
             
             {/* Expand/collapse button */}
-            <div className="w-6 flex justify-center">
+            <div className="w-6 flex justify-center mr-2">
               {hasChildren ? (
                 <button
                   onClick={(e) => {
@@ -92,7 +95,7 @@ const HierarchicalDataView = ({
   };
 
   return (
-    <div className="space-y-1">
+    <div className="hierarchical-data-view">
       {data.length > 0 ? (
         renderItems(data)
       ) : (

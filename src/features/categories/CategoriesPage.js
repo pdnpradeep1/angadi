@@ -41,7 +41,7 @@ const CategoriesPage = () => {
   const [categoryToEdit, setCategoryToEdit] = useState(null);
   const [categoryToView, setCategoryToView] = useState(null);
   const [showReorderModal, setShowReorderModal] = useState(false);
-  const [viewMode, setViewMode] = useState('list'); // 'list' or 'hierarchy'
+  const [viewMode, setViewMode] = useState('hierarchy'); // 'list' or 'hierarchy'
   const [expandedCategories, setExpandedCategories] = useState({});
   const [filters, setFilters] = useState({
     status: 'all',
@@ -51,99 +51,102 @@ const CategoriesPage = () => {
   // Fetch Categories
   useEffect(() => {
     fetchCategories();
-    fetchCategoryHierarchy();
   }, []);
+
+  // Build hierarchical structure when categories change
+  useEffect(() => {
+    if (categories.length > 0) {
+      buildCategoryHierarchy();
+    }
+  }, [categories]);
 
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      // In a real app, you would fetch from your API
-      const response = await apiService.get(`/categories/store/${storeId}`);
-      setCategories(response.data);
-      setLoading(false);
+      // Try to fetch from API first
+      try {
+        const response = await apiService.get(`/categories/store/${storeId}`);
+        setCategories(response.data);
+        setLoading(false);
+      } catch (apiErr) {
+        console.error('API fetch error:', apiErr);
+        
+        // For development/demo, use mock data
+        setTimeout(() => {
+          const mockCategories = [
+            {
+              id: 1,
+              name: 'Clothing',
+              productCount: 24,
+              status: 'Active',
+              image: '/api/placeholder/50/50?text=Clothing'
+            },
+            {
+              id: 2,
+              name: 'shirts',
+              parentId: 1, // Child of Clothing
+              productCount: 12,
+              status: 'Active',
+              image: '/api/placeholder/50/50?text=shirts'
+            },
+            {
+              id: 3,
+              name: 'Accessories',
+              productCount: 18,
+              status: 'Active',
+              image: '/api/placeholder/50/50?text=Accessories'
+            },
+            {
+              id: 4,
+              name: 'Hats',
+              parentId: 3, // Child of Accessories 
+              productCount: 8,
+              status: 'Active',
+              image: '/api/placeholder/50/50?text=Hats'
+            },
+            {
+              id: 5,
+              name: 'T-shirts',
+              parentId: 2, // Child of shirts
+              productCount: 6,
+              status: 'Active',
+              image: '/api/placeholder/50/50?text=Tshirts'
+            }
+          ];
+          setCategories(mockCategories);
+          setLoading(false);
+        }, 500);
+      }
     } catch (err) {
       console.error('Error fetching categories:', err);
       setError('Failed to load categories. Please try again.');
-      
-      // For this demo, we'll use mock data
-      setTimeout(() => {
-        const mockCategories = [
-          {
-            id: 1,
-            name: 'Spicy',
-            productCount: 12,
-            status: 'Active',
-            image: '/api/placeholder/50/50?text=Spicy'
-          },
-          {
-            id: 2,
-            name: 'Sweets',
-            productCount: 24,
-            status: 'Active',
-            image: '/api/placeholder/50/50?text=Sweets'
-          },
-          {
-            id: 3,
-            name: 'Make On Order',
-            productCount: 8,
-            status: 'Active',
-            image: '/api/placeholder/50/50?text=OnOrder'
-          },
-          {
-            id: 4,
-            name: 'Traditional',
-            parentId: 2,
-            productCount: 15,
-            status: 'Active',
-            image: '/api/placeholder/50/50?text=Trad'
-          },
-          {
-            id: 5,
-            name: 'Modern',
-            parentId: 2,
-            productCount: 9,
-            status: 'Active',
-            image: '/api/placeholder/50/50?text=Modern'
-          },
-          {
-            id: 6,
-            name: 'Seasonal',
-            productCount: 6,
-            status: 'Inactive',
-            image: '/api/placeholder/50/50?text=Season'
-          },
-          {
-            id: 7,
-            name: 'Dry Fruits',
-            productCount: 14,
-            status: 'Active',
-            image: '/api/placeholder/50/50?text=DryFr'
-          }
-        ];
-        setCategories(mockCategories);
-        setLoading(false);
-      }, 500);
+      setLoading(false);
     }
   };
 
-  const fetchCategoryHierarchy = async () => {
-    try {
-      // Build hierarchy from flat categories
-      const buildHierarchy = (cats, parentId = null) => {
-        const children = cats.filter(cat => cat.parentId === parentId);
-        return children.map(child => ({
-          ...child,
-          children: buildHierarchy(cats, child.id)
+  // Helper function to build category hierarchy
+  const buildCategoryHierarchy = () => {
+    // Create a hierarchy from flat categories
+    const buildHierarchy = (items, parentId = null) => {
+      return items
+        .filter(item => item.parentId === parentId)
+        .map(item => ({
+          ...item,
+          children: buildHierarchy(items, item.id)
         }));
-      };
-      
-      setTimeout(() => {
-        const mockHierarchy = buildHierarchy(categories);
-        setCategoryHierarchy(mockHierarchy);
-      }, 500);
-    } catch (err) {
-      console.error('Error fetching category hierarchy:', err);
-    }
+    };
+
+    const hierarchy = buildHierarchy(categories);
+    setCategoryHierarchy(hierarchy);
+    
+    // Auto-expand all parent categories
+    const newExpandedState = {};
+    categories.forEach(cat => {
+      if (categories.some(c => c.parentId === cat.id)) {
+        newExpandedState[cat.id] = true;
+      }
+    });
+    setExpandedCategories(prev => ({...prev, ...newExpandedState}));
   };
 
   // Handle Filter Changes
@@ -197,27 +200,10 @@ const CategoriesPage = () => {
   };
 
   // Render a hierarchical category tree
-  const renderCategoryTree = (categories) => {
-    // Create a lookup map to efficiently find parents
-    const categoryMap = {};
-    categories.forEach(cat => {
-      categoryMap[cat.id] = { ...cat, children: [] };
-    });
-    
-    // Build the tree structure
-    const rootCategories = [];
-    categories.forEach(cat => {
-      if (cat.parentId && categoryMap[cat.parentId]) {
-        categoryMap[cat.parentId].children.push(categoryMap[cat.id]);
-      } else {
-        rootCategories.push(categoryMap[cat.id]);
-      }
-    });
-    
-    // Render the tree
+  const renderCategoryTree = () => {
     return (
       <div className="space-y-1">
-        {renderCategoryNodes(rootCategories)}
+        {renderCategoryNodes(categoryHierarchy)}
       </div>
     );
   };
@@ -241,9 +227,8 @@ const CategoriesPage = () => {
       return (
         <div key={node.id} className="category-node">
           <div 
-            className={`flex items-center p-3 ${
-              level > 0 ? `ml-${level * 6}` : ''
-            } hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-200 dark:border-gray-700`}
+            className={`flex items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-200 dark:border-gray-700`}
+            style={{ paddingLeft: `${(level * 20) + 12}px` }}
           >
             {/* Checkbox */}
             <div className="w-6 flex justify-center">
@@ -344,9 +329,6 @@ const CategoriesPage = () => {
       // Update local state to remove the category
       setCategories(categories.filter(c => c.id !== categoryToDelete.id));
       
-      // Also refresh hierarchy
-      fetchCategoryHierarchy();
-      
       setShowDeleteConfirm(false);
       setCategoryToDelete(null);
     } catch (err) {
@@ -362,9 +344,6 @@ const CategoriesPage = () => {
   
   const handleCategoryAdded = (newCategory) => {
     setCategories(prevCategories => [newCategory, ...prevCategories]);
-    
-    // Refresh hierarchy after adding
-    fetchCategoryHierarchy();
   };
 
   // Handle editing a category
@@ -379,9 +358,6 @@ const CategoriesPage = () => {
         category.id === updatedCategory.id ? updatedCategory : category
       )
     );
-    
-    // Refresh hierarchy after updating
-    fetchCategoryHierarchy();
   };
 
   // Handle viewing category details
@@ -398,12 +374,7 @@ const CategoriesPage = () => {
   const saveNewCategoryOrder = (reorderedCategories) => {
     // Update the local state with the new order
     setCategories(reorderedCategories);
-    
-    // Refresh hierarchy after reordering
-    fetchCategoryHierarchy();
   };
-
-  // We no longer need these - we're properly importing from react-icons/fi
 
   return (
     <div className="p-6">
@@ -506,13 +477,13 @@ const CategoriesPage = () => {
                 setFilters({ status: 'all', parentId: 'all' });
                 setFilterOpen(false);
               }}
-              className="px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 mr-2"
+              className="px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-middle hover:bg-gray-50 dark:hover:bg-gray-700 mr-2"
             >
               Clear
             </button>
             <button
               onClick={() => setFilterOpen(false)}
-              className="px-4 py-2 bg-primary-600 text-white rounded-md shadow-sm text-sm font-medium hover:bg-primary-700"
+              className="px-4 py-2 bg-primary-600 text-white rounded-md shadow-sm text-sm font-mediu hover:bg-primary-700"
             >
               Apply
             </button>
@@ -520,7 +491,7 @@ const CategoriesPage = () => {
         </Card>
       )}
 
-      {/* Error State */}
+      {/* Error state */}
       {error && (
         <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-md">
           <div className="flex items-center">
@@ -529,8 +500,6 @@ const CategoriesPage = () => {
           </div>
         </div>
       )}
-
-      {/* Icons properly imported at the top of the file now */}
 
       {/* Main Content Area - Either Table or Hierarchy View */}
       <Card className="overflow-hidden">
@@ -612,7 +581,7 @@ const CategoriesPage = () => {
         ) : (
           <div className="p-4 overflow-auto max-h-[calc(100vh-300px)]">
             {categories.length > 0 ? (
-              renderCategoryTree(categories)
+              renderCategoryTree()
             ) : (
               <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                 No categories found
@@ -650,7 +619,7 @@ const CategoriesPage = () => {
         </div>
       )}
 
-      {/* Add Category Modal */}
+      {/* Modals */}
       {showAddModal && (
         <AddCategoryModal
           isOpen={showAddModal}
@@ -661,7 +630,6 @@ const CategoriesPage = () => {
         />
       )}
       
-      {/* Edit Category Modal */}
       {showEditModal && (
         <EditCategoryModal
           isOpen={showEditModal}
@@ -673,7 +641,6 @@ const CategoriesPage = () => {
         />
       )}
       
-      {/* Category Details Modal */}
       {showDetailsModal && (
         <CategoryDetailsModal
           isOpen={showDetailsModal}
@@ -683,7 +650,6 @@ const CategoriesPage = () => {
         />
       )}
       
-      {/* Reorder Categories Modal */}
       {showReorderModal && (
         <ReorderCategoriesModal
           isOpen={showReorderModal}
