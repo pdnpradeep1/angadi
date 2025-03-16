@@ -335,11 +335,12 @@ const CategoriesPage = () => {
 
   // Find all children of a category (recursive)
   const findAllChildren = (categoryId) => {
-    const children = categories.filter(cat => cat.parentId === categoryId);
-    let allChildren = [...children];
+    const directChildren = categories.filter(cat => cat.parentId === categoryId);
+    let allChildren = [...directChildren];
     
-    children.forEach(child => {
-      allChildren = [...allChildren, ...findAllChildren(child.id)];
+    directChildren.forEach(child => {
+      const childDescendants = findAllChildren(child.id);
+      allChildren = [...allChildren, ...childDescendants];
     });
     
     return allChildren;
@@ -350,15 +351,22 @@ const CategoriesPage = () => {
     const isSelected = selectedCategories.includes(categoryId);
     
     if (isSelected) {
-      // Deselect this category and all its children
-      const childrenIds = findAllChildren(categoryId).map(c => c.id);
-      setSelectedCategories(prev => 
-        prev.filter(id => id !== categoryId && !childrenIds.includes(id))
-      );
+      // Deselect this category
+      setSelectedCategories(prev => prev.filter(id => id !== categoryId));
     } else {
-      // Select this category and all its children
-      const childrenIds = findAllChildren(categoryId).map(c => c.id);
-      setSelectedCategories(prev => [...prev, categoryId, ...childrenIds]);
+      // Select this category
+      setSelectedCategories(prev => [...prev, categoryId]);
+    }
+  };
+
+  // Handle select all
+  const handleSelectAll = (itemIds) => {
+    if (itemIds.length === 0 || (selectedCategories.length === categories.length)) {
+      // If already all selected or we're deselecting all
+      setSelectedCategories([]);
+    } else {
+      // Select all
+      setSelectedCategories(itemIds);
     }
   };
 
@@ -615,53 +623,6 @@ const CategoriesPage = () => {
 
   return (
     <>
-      {/* <GenericDataList
-        title="Categories"
-        data={applyFilters(categories)}
-        columns={columns}
-        filters={filterConfig}
-        onSearch={(term) => {
-          setSearchTerm(term);
-          fetchCategories();
-        }}
-        onFilterChange={handleFilterChange}
-        onApplyFilters={() => {
-          fetchCategories();
-          setFilterOpen(false);
-        }}
-        onClearFilters={() => {
-          setFilters({ status: 'all', parentId: 'all' });
-          setSearchTerm('');
-          setFilterOpen(false);
-          fetchCategories();
-        }}
-        onDelete={handleDeleteCategory}
-        onAdd={handleAddCategory}
-        loading={loading}
-        error={error}
-        emptyState={{
-          title: "No categories found",
-          message: searchTerm 
-            ? "Try adjusting your search or filters" 
-            : "Get started by creating your first category",
-          actionText: "Add Category",
-          onAction: handleAddCategory
-        }}
-        actionButtons={actionButtons}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        showViewModeToggle={true}
-        renderGridView={viewMode === 'hierarchy' ? () => renderHierarchicalContent() : null}
-        bulkActions={bulkActions}
-        selectedItems={selectedCategories}
-        onItemSelect={handleCategorySelection}
-        filterOpen={filterOpen}
-        setFilterOpen={setFilterOpen}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        entityName="category"
-      /> */}
-
       <GenericDataList
         title="Categories"
         data={applyFilters(categories)}
@@ -702,6 +663,7 @@ const CategoriesPage = () => {
         bulkActions={bulkActions}
         selectedItems={selectedCategories}
         onItemSelect={handleCategorySelection}
+        onSelectAll={handleSelectAll}
         filterOpen={filterOpen}
         setFilterOpen={setFilterOpen}
         searchTerm={searchTerm}

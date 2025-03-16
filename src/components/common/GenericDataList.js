@@ -114,6 +114,27 @@ const GenericDataList = ({
     }
   };
 
+  const handleSelectAll = (itemIds) => {
+    if (onSelectAll) {
+      onSelectAll(itemIds);
+    } else if (onItemSelect) {
+      // Fall back to using onItemSelect for each item if onSelectAll isn't provided
+      const allSelected = data.every(item => selectedItems.includes(item.id));
+      
+      if (allSelected) {
+        // Deselect all
+        selectedItems.forEach(id => onItemSelect(id));
+      } else {
+        // Select all
+        data.forEach(item => {
+          if (!selectedItems.includes(item.id)) {
+            onItemSelect(item.id);
+          }
+        });
+      }
+    }
+  };
+
   return (
     <div className="p-6 bg-gray-50 dark:bg-gray-900">
       {/* Header */}
@@ -246,14 +267,16 @@ const GenericDataList = ({
             </div>
         ) : (
             <Table
-            columns={columns}
-            data={data}
-            isLoading={loading}
-            emptyState={emptyState}
+                columns={columns}
+                data={data}
+                isLoading={loading}
+                emptyState={emptyState}
+                onSelectAll={handleSelectAll}
+                selectedItems={selectedItems}
             />
         )}
         </Card>
-        
+
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         isOpen={showDeleteConfirm}

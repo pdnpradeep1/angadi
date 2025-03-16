@@ -264,6 +264,15 @@ const ProductList = () => {
     // Build hierarchical options
     return [...options, ...buildCategoryOptions(categoriesWithHasChildren)];
   };
+  const handleSelectAllItems = (itemIds) => {
+    if (itemIds.length === 0) {
+      // Deselect all
+      setSelectedProducts([]);
+    } else {
+      // Select all
+      setSelectedProducts(itemIds);
+    }
+  };
 
   // Filter Configuration
   const filterConfig = {
@@ -651,6 +660,16 @@ const ProductList = () => {
     );
   };
 
+  // const handleSelectAll = (itemIds) => {
+  //   if (itemIds.length === 0) {
+  //     // Deselect all
+  //     setSelectedProducts([]);
+  //   } else {
+  //     // Select all
+  //     setSelectedProducts(itemIds);
+  //   }
+  // };
+
   return (
     <>
       {showImportExport && (
@@ -732,6 +751,7 @@ const ProductList = () => {
           filterOpen={filterOpen}
           setFilterOpen={setFilterOpen}
           searchTerm={searchTerm}
+          onSelectAll={handleSelectAllItems}
           setSearchTerm={setSearchTerm}
           entityName="product"
         />

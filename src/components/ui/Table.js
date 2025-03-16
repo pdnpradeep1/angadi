@@ -21,7 +21,9 @@ const Table = ({
   onRowClick, 
   isLoading = false, 
   emptyState,
-  className = ''
+  className = '',
+  onSelectAll = null,  // Add this parameter
+  selectedItems = []   // Add this parameter to track selected items
 }) => {
   if (isLoading) {
     return <LoadingState />;
@@ -30,6 +32,22 @@ const Table = ({
   if (data.length === 0) {
     return emptyState || <EmptyStates.SearchResults />;
   }
+
+  const allSelected = data.length > 0 && data.every(item => 
+    selectedItems.includes(item.id)
+  );
+  
+  const handleSelectAll = () => {
+    if (onSelectAll) {
+      if (allSelected) {
+        // If all are selected, deselect all
+        onSelectAll([]);
+      } else {
+        // Otherwise, select all items
+        onSelectAll(data.map(item => item.id));
+      }
+    }
+  };
   
   return (
     <div className={`bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden ${className}`}>
@@ -41,19 +59,31 @@ const Table = ({
                 <th 
                   key={column.key || index}
                   className={`px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider ${column.sortable ? 'cursor-pointer' : ''} ${column.className || ''}`}
-                  onClick={() => column.sortable && column.onSort && column.onSort(column.key)}
+                  onClick={column.key === 'select' ? null : () => column.sortable && column.onSort && column.onSort(column.key)}
                 >
-                  {column.sortable ? (
-                    <div className="flex items-center">
-                      <span>{column.title}</span>
-                      {column.isSorted && (
-                        <span className="ml-1">
-                          {column.sortDirection === 'asc' ? '↑' : '↓'}
-                        </span>
-                      )}
+                  {column.key === 'select' && onSelectAll ? (
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={allSelected}
+                        onChange={handleSelectAll}
+                        className="h-4 w-4 text-primary-600 border-gray-300 rounded"
+                      />
                     </div>
                   ) : (
-                    column.title
+                    // Original column rendering
+                    column.sortable ? (
+                      <div className="flex items-center">
+                        <span>{column.title}</span>
+                        {column.isSorted && (
+                          <span className="ml-1">
+                            {column.sortDirection === 'asc' ? '↑' : '↓'}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      column.title
+                    )
                   )}
                 </th>
               ))}
