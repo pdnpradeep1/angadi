@@ -3,6 +3,7 @@ import Modal from '../../components/ui/Modal';
 import { FormField } from '../../components/ui/FormField';
 import { Button } from '../../components/ui/Button';
 import { FiImage, FiX } from 'react-icons/fi';
+import { renderCategoryImage, getDefaultCategoryImage } from '../../utils/category-image-utils';
 
 const EditCategoryModal = ({ isOpen, onClose, category, onUpdate }) => {
   const [formData, setFormData] = useState({
@@ -50,7 +51,7 @@ const EditCategoryModal = ({ isOpen, onClose, category, onUpdate }) => {
 
   const removeImage = () => {
     setImageFile(null);
-    setImagePreview(category?.image || '');
+    setImagePreview('');
   };
 
   const handleSubmit = async () => {
@@ -130,7 +131,24 @@ const EditCategoryModal = ({ isOpen, onClose, category, onUpdate }) => {
                 src={imagePreview} 
                 alt="Category preview" 
                 className="w-24 h-24 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
+                onError={(e) => {
+                  e.target.onerror = null; // Prevent infinite loop
+                  removeImage(); // Remove broken image and show the add image placeholder
+                }}
               />
+              <button
+                type="button"
+                onClick={removeImage}
+                className="absolute -top-2 -right-2 bg-white dark:bg-gray-800 rounded-full p-1 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                <FiX className="text-gray-500" />
+              </button>
+            </div>
+          ) : category && category.image ? (
+            <div className="relative inline-block">
+              {renderCategoryImage(category.image, category.name, { 
+                className: "w-24 h-24 object-cover rounded-lg border border-gray-300 dark:border-gray-600" 
+              })}
               <button
                 type="button"
                 onClick={removeImage}

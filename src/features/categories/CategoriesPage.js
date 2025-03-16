@@ -16,6 +16,7 @@ import EditCategoryModal from './EditCategoryModal';
 import CategoryDetailsModal from './CategoryDetailsModal';
 import ReorderCategoriesModal from './ReorderCategoriesModal';
 import { apiService } from '../../api/config';
+import { renderCategoryImage } from '../../utils/category-image-utils';
 
 const CategoriesPage = () => {
   const { storeId } = useParams();
@@ -195,11 +196,7 @@ const CategoriesPage = () => {
       title: 'Category',
       render: (row) => (
         <div className="flex items-center">
-          <img 
-            src={row.image} 
-            alt={row.name} 
-            className="h-10 w-10 rounded-md mr-3" 
-          />
+          {renderCategoryImage(row.image, row.name, { className: "h-10 w-10 rounded-md mr-3" })}
           <span>{row.name}</span>
         </div>
       )

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Modal from '../../components/ui/Modal';
 import { Button } from '../../components/ui/Button';
 import { FiMenu } from 'react-icons/fi'; // Changed from FiGripVertical to FiMenu
+import { renderCategoryImage } from '../../utils/category-image-utils';
 
 const ReorderCategoriesModal = ({ isOpen, onClose, categories, onSave }) => {
   const [orderedCategories, setOrderedCategories] = useState([]);
@@ -105,11 +106,9 @@ const ReorderCategoriesModal = ({ isOpen, onClose, categories, onSave }) => {
                 <FiMenu /> {/* Changed from FiGripVertical to FiMenu */}
               </span>
               <div className="flex items-center">
-                <img 
-                  src={category.image}
-                  alt={category.name}
-                  className="w-10 h-10 rounded-md object-cover mr-3"
-                />
+                {renderCategoryImage(category.image, category.name, {
+                  className: "w-10 h-10 rounded-md object-cover mr-3"
+                })}
                 <span className="text-gray-800 dark:text-gray-200">{category.name}</span>
               </div>
               {category.status === 'Inactive' && (

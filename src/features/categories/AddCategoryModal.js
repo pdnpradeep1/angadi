@@ -3,6 +3,7 @@ import Modal from '../../components/ui/Modal';
 import { FormField } from '../../components/ui/FormField';
 import { Button } from '../../components/ui/Button';
 import { FiImage, FiX } from 'react-icons/fi';
+import { getDefaultCategoryImage } from '../../utils/category-image-utils';
 
 const AddCategoryModal = ({ isOpen, onClose, onAdd }) => {
   const [formData, setFormData] = useState({
@@ -62,7 +63,7 @@ const AddCategoryModal = ({ isOpen, onClose, onAdd }) => {
           description: formData.description,
           status: formData.status,
           productCount: 0,
-          image: imagePreview || '/api/placeholder/50/50'
+          image: imagePreview || getDefaultCategoryImage(formData.name)
         };
         
         onAdd(newCategory);
@@ -129,6 +130,10 @@ const AddCategoryModal = ({ isOpen, onClose, onAdd }) => {
                 src={imagePreview} 
                 alt="Category preview" 
                 className="w-24 h-24 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
+                onError={(e) => {
+                  e.target.onerror = null; // Prevent infinite loop
+                  removeImage(); // Remove broken image and show the add image placeholder
+                }}
               />
               <button
                 type="button"

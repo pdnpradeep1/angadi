@@ -2,6 +2,7 @@ import React from 'react';
 import Modal from '../../components/ui/Modal';
 import { Button } from '../../components/ui/Button';
 import { FiCalendar, FiTag, FiShoppingBag, FiEdit2 } from 'react-icons/fi';
+import { renderCategoryImage } from '../../utils/category-image-utils';
 
 const CategoryDetailsModal = ({ isOpen, onClose, category, onEdit }) => {
   if (!category) return null;
@@ -35,11 +36,9 @@ const CategoryDetailsModal = ({ isOpen, onClose, category, onEdit }) => {
       <div className="space-y-6">
         {/* Category Image */}
         <div className="flex justify-center">
-          <img 
-            src={category.image} 
-            alt={category.name} 
-            className="w-32 h-32 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
-          />
+          {renderCategoryImage(category.image, category.name, { 
+            className: "w-32 h-32 object-cover rounded-lg border border-gray-300 dark:border-gray-600" 
+          })}
         </div>
         
         {/* Category Details */}
