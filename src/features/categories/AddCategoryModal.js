@@ -4,6 +4,7 @@ import { FormField } from '../../components/ui/FormField';
 import { Button } from '../../components/ui/Button';
 import { FiImage, FiX } from 'react-icons/fi';
 import { getDefaultCategoryImage } from '../../utils/category-image-utils';
+import { apiService } from '../../api/config';
 
 const AddCategoryModal = ({ isOpen, onClose, onAdd, categories = [], storeId }) => {
   const [formData, setFormData] = useState({
@@ -57,32 +58,67 @@ const AddCategoryModal = ({ isOpen, onClose, onAdd, categories = [], storeId }) 
       // In a real implementation, you would upload the image and create the category
       // For now, we'll just simulate a successful API call
       
-      setTimeout(() => {
-        const newCategory = {
-          id: Date.now(), // Temporary ID
-          name: formData.name,
-          description: formData.description,
-          status: formData.status,
-          parentCategoryId: formData.parentCategoryId ? parseInt(formData.parentCategoryId) : null,
-          productCount: 0,
-          image: imagePreview || getDefaultCategoryImage(formData.name)
-        };
+      // setTimeout(() => {
+      //   const newCategory = {
+      //     id: Date.now(), // Temporary ID
+      //     name: formData.name,
+      //     description: formData.description,
+      //     status: formData.status,
+      //     parentCategoryId: formData.parentCategoryId ? parseInt(formData.parentCategoryId) : null,
+      //     productCount: 0,
+      //     image: imagePreview || getDefaultCategoryImage(formData.name)
+      //   };
+
+      //   const response =  apiService.get('/api/stores/my-stores');
+      //   console.log(response.data);
         
-        onAdd(newCategory);
-        setLoading(false);
+      //   // await apiService.post(`/categories/${storeId}`, newCategory);
+
+      //   onAdd(newCategory);
+      //   setLoading(false);
         
-        // Reset form
-        setFormData({
-          name: '',
-          description: '',
-          status: 'Active',
-          parentCategoryId: ''
-        });
-        setImageFile(null);
-        setImagePreview('');
+      //   // Reset form
+      //   setFormData({
+      //     name: '',
+      //     description: '',
+      //     status: 'Active',
+      //     parentCategoryId: ''
+      //   });
+      //   setImageFile(null);
+      //   setImagePreview('');
         
-        onClose();
-      }, 1000);
+      //   onClose();
+      // }, 1000);
+
+      const newCategory = {
+        id: Date.now(), // Temporary ID
+        name: formData.name,
+        description: formData.description,
+        status: formData.status,
+        parentCategoryId: formData.parentCategoryId ? parseInt(formData.parentCategoryId) : null,
+        productCount: 0,
+        image: imagePreview || getDefaultCategoryImage(formData.name)
+      };
+
+      const response =  await apiService.post(`/categories/${storeId}`, newCategory);
+      console.log(response.data);
+      
+      // await apiService.post(`/categories/${storeId}`, newCategory);
+
+      onAdd(newCategory);
+      setLoading(false);
+      
+      // Reset form
+      setFormData({
+        name: '',
+        description: '',
+        status: 'Active',
+        parentCategoryId: ''
+      });
+      setImageFile(null);
+      setImagePreview('');
+      
+      onClose();
     } catch (err) {
       console.error('Error adding category:', err);
       setError('Failed to add category. Please try again.');

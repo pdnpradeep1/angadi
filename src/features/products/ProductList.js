@@ -294,12 +294,14 @@ const ProductList = () => {
     
     // Get category counts from products
     const categoryCounts = {};
-    products.forEach(product => {
-      const categoryId = product.category?.id || product.categoryId;
-      if (categoryId) {
-        categoryCounts[categoryId] = (categoryCounts[categoryId] || 0) + 1;
-      }
-    });
+    if (Array.isArray(products)) {
+      products.forEach(product => {
+        const categoryId = product.category?.id || product.categoryId;
+        if (categoryId) {
+          categoryCounts[categoryId] = (categoryCounts[categoryId] || 0) + 1;
+        }
+      });
+    }
     
     // Add has-children flag to categories
     const categoriesWithHasChildren = categoryHierarchy.map(category => {
