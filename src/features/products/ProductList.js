@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   FiPlus, 
-  FiMoreVertical, 
   FiEdit2, 
   FiTrash2,
   FiUpload,
   FiImage,
-  FiChevronDown,
-  FiChevronRight,
   FiTag,
-  FiSearch
+  FiCheck,
+  FiX
 } from 'react-icons/fi';
 import api from '../../api/config';
 
@@ -20,12 +18,10 @@ import { generateMockProducts } from '../../utils/mock-data-utils';
 import { getCategoryBreadcrumb } from '../../utils/category-image-utils';
 
 // UI Component Imports
-import Table from '../../components/ui/Table';
-import FilterPanel from '../../components/ui/FilterPanel';
+import GenericDataList from '../../components/common/GenericDataList';
 import { EmptyStates } from '../../utils/loading-error-states';
 import ProductImportExport from '../importexport/ProductImportExport';
 import { Button } from '../../components/ui/Button';
-import { ConfirmDialog } from '../../components/ui/Modal';
 
 const ProductList = () => {
   const { storeId } = useParams();
@@ -42,8 +38,6 @@ const ProductList = () => {
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [showImportExport, setShowImportExport] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [productToDelete, setProductToDelete] = useState(null);
   const [expandedCategories, setExpandedCategories] = useState({});
 
   // Filters state
@@ -136,43 +130,7 @@ const ProductList = () => {
             status: 'Active',
             image: '/api/placeholder/50/50?text=Sweets'
           },
-          {
-            id: 3,
-            name: 'Make On Order',
-            productCount: 8,
-            status: 'Active',
-            image: '/api/placeholder/50/50?text=OnOrder'
-          },
-          {
-            id: 4,
-            name: 'Traditional',
-            parentId: 2,
-            productCount: 15,
-            status: 'Active',
-            image: '/api/placeholder/50/50?text=Trad'
-          },
-          {
-            id: 5,
-            name: 'Modern',
-            parentId: 2,
-            productCount: 9,
-            status: 'Active',
-            image: '/api/placeholder/50/50?text=Modern'
-          },
-          {
-            id: 6,
-            name: 'Seasonal',
-            productCount: 6,
-            status: 'Inactive',
-            image: '/api/placeholder/50/50?text=Season'
-          },
-          {
-            id: 7,
-            name: 'Dry Fruits',
-            productCount: 14,
-            status: 'Active',
-            image: '/api/placeholder/50/50?text=DryFr'
-          }
+          // Add more mock categories as needed
         ];
         setCategories(mockCategories);
       }
@@ -241,7 +199,9 @@ const ProductList = () => {
       result.push({
         value: category.id.toString(),
         label: `${Array(level).fill('\u00A0\u00A0').join('')}${level > 0 ? '↳ ' : ''}${category.name}`,
-        level
+        level,
+        hasChildren: category.children && category.children.length > 0,
+        count: category.productCount
       });
       
       // Add its children if expanded
@@ -292,23 +252,11 @@ const ProductList = () => {
       { value: 'all', label: 'All Categories' },
     ];
     
-    // Get category counts from products
-    const categoryCounts = {};
-    if (Array.isArray(products)) {
-      products.forEach(product => {
-        const categoryId = product.category?.id || product.categoryId;
-        if (categoryId) {
-          categoryCounts[categoryId] = (categoryCounts[categoryId] || 0) + 1;
-        }
-      });
-    }
-    
     // Add has-children flag to categories
     const categoriesWithHasChildren = categoryHierarchy.map(category => {
       return {
         ...category,
         hasChildren: category.children && category.children.length > 0,
-        count: categoryCounts[category.id] || 0
       };
     });
     
@@ -391,23 +339,26 @@ const ProductList = () => {
   };
 
   // Handle product deletion
-  const handleDeleteProduct = (product) => {
-    setProductToDelete(product);
-    setShowDeleteConfirm(true);
-  };
-
-  const confirmDeleteProduct = async () => {
+  const handleDeleteProduct = async (product) => {
     try {
-      await api.delete(`/products/${productToDelete.id}`);
-      
-      // Update local state to remove the product
-      setProducts(products.filter(p => p.id !== productToDelete.id));
-      
-      setShowDeleteConfirm(false);
-      setProductToDelete(null);
+      // Handle bulk delete
+      if (product.id === 'bulk') {
+        // Call API for each item in the bulk selection
+        await Promise.all(
+          product.items.map(id => api.delete(`/products/${id}`))
+        );
+        
+        // Update local state to remove deleted products
+        setProducts(products.filter(p => !product.items.includes(p.id)));
+        setSelectedProducts([]);
+      } else {
+        // Single delete
+        await api.delete(`/products/${product.id}`);
+        setProducts(products.filter(p => p.id !== product.id));
+      }
     } catch (err) {
-      console.error('Error deleting product:', err);
-      setError('Failed to delete product. Please try again.');
+      console.error('Error deleting product(s):', err);
+      setError('Failed to delete product(s). Please try again.');
     }
   };
 
@@ -486,7 +437,7 @@ const ProductList = () => {
       title: 'Product Name',
       render: (row) => (
         <div className="flex items-center">
-          {renderProductImage(row.image, row.name)}
+          {renderProductImage(row.image || row.imageUrl, row.name)}
           <div className="ml-3">
             <span className="font-medium">{row.name}</span>
             <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center mt-1">
@@ -583,143 +534,169 @@ const ProductList = () => {
     }
   ];
 
-  // Handle bulk actions
-  const handleBulkAction = (action) => {
-    if (selectedProducts.length === 0) {
-      alert('Please select at least one product');
-      return;
+  // Bulk actions configuration
+  const bulkActions = [
+    {
+      type: 'activate',
+      label: 'Activate',
+      variant: 'secondary',
+      icon: <FiCheck className="mr-1" size={14} />,
+      handler: (selectedIds) => {
+        // Implementation for bulk activate
+        console.log('Bulk activate:', selectedIds);
+      }
+    },
+    {
+      type: 'deactivate',
+      label: 'Deactivate',
+      variant: 'secondary',
+      icon: <FiX className="mr-1" size={14} />,
+      handler: (selectedIds) => {
+        // Implementation for bulk deactivate
+        console.log('Bulk deactivate:', selectedIds);
+      }
+    },
+    {
+      type: 'delete',
+      label: 'Delete',
+      variant: 'danger',
+      icon: <FiTrash2 className="mr-1" size={14} />
+      // No handler needed, will use the confirmation dialog
     }
-    
-    switch (action) {
-      case 'delete':
-        // Implement bulk delete
-        break;
-      case 'activate':
-        // Implement bulk activate
-        break;
-      case 'deactivate':
-        // Implement bulk deactivate
-        break;
-      default:
-        break;
+  ];
+
+  // Additional action buttons for the header
+  const actionButtons = [
+    {
+      label: 'Import/Export',
+      icon: <FiUpload />,
+      variant: 'secondary',
+      onClick: () => setShowImportExport(!showImportExport)
     }
+  ];
+
+  // Render a grid view (alternative to table view)
+  const renderGridView = (data) => {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
+        {data.map(product => (
+          <div 
+            key={product.id} 
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
+          >
+            <div className="p-4">
+              <div className="flex items-center mb-2">
+                {renderProductImage(product.image || product.imageUrl, product.name)}
+                <div className="ml-3 flex-1 min-w-0">
+                  <h3 className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                    {product.name}
+                  </h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                    {getProductCategoryDisplay(product)}
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={selectedProducts.includes(product.id)}
+                  onChange={() => {
+                    setSelectedProducts(prev => 
+                      prev.includes(product.id) 
+                        ? prev.filter(id => id !== product.id)
+                        : [...prev, product.id]
+                    );
+                  }}
+                  className="h-4 w-4 text-primary-600 border-gray-300 rounded ml-2"
+                />
+              </div>
+              
+              <div className="flex justify-between items-center mt-3">
+                <div>
+                  <div className="font-medium">{formatCurrency(product.price)}</div>
+                  {product.originalPrice && product.originalPrice > product.price && (
+                    <div className="text-xs text-gray-500 dark:text-gray-400 line-through">
+                      {formatCurrency(product.originalPrice)}
+                    </div>
+                  )}
+                </div>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium
+                  ${product.status === 'Active' 
+                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' 
+                    : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'}`}
+                >
+                  {product.status}
+                </span>
+              </div>
+              
+              <div className="flex justify-between items-center mt-4">
+                <Button 
+                  variant="secondary" 
+                  size="sm"
+                  onClick={() => navigate(`/store-dashboard/${storeId}/edit-product/${product.id}`)}
+                >
+                  <FiEdit2 size={14} />
+                </Button>
+                <Button 
+                  variant="danger" 
+                  size="sm"
+                  onClick={() => handleDeleteProduct(product)}
+                >
+                  <FiTrash2 size={14} />
+                </Button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   return (
-    <div className="p-6 bg-gray-50 dark:bg-gray-900">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Products</h1>
-        <div className="flex space-x-2">
-          <Button 
-            variant="secondary" 
-            onClick={() => setShowImportExport(!showImportExport)}
-          >
-            <FiUpload className="mr-2" /> Import/Export
-          </Button>
-          <Button 
-            variant="primary" 
-            onClick={() => navigate(`/store-dashboard/${storeId}/all-products/add-product`)}
-          >
-            <FiPlus className="mr-2" /> Add Product
-          </Button>
-        </div>
-      </div>
-
+    <>
       {showImportExport && (
         <div className="mb-6">
           <ProductImportExport storeId={storeId} />
         </div>
       )}
-
-      {/* Bulk actions bar */}
-      {selectedProducts.length > 0 && (
-        <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-3 mb-4 flex items-center justify-between">
-          <div className="text-primary-800 dark:text-primary-300 font-medium">
-            {selectedProducts.length} products selected
-          </div>
-          <div className="flex space-x-2">
-            <Button 
-              variant="secondary" 
-              size="sm" 
-              onClick={() => handleBulkAction('activate')}
-            >
-              Activate
-            </Button>
-            <Button 
-              variant="secondary" 
-              size="sm" 
-              onClick={() => handleBulkAction('deactivate')}
-            >
-              Deactivate
-            </Button>
-            <Button 
-              variant="danger" 
-              size="sm" 
-              onClick={() => handleBulkAction('delete')}
-            >
-              Delete Selected
-            </Button>
-          </div>
-        </div>
-      )}
-
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 space-y-4 md:space-y-0">
-        <div className="relative flex-1 max-w-md">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <FiSearch className="h-5 w-5 text-gray-400" />
-          </div>
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            handleSearch();
-          }}>
-            <input 
-              type="text"
-              placeholder="Search products..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            />
-          </form>
-        </div>
-        <Button 
-          variant="secondary" 
-          onClick={() => setFilterOpen(!filterOpen)}
-          className="ml-auto"
-        >
-          <FiMoreVertical className="mr-2" /> Filters
-        </Button>
-      </div>
-
-      <FilterPanel
-        isOpen={filterOpen}
-        filters={filterConfig}
-        onFilterChange={handleFilterChange}
-        onApply={applyFilters}
-        onClear={clearFilters}
-      />
-
-      <Table
-        columns={columns}
+      
+      <GenericDataList
+        title="Products"
         data={products}
-        isLoading={loading}
+        columns={columns}
+        filters={filterConfig}
+        onSearch={handleSearch}
+        onFilterChange={handleFilterChange}
+        onApplyFilters={applyFilters}
+        onClearFilters={clearFilters}
+        onDelete={handleDeleteProduct}
+        onAdd={() => navigate(`/store-dashboard/${storeId}/all-products/add-product`)}
+        loading={loading}
+        error={error}
         emptyState={
           <EmptyStates.Products 
             onAction={() => navigate(`/store-dashboard/${storeId}/all-products/add-product`)}
           />
         }
+        actionButtons={actionButtons}
+        viewMode="list"
+        onViewModeChange={mode => console.log(`View mode changed to ${mode}`)}
+        showViewModeToggle={true}
+        renderGridView={renderGridView}
+        bulkActions={bulkActions}
+        selectedItems={selectedProducts}
+        onItemSelect={(id) => {
+          setSelectedProducts(prev => 
+            prev.includes(id) 
+              ? prev.filter(itemId => itemId !== id)
+              : [...prev, id]
+          );
+        }}
+        filterOpen={filterOpen}
+        setFilterOpen={setFilterOpen}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        entityName="product"
       />
-
-      {/* Delete Confirmation Dialog */}
-      <ConfirmDialog
-        isOpen={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={confirmDeleteProduct}
-        title="Delete Product"
-        message={`Are you sure you want to delete "${productToDelete?.name}"? This action cannot be undone.`}
-        confirmText="Delete"
-        confirmVariant="danger"
-      />
-    </div>
+    </>
   );
 };
 
