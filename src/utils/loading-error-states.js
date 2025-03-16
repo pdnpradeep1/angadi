@@ -144,7 +144,7 @@ export const EmptyStates = {
  * @param {string} props.error - Error message if any
  * @param {Array|Object} props.data - Data to check if empty
  * @param {JSX.Element} props.children - Children to render when data exists
- * @param {Object} props.emptyStateProps - Properties for empty state
+ * @param {Object} props.emptyState - Properties for empty state
  * @param {Function} props.onRetry - Function to retry on error
  * @returns {JSX.Element} - Appropriate component based on state
  */
@@ -153,7 +153,7 @@ export const DataStateHandler = ({
   error,
   data,
   children,
-  emptyStateProps,
+  emptyState,
   onRetry
 }) => {
   if (loading) {
@@ -166,8 +166,9 @@ export const DataStateHandler = ({
   
   const isEmpty = Array.isArray(data) ? data.length === 0 : !data;
   
-  if (isEmpty && emptyStateProps) {
-    return <EmptyState {...emptyStateProps} />;
+  if (isEmpty && emptyState) {
+    // Directly render EmptyState component with props
+    return <EmptyState {...emptyState} />;
   }
   
   return children;

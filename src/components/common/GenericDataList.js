@@ -1,5 +1,5 @@
 // src/components/common/GenericDataList.js
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   FiSearch, 
   FiFilter, 
@@ -13,27 +13,10 @@ import FilterPanel from '../ui/FilterPanel';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { ConfirmDialog } from '../ui/Modal';
+import { EmptyState } from '../../utils/loading-error-states';
 
 /**
  * A reusable component for displaying, filtering, and managing lists of entities
- * 
- * @param {Object} props
- * @param {string} props.title - Page title
- * @param {Array} props.data - List of items to display
- * @param {Array} props.columns - Column configuration for the table
- * @param {Object} props.filters - Filter configuration
- * @param {Function} props.onSearch - Function to handle search
- * @param {Function} props.onDelete - Function to handle item deletion
- * @param {Function} props.onAdd - Function to handle adding new item
- * @param {boolean} props.loading - Whether data is loading
- * @param {string} props.error - Error message if any
- * @param {Object} props.emptyState - Empty state component/configuration
- * @param {Array} props.actionButtons - Additional action buttons for the header
- * @param {string} props.viewMode - View mode (list or grid)
- * @param {Function} props.onViewModeChange - Function to handle view mode change
- * @param {boolean} props.showViewModeToggle - Whether to show view mode toggle
- * @param {Function} props.renderGridView - Function to render grid view
- * @param {Array} props.bulkActions - Bulk action configuration
  */
 const GenericDataList = ({
   title,
@@ -114,25 +97,35 @@ const GenericDataList = ({
     }
   };
 
-  const handleSelectAll = (itemIds) => {
-    if (onSelectAll) {
-      onSelectAll(itemIds);
-    } else if (onItemSelect) {
-      // Fall back to using onItemSelect for each item if onSelectAll isn't provided
-      const allSelected = data.every(item => selectedItems.includes(item.id));
-      
-      if (allSelected) {
-        // Deselect all
-        selectedItems.forEach(id => onItemSelect(id));
-      } else {
-        // Select all
-        data.forEach(item => {
-          if (!selectedItems.includes(item.id)) {
-            onItemSelect(item.id);
-          }
-        });
-      }
+  // Prepare empty state component
+  const renderEmptyState = () => {
+    // If emptyState is a React element, use it directly
+    if (React.isValidElement(emptyState)) {
+      return emptyState;
     }
+    
+    // If emptyState is an object with properties, create an EmptyState component with these props
+    if (emptyState && typeof emptyState === 'object') {
+      return (
+        <EmptyState
+          title={emptyState.title || `No ${entityName}s found`}
+          message={emptyState.message || `There are no ${entityName}s matching your criteria.`}
+          actionText={emptyState.actionText}
+          onAction={emptyState.onAction}
+          icon={emptyState.icon}
+        />
+      );
+    }
+    
+    // Default empty state
+    return (
+      <EmptyState
+        title={`No ${entityName}s found`}
+        message={`There are no ${entityName}s available. Get started by creating a new ${entityName}.`}
+        actionText={onAdd ? `Add ${entityName}` : undefined}
+        onAction={onAdd}
+      />
+    );
   };
 
   return (
@@ -258,24 +251,27 @@ const GenericDataList = ({
       {/* Content - Either Table or Grid */}
       <Card className="overflow-hidden">
         {loading ? (
-            <div className="flex justify-center items-center p-8">
+          <div className="flex justify-center items-center p-8">
             <div className="animate-spin h-8 w-8 border-4 border-primary-500 rounded-full border-t-transparent"></div>
-            </div>
+          </div>
         ) : viewMode === 'grid' && renderGridView ? (
-            <div className="p-4">
-            {renderGridView(data)}
-            </div>
+          <div className="p-4">
+            {data.length > 0 ? 
+              renderGridView(data) : 
+              renderEmptyState()
+            }
+          </div>
         ) : (
-            <Table
-                columns={columns}
-                data={data}
-                isLoading={loading}
-                emptyState={emptyState}
-                onSelectAll={handleSelectAll}
-                selectedItems={selectedItems}
-            />
+          <Table
+            columns={columns}
+            data={data}
+            isLoading={loading}
+            emptyState={renderEmptyState()}
+            onSelectAll={onSelectAll}
+            selectedItems={selectedItems}
+          />
         )}
-        </Card>
+      </Card>
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog

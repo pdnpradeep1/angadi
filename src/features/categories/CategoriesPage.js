@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { 
   FiEdit2, 
   FiEye, 
@@ -7,17 +7,14 @@ import {
   FiPlus,
   FiList,
   FiGrid,
-  FiImage,
-  FiTag,
+  FiAlertCircle,
+  FiSearch,
+  FiFilter,
   FiChevronDown,
-  FiChevronRight,
-  FiCheck,
-  FiX
+  FiChevronRight
 } from 'react-icons/fi';
 import { apiService } from '../../api/config';
 import { renderCategoryImage, getCategoryColor } from '../../utils/category-image-utils';
-import GenericDataList from '../../components/common/GenericDataList';
-import HierarchicalDataView from '../../components/common/HierarchicalDataView';
 import AddCategoryModal from './AddCategoryModal';
 import EditCategoryModal from './EditCategoryModal';
 import CategoryDetailsModal from './CategoryDetailsModal';
@@ -27,7 +24,6 @@ import { Card } from '../../components/ui/Card';
 
 const CategoriesPage = () => {
   const { storeId } = useParams();
-  const navigate = useNavigate();
 
   // State Management
   const [categories, setCategories] = useState([]);
@@ -36,6 +32,8 @@ const CategoriesPage = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterOpen, setFilterOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState(null);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -54,11 +52,12 @@ const CategoriesPage = () => {
   useEffect(() => {
     fetchCategories();
     fetchCategoryHierarchy();
-  }, [storeId]);
+  }, []);
 
   const fetchCategories = async () => {
     setLoading(true);
     try {
+      // In a real app, you would fetch from your API
       const response = await apiService.get(`/categories/store/${storeId}`);
       setCategories(response.data);
       setLoading(false);
@@ -66,8 +65,8 @@ const CategoriesPage = () => {
       console.error('Error fetching categories:', err);
       setError('Failed to load categories. Please try again.');
       
-      // For development, use mock data as fallback
-      if (process.env.NODE_ENV === 'development') {
+      // For this demo, we'll use mock data
+      setTimeout(() => {
         const mockCategories = [
           {
             id: 1,
@@ -123,74 +122,27 @@ const CategoriesPage = () => {
         ];
         setCategories(mockCategories);
         setLoading(false);
-      }
+      }, 500);
     }
   };
 
   const fetchCategoryHierarchy = async () => {
     try {
-      const response = await apiService.get(`/categories/store/${storeId}/hierarchy`);
-      setCategoryHierarchy(response.data);
+      // Build hierarchy from flat categories
+      const buildHierarchy = (cats, parentId = null) => {
+        const children = cats.filter(cat => cat.parentId === parentId);
+        return children.map(child => ({
+          ...child,
+          children: buildHierarchy(cats, child.id)
+        }));
+      };
+      
+      setTimeout(() => {
+        const mockHierarchy = buildHierarchy(categories);
+        setCategoryHierarchy(mockHierarchy);
+      }, 500);
     } catch (err) {
       console.error('Error fetching category hierarchy:', err);
-      
-      // For development, create a mock hierarchy based on flat categories
-      if (process.env.NODE_ENV === 'development') {
-        setTimeout(() => {
-          // Build hierarchy from flat categories
-          const buildHierarchy = (cats, parentId = null) => {
-            const children = cats.filter(cat => cat.parentId === parentId);
-            return children.map(child => ({
-              ...child,
-              children: buildHierarchy(cats, child.id)
-            }));
-          };
-          
-          const mockHierarchy = buildHierarchy(categories);
-          setCategoryHierarchy(mockHierarchy);
-        }, 500);
-      }
-    }
-  };
-
-  // Get available parent categories for filtering
-  const getParentCategories = () => {
-    // Find all categories that have children
-    const parentIds = new Set(
-      categories
-        .filter(cat => cat.parentId)
-        .map(cat => cat.parentId)
-    );
-    
-    return categories
-      .filter(cat => parentIds.has(cat.id) || !cat.parentId)
-      .map(cat => ({
-        value: cat.id.toString(),
-        label: cat.name
-      }));
-  };
-
-  // Filter Configuration
-  const filterConfig = {
-    status: {
-      type: 'select',
-      label: 'Status',
-      value: filters.status,
-      options: [
-        { value: 'all', label: 'All Categories' },
-        { value: 'active', label: 'Active' },
-        { value: 'inactive', label: 'Inactive' }
-      ]
-    },
-    parentId: {
-      type: 'select',
-      label: 'Parent Category',
-      value: filters.parentId,
-      options: [
-        { value: 'all', label: 'All Categories' },
-        { value: 'root', label: 'Root Categories Only' },
-        ...getParentCategories()
-      ]
     }
   };
 
@@ -231,57 +183,175 @@ const CategoriesPage = () => {
     });
   };
 
-  // Handle category deletion
-  const handleDeleteCategory = async (category) => {
-    try {
-      if (category.id === 'bulk') {
-        // Handle bulk delete
-        for (const id of category.items) {
-          await apiService.delete(`/categories/${id}`);
-        }
-        
-        // Update local state
-        setCategories(categories.filter(c => !category.items.includes(c.id)));
-        setSelectedCategories([]);
+  // Toggle expanded state for a category in hierarchy view
+  const toggleCategoryExpanded = (categoryId) => {
+    setExpandedCategories(prev => ({
+      ...prev,
+      [categoryId]: !prev[categoryId]
+    }));
+  };
+
+  // Check if a category has children in the flat categories array
+  const hasChildren = (categoryId) => {
+    return categories.some(cat => cat.parentId === categoryId);
+  };
+
+  // Render a hierarchical category tree
+  const renderCategoryTree = (categories) => {
+    // Create a lookup map to efficiently find parents
+    const categoryMap = {};
+    categories.forEach(cat => {
+      categoryMap[cat.id] = { ...cat, children: [] };
+    });
+    
+    // Build the tree structure
+    const rootCategories = [];
+    categories.forEach(cat => {
+      if (cat.parentId && categoryMap[cat.parentId]) {
+        categoryMap[cat.parentId].children.push(categoryMap[cat.id]);
       } else {
-        // Single category delete
-        await apiService.delete(`/categories/${category.id}`);
-        
-        // Update local state to remove the category
-        setCategories(categories.filter(c => c.id !== category.id));
+        rootCategories.push(categoryMap[cat.id]);
       }
+    });
+    
+    // Render the tree
+    return (
+      <div className="space-y-1">
+        {renderCategoryNodes(rootCategories)}
+      </div>
+    );
+  };
+
+  // Recursively render category nodes
+  const renderCategoryNodes = (nodes, level = 0) => {
+    return nodes.map(node => {
+      // Apply filters to this node
+      if (filters.status !== 'all' && node.status.toLowerCase() !== filters.status.toLowerCase()) {
+        return null;
+      }
+      
+      if (searchTerm && !node.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+        return null;
+      }
+      
+      const isExpanded = expandedCategories[node.id];
+      const hasChildNodes = node.children && node.children.length > 0;
+      const colorInfo = getCategoryColor(node.name);
+      
+      return (
+        <div key={node.id} className="category-node">
+          <div 
+            className={`flex items-center p-3 ${
+              level > 0 ? `ml-${level * 6}` : ''
+            } hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-200 dark:border-gray-700`}
+          >
+            {/* Checkbox */}
+            <div className="w-6 flex justify-center">
+              <input
+                type="checkbox"
+                checked={selectedCategories.includes(node.id)}
+                onChange={() => {
+                  setSelectedCategories(prev => 
+                    prev.includes(node.id) 
+                      ? prev.filter(id => id !== node.id)
+                      : [...prev, node.id]
+                  );
+                }}
+                className="h-4 w-4 text-primary-600 border-gray-300 rounded"
+              />
+            </div>
+            
+            {/* Expand/collapse button */}
+            <div className="w-6 flex justify-center">
+              {hasChildNodes ? (
+                <button
+                  onClick={() => toggleCategoryExpanded(node.id)}
+                  className="text-gray-500"
+                >
+                  {isExpanded ? <FiChevronDown size={16} /> : <FiChevronRight size={16} />}
+                </button>
+              ) : (
+                <span className="w-4"></span>
+              )}
+            </div>
+            
+            {/* Category image and name */}
+            {renderCategoryImage(node.image, node.name, {
+              className: "h-8 w-8 rounded-md mr-3"
+            })}
+            
+            <span className="flex-grow font-medium text-gray-800 dark:text-white">
+              {node.name}
+            </span>
+            
+            {/* Product count */}
+            <span className={`px-2 py-1 rounded-full text-xs font-medium ${colorInfo.bg} ${colorInfo.text} mr-4`}>
+              {node.productCount || 0}
+            </span>
+            
+            {/* Status indicator */}
+            <div className="flex items-center mr-4">
+              <span className={`relative inline-block h-3 w-3 rounded-full mr-2 ${
+                node.status === 'Active' ? 'bg-green-400' : 'bg-red-400'
+              }`}></span>
+              <span className="text-sm">{node.status}</span>
+            </div>
+            
+            {/* Actions */}
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => handleEditCategory(node)}
+                className="p-1 text-gray-500 hover:text-primary-600 transition-colors"
+                title="Edit Category"
+              >
+                <FiEdit2 size={16} />
+              </button>
+              <button
+                onClick={() => handleViewCategory(node)}
+                className="p-1 text-gray-500 hover:text-primary-600 transition-colors"
+                title="View Category Details"
+              >
+                <FiEye size={16} />
+              </button>
+              <button
+                onClick={() => handleDeleteCategory(node)}
+                className="p-1 text-gray-500 hover:text-red-600 transition-colors"
+                title="Delete Category"
+              >
+                <FiTrash2 size={16} />
+              </button>
+            </div>
+          </div>
+          
+          {/* Render children if expanded */}
+          {hasChildNodes && isExpanded && renderCategoryNodes(node.children, level + 1)}
+        </div>
+      );
+    }).filter(Boolean); // Filter out null nodes (non-matching filters)
+  };
+
+  // Handle category deletion
+  const handleDeleteCategory = (category) => {
+    setCategoryToDelete(category);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteCategory = async () => {
+    try {
+      // Simulate API call
+      console.log('Deleting category:', categoryToDelete);
+      
+      // Update local state to remove the category
+      setCategories(categories.filter(c => c.id !== categoryToDelete.id));
       
       // Also refresh hierarchy
       fetchCategoryHierarchy();
+      
+      setShowDeleteConfirm(false);
+      setCategoryToDelete(null);
     } catch (err) {
       console.error('Error deleting category:', err);
       setError('Failed to delete category. Please try again.');
-    }
-  };
-
-  // Handle reordering categories
-  const handleReorderCategories = () => {
-    setShowReorderModal(true);
-  };
-  
-  const saveNewCategoryOrder = async (reorderedCategories) => {
-    try {
-      // Prepare data for API - format depends on your backend
-      const orderData = reorderedCategories.map((category, index) => ({
-        id: category.id,
-        order: index
-      }));
-      
-      await apiService.put(`/categories/store/${storeId}/order`, orderData);
-      
-      // Update the local state with the new order
-      setCategories(reorderedCategories);
-      
-      // Refresh hierarchy after reordering
-      fetchCategoryHierarchy();
-    } catch (err) {
-      console.error('Error saving category order:', err);
-      setError('Failed to save category order. Please try again.');
     }
   };
 
@@ -320,395 +390,311 @@ const CategoriesPage = () => {
     setShowDetailsModal(true);
   };
 
-  // Toggle expanded state for a category in hierarchy view
-  const toggleCategoryExpanded = (categoryId) => {
-    setExpandedCategories(prev => ({
-      ...prev,
-      [categoryId]: !prev[categoryId]
-    }));
+  // Handle reordering categories
+  const handleReorderCategories = () => {
+    setShowReorderModal(true);
   };
-
-  // Check if a category has children in the flat categories array
-  const hasChildren = (categoryId) => {
-    return categories.some(cat => cat.parentId === categoryId);
-  };
-
-  // Find all children of a category (recursive)
-  const findAllChildren = (categoryId) => {
-    const directChildren = categories.filter(cat => cat.parentId === categoryId);
-    let allChildren = [...directChildren];
+  
+  const saveNewCategoryOrder = (reorderedCategories) => {
+    // Update the local state with the new order
+    setCategories(reorderedCategories);
     
-    directChildren.forEach(child => {
-      const childDescendants = findAllChildren(child.id);
-      allChildren = [...allChildren, ...childDescendants];
-    });
-    
-    return allChildren;
+    // Refresh hierarchy after reordering
+    fetchCategoryHierarchy();
   };
 
-  // Handle category selection
-  const handleCategorySelection = (categoryId) => {
-    const isSelected = selectedCategories.includes(categoryId);
-    
-    if (isSelected) {
-      // Deselect this category
-      setSelectedCategories(prev => prev.filter(id => id !== categoryId));
-    } else {
-      // Select this category
-      setSelectedCategories(prev => [...prev, categoryId]);
-    }
-  };
+  // We no longer need these - we're properly importing from react-icons/fi
 
-  // Handle select all
-  const handleSelectAll = (itemIds) => {
-    if (itemIds.length === 0 || (selectedCategories.length === categories.length)) {
-      // If already all selected or we're deselecting all
-      setSelectedCategories([]);
-    } else {
-      // Select all
-      setSelectedCategories(itemIds);
-    }
-  };
+  return (
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Categories</h2>
+        <div className="flex space-x-2">
+          <div className="flex rounded-md shadow-sm">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`px-3 py-2 text-sm font-medium ${
+                viewMode === 'list'
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+              } rounded-l-md border border-gray-300 dark:border-gray-600 flex items-center`}
+            >
+              <FiList className="mr-1" /> List
+            </button>
+            <button
+              onClick={() => setViewMode('hierarchy')}
+              className={`px-3 py-2 text-sm font-medium ${
+                viewMode === 'hierarchy'
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+              } rounded-r-md border border-gray-300 dark:border-gray-600 border-l-0 flex items-center`}
+            >
+              <FiGrid className="mr-1" /> Hierarchy
+            </button>
+          </div>
+          <button 
+            className="px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700"
+            onClick={handleReorderCategories}
+          >
+            Reorder Categories
+          </button>
+          <button 
+            className="px-4 py-2 bg-primary-600 text-white rounded-md shadow-sm text-sm font-medium hover:bg-primary-700"
+            onClick={handleAddCategory}
+          >
+            <FiPlus className="inline-block mr-1" /> Add Category
+          </button>
+        </div>
+      </div>
 
-  // Table Columns Definition
-  const columns = [
-    {
-      key: 'select',
-      title: '',
-      render: (row) => (
-        <input
-          type="checkbox"
-          checked={selectedCategories.includes(row.id)}
-          onChange={() => handleCategorySelection(row.id)}
-          className="h-4 w-4 text-primary-600 border-gray-300 rounded"
-        />
-      )
-    },
-    {
-      key: 'name',
-      title: 'Category',
-      render: (row) => (
-        <div className="flex items-center">
-          {renderCategoryImage(row.image, row.name)}
-          <div className="ml-3">
-            <span className="font-medium">{row.name}</span>
-            {row.parentId && (
-              <div className="text-xs text-gray-500 dark:text-gray-400">
-                Parent: {categories.find(c => c.id === row.parentId)?.name || 'Unknown'}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
+        <div className="relative flex-1 max-w-md">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <FiSearch className="h-5 w-5 text-gray-400" />
+          </div>
+          <input 
+            type="text"
+            placeholder="Search categories..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 pr-3 py-2 w-full border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          />
+        </div>
+        <button 
+          className="px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center"
+          onClick={() => setFilterOpen(!filterOpen)}
+        >
+          <FiFilter className="mr-2" /> Filter
+        </button>
+      </div>
+
+      {/* Filter Panel */}
+      {filterOpen && (
+        <Card className="mb-6 p-4">
+          <h3 className="text-lg font-medium mb-4">Filters</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Status</label>
+              <select
+                value={filters.status}
+                onChange={(e) => handleFilterChange('status', e.target.value)}
+                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="all">All Categories</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Parent Category</label>
+              <select
+                value={filters.parentId}
+                onChange={(e) => handleFilterChange('parentId', e.target.value)}
+                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="all">All Categories</option>
+                <option value="root">Root Categories Only</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <button
+              onClick={() => {
+                setFilters({ status: 'all', parentId: 'all' });
+                setFilterOpen(false);
+              }}
+              className="px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 mr-2"
+            >
+              Clear
+            </button>
+            <button
+              onClick={() => setFilterOpen(false)}
+              className="px-4 py-2 bg-primary-600 text-white rounded-md shadow-sm text-sm font-medium hover:bg-primary-700"
+            >
+              Apply
+            </button>
+          </div>
+        </Card>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-md">
+          <div className="flex items-center">
+            <FiAlertCircle className="text-red-500 mr-2" size={20} />
+            <span className="text-red-700 dark:text-red-400">{error}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Icons properly imported at the top of the file now */}
+
+      {/* Main Content Area - Either Table or Hierarchy View */}
+      <Card className="overflow-hidden">
+        {loading ? (
+          <div className="flex justify-center items-center p-8">
+            <div className="animate-spin h-8 w-8 border-4 border-primary-500 rounded-full border-t-transparent"></div>
+          </div>
+        ) : viewMode === 'list' ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Products</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Type</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                {applyFilters(categories).map((category) => (
+                  <tr key={category.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        {renderCategoryImage(category.image, category.name)}
+                        <div className="ml-3">
+                          <span className="font-medium">{category.name}</span>
+                          {category.parentId && (
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              Parent: {categories.find(c => c.id === category.parentId)?.name || 'Unknown'}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                        {category.productCount}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <span className={`relative inline-block h-3 w-3 rounded-full mr-2 ${
+                          category.status === 'Active' ? 'bg-green-400' : 'bg-red-400'
+                        }`}></span>
+                        <span>{category.status}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        {hasChildren(category.id) ? 'Parent' : 'Leaf'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <button 
+                        onClick={() => handleEditCategory(category)}
+                        className="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300 mr-3"
+                      >
+                        <FiEdit2 className="inline" /> Edit
+                      </button>
+                      <button 
+                        onClick={() => handleViewCategory(category)}
+                        className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 mr-3"
+                      >
+                        <FiEye className="inline" /> View
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteCategory(category)}
+                        className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                      >
+                        <FiTrash2 className="inline" /> Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="p-4 overflow-auto max-h-[calc(100vh-300px)]">
+            {categories.length > 0 ? (
+              renderCategoryTree(categories)
+            ) : (
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                No categories found
               </div>
             )}
           </div>
+        )}
+      </Card>
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-lg font-medium mb-4">Delete Category</h3>
+            <p className="mb-6 text-gray-600 dark:text-gray-400">
+              {categoryToDelete && hasChildren(categoryToDelete.id)
+                ? `Warning: "${categoryToDelete?.name}" has subcategories that will also be deleted. Are you sure you want to continue?`
+                : `Are you sure you want to delete "${categoryToDelete?.name}"? This action cannot be undone.`}
+            </p>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 mr-2"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteCategory}
+                className="px-4 py-2 bg-red-600 text-white rounded-md shadow-sm text-sm font-medium hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
         </div>
-      )
-    },
-    {
-      key: 'productCount',
-      title: 'Products',
-      render: (row) => {
-        const colorInfo = getCategoryColor(row.name);
-        return (
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${colorInfo.bg} ${colorInfo.text}`}>
-            {row.productCount}
-          </span>
-        );
-      }
-    },
-    {
-      key: 'status',
-      title: 'Status',
-      render: (row) => (
-        <div className="flex items-center">
-          <span className={`relative inline-block h-3 w-3 rounded-full mr-2 ${
-            row.status === 'Active' ? 'bg-green-400' : 'bg-red-400'
-          }`}></span>
-          <span>{row.status}</span>
-        </div>
-      )
-    },
-    {
-      key: 'hasChildren',
-      title: 'Type',
-      render: (row) => (
-        <span className="text-sm text-gray-600 dark:text-gray-400">
-          {hasChildren(row.id) ? 'Parent' : 'Leaf'}
-        </span>
-      )
-    },
-    {
-      key: 'actions',
-      title: 'Action',
-      render: (row) => (
-        <div className="flex items-center space-x-2">
-          <Button 
-            variant="secondary"
-            size="sm"
-            onClick={() => handleEditCategory(row)}
-            title="Edit Category"
-          >
-            <FiEdit2 size={16} className="mr-1" /> Edit
-          </Button>
-          <Button 
-            variant="secondary"
-            size="sm"
-            onClick={() => handleViewCategory(row)}
-            title="View Category Details"
-          >
-            <FiEye size={16} className="mr-1" /> View
-          </Button>
-          <Button 
-            variant="danger"
-            size="sm"
-            onClick={() => handleDeleteCategory(row)}
-            title="Delete Category"
-          >
-            <FiTrash2 size={16} className="mr-1" /> Delete
-          </Button>
-        </div>
-      )
-    }
-  ];
+      )}
 
-  // Render category item for hierarchical view
-  const renderCategoryItem = (category, itemState) => {
-    const { level, isExpanded, hasChildren, isSelected } = itemState;
-    const colorInfo = getCategoryColor(category.name);
-    
-    return (
-      <>
-        {/* Category image and name */}
-        {renderCategoryImage(category.image, category.name, {
-          className: "h-8 w-8 rounded-md mr-3"
-        })}
-        
-        <span className="flex-grow font-medium text-gray-800 dark:text-white">
-          {category.name}
-        </span>
-        
-        {/* Product count */}
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${colorInfo.bg} ${colorInfo.text} mr-4`}>
-          {category.productCount || 0}
-        </span>
-        
-        {/* Status indicator */}
-        <div className="flex items-center mr-4">
-          <span className={`relative inline-block h-3 w-3 rounded-full mr-2 ${
-            category.status === 'Active' ? 'bg-green-400' : 'bg-red-400'
-          }`}></span>
-          <span className="text-sm">{category.status}</span>
-        </div>
-        
-        {/* Actions */}
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEditCategory(category);
-            }}
-            className="p-1 text-gray-500 hover:text-primary-600 transition-colors"
-            title="Edit Category"
-          >
-            <FiEdit2 size={16} />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleViewCategory(category);
-            }}
-            className="p-1 text-gray-500 hover:text-primary-600 transition-colors"
-            title="View Category Details"
-          >
-            <FiEye size={16} />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDeleteCategory(category);
-            }}
-            className="p-1 text-gray-500 hover:text-red-600 transition-colors"
-            title="Delete Category"
-          >
-            <FiTrash2 size={16} />
-          </button>
-        </div>
-      </>
-    );
-  };
-
-  // Filter function for hierarchical view
-  const shouldShowCategory = (category) => {
-    // Apply filters
-    if (filters.status !== 'all' && 
-        category.status.toLowerCase() !== filters.status.toLowerCase()) {
-      return false;
-    }
-    
-    // Search term
-    if (searchTerm && 
-        !category.name.toLowerCase().includes(searchTerm.toLowerCase())) {
-      return false;
-    }
-    
-    return true;
-  };
-
-  // Render hierarchical content
-  const renderHierarchicalContent = () => {
-    // Make sure we're using the full hierarchy data, not the filtered flat list
-    return (
-      <div className="overflow-auto max-h-[calc(100vh-300px)]">
-        <HierarchicalDataView
-          data={categoryHierarchy} // Use categoryHierarchy instead of filtered categories
-          expandedItems={expandedCategories}
-          onToggleExpand={toggleCategoryExpanded}
-          renderItem={renderCategoryItem}
-          onSelect={handleCategorySelection}
-          selectedIds={selectedCategories}
-          shouldShowItem={shouldShowCategory}
-        />
-      </div>
-    );
-  };
-
-  // Additional action buttons for the header
-  const actionButtons = [
-    {
-      label: 'Reorder Categories',
-      variant: 'secondary',
-      onClick: handleReorderCategories
-    }
-  ];
-
-  // Bulk actions configuration
-  const bulkActions = [
-    {
-      type: 'activate',
-      label: 'Set Active',
-      variant: 'secondary',
-      icon: <FiCheck className="mr-1" size={14} />,
-      handler: (selectedIds) => {
-        // Bulk status update to active
-        const updatedCategories = categories.map(category => 
-          selectedIds.includes(category.id) 
-            ? { ...category, status: 'Active' } 
-            : category
-        );
-        setCategories(updatedCategories);
-        setSelectedCategories([]);
-      }
-    },
-    {
-      type: 'deactivate',
-      label: 'Set Inactive',
-      variant: 'secondary',
-      icon: <FiX className="mr-1" size={14} />,
-      handler: (selectedIds) => {
-        // Bulk status update to inactive
-        const updatedCategories = categories.map(category => 
-          selectedIds.includes(category.id) 
-            ? { ...category, status: 'Inactive' } 
-            : category
-        );
-        setCategories(updatedCategories);
-        setSelectedCategories([]);
-      }
-    },
-    {
-      type: 'delete',
-      label: 'Delete Selected',
-      variant: 'danger',
-      icon: <FiTrash2 className="mr-1" size={14} />
-      // No handler needed, will use the confirmation dialog
-    }
-  ];
-
-  return (
-    <>
-      <GenericDataList
-        title="Categories"
-        data={applyFilters(categories)}
-        columns={columns}
-        filters={filterConfig}
-        onSearch={(term) => {
-          setSearchTerm(term);
-          fetchCategories();
-        }}
-        onFilterChange={handleFilterChange}
-        onApplyFilters={() => {
-          fetchCategories();
-          setFilterOpen(false);
-        }}
-        onClearFilters={() => {
-          setFilters({ status: 'all', parentId: 'all' });
-          setSearchTerm('');
-          setFilterOpen(false);
-          fetchCategories();
-        }}
-        onDelete={handleDeleteCategory}
-        onAdd={handleAddCategory}
-        loading={loading}
-        error={error}
-        emptyState={{
-          title: "No categories found",
-          message: searchTerm 
-            ? "Try adjusting your search or filters" 
-            : "Get started by creating your first category",
-          actionText: "Add Category",
-          onAction: handleAddCategory
-        }}
-        actionButtons={actionButtons}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        showViewModeToggle={true}
-        renderGridView={data => renderHierarchicalContent(data)}
-        bulkActions={bulkActions}
-        selectedItems={selectedCategories}
-        onItemSelect={handleCategorySelection}
-        onSelectAll={handleSelectAll}
-        filterOpen={filterOpen}
-        setFilterOpen={setFilterOpen}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        entityName="category"
-      />
-
-      {/* Modals */}
       {/* Add Category Modal */}
-      <AddCategoryModal
-        isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        onAdd={handleCategoryAdded}
-        categories={categories}
-        storeId={storeId}
-      />
+      {showAddModal && (
+        <AddCategoryModal
+          isOpen={showAddModal}
+          onClose={() => setShowAddModal(false)}
+          onAdd={handleCategoryAdded}
+          categories={categories}
+          storeId={storeId}
+        />
+      )}
       
       {/* Edit Category Modal */}
-      <EditCategoryModal
-        isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        category={categoryToEdit}
-        categories={categories}
-        onUpdate={handleCategoryUpdated}
-        storeId={storeId}
-      />
+      {showEditModal && (
+        <EditCategoryModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          category={categoryToEdit}
+          categories={categories}
+          onUpdate={handleCategoryUpdated}
+          storeId={storeId}
+        />
+      )}
       
       {/* Category Details Modal */}
-      <CategoryDetailsModal
-        isOpen={showDetailsModal}
-        onClose={() => setShowDetailsModal(false)}
-        category={categoryToView}
-        onEdit={handleEditCategory}
-      />
+      {showDetailsModal && (
+        <CategoryDetailsModal
+          isOpen={showDetailsModal}
+          onClose={() => setShowDetailsModal(false)}
+          category={categoryToView}
+          onEdit={handleEditCategory}
+        />
+      )}
       
       {/* Reorder Categories Modal */}
-      <ReorderCategoriesModal
-        isOpen={showReorderModal}
-        onClose={() => setShowReorderModal(false)}
-        categories={categories}
-        hierarchy={categoryHierarchy}
-        onSave={saveNewCategoryOrder}
-        storeId={storeId}
-      />
-    </>
+      {showReorderModal && (
+        <ReorderCategoriesModal
+          isOpen={showReorderModal}
+          onClose={() => setShowReorderModal(false)}
+          categories={categories}
+          hierarchy={categoryHierarchy}
+          onSave={saveNewCategoryOrder}
+          storeId={storeId}
+        />
+      )}
+    </div>
   );
 };
 

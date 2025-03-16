@@ -1,19 +1,18 @@
 // src/components/ui/Table.js
 import React from 'react';
-import { LoadingState } from '../../utils/loading-error-states';
-import { EmptyStates } from '../../utils/loading-error-states';
 
 /**
- * Reusable Table component with support for sorting, custom column rendering,
- * loading states, and empty states
+ * Fixed Table component that properly handles empty states
  * 
  * @param {Object} props - Component properties
  * @param {Array} props.columns - Column definitions
  * @param {Array} props.data - Table data
  * @param {Function} props.onRowClick - Function to call when a row is clicked (optional)
  * @param {boolean} props.isLoading - Whether data is loading
- * @param {JSX.Element} props.emptyState - Custom empty state component (optional)
+ * @param {React.ReactNode} props.emptyState - Custom empty state component (optional)
  * @param {string} props.className - Additional class names for the table container (optional)
+ * @param {Function} props.onSelectAll - Function to handle select all checkbox (optional)
+ * @param {Array} props.selectedItems - Array of selected item IDs (optional)
  */
 const Table = ({ 
   columns,
@@ -22,21 +21,59 @@ const Table = ({
   isLoading = false, 
   emptyState,
   className = '',
-  onSelectAll = null,  // Add this parameter
-  selectedItems = []   // Add this parameter to track selected items
+  onSelectAll = null,
+  selectedItems = []
 }) => {
+  // Handle loading state
   if (isLoading) {
-    return <LoadingState />;
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
+        <span className="ml-3 text-lg text-gray-700 dark:text-gray-300">Loading...</span>
+      </div>
+    );
   }
   
+  // Handle empty state
   if (data.length === 0) {
-    return emptyState || <EmptyStates.SearchResults />;
+    // Check if emptyState is a React element, otherwise render a default empty state
+    if (React.isValidElement(emptyState)) {
+      return emptyState;
+    }
+    
+    // Default empty state if none provided
+    return (
+      <div className="text-center py-12">
+        <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+        <h3 className="mt-2 text-lg font-medium text-gray-900 dark:text-white">No items found</h3>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          {emptyState && typeof emptyState === 'object' && emptyState.message 
+            ? emptyState.message 
+            : "No items match your criteria. Try adjusting your filters or create a new item."}
+        </p>
+        {emptyState && typeof emptyState === 'object' && emptyState.actionText && emptyState.onAction && (
+          <div className="mt-6">
+            <button
+              type="button"
+              onClick={emptyState.onAction}
+              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            >
+              {emptyState.actionText}
+            </button>
+          </div>
+        )}
+      </div>
+    );
   }
 
+  // Check if all items are selected
   const allSelected = data.length > 0 && data.every(item => 
     selectedItems.includes(item.id)
   );
   
+  // Handle select all functionality
   const handleSelectAll = () => {
     if (onSelectAll) {
       if (allSelected) {
