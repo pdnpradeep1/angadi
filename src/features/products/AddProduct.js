@@ -13,6 +13,8 @@ import {
 import { apiService } from '../../api/config';
 import { isAuthenticated } from '../../utils/jwtUtils';
 import '../../styles/AddProduct.css';
+import CategorySelector from '../categories/CategorySelector';
+
 
 const AddProduct = () => {
   const navigate = useNavigate();
@@ -739,7 +741,7 @@ const AddProduct = () => {
             <div className="section">
               <h3 className="text-xl font-semibold mb-6 text-secondary-900 dark:text-white">Categories & Tags</h3>
               
-              <div className="mb-6">
+              {/* <div className="mb-6">
                 <label htmlFor="categoryId" className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-1">
                   Category <span className="text-red-500">*</span>
                 </label>
@@ -804,8 +806,87 @@ const AddProduct = () => {
                     )}
                   </>
                 )}
-              </div>
-              
+              </div> */}
+              <div className="mb-4">
+                  <label htmlFor="categoryId" className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-1">
+                    Category <span className="text-red-500">*</span>
+                  </label>
+                  
+                  {loadingCategories ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-500"></div>
+                      <span className="text-secondary-500 dark:text-secondary-400">Loading categories...</span>
+                    </div>
+                  ) : (
+                    <>
+                      {showNewCategory ? (
+                        <div className="flex items-center">
+                          <input
+                            type="text"
+                            value={newCategoryName}
+                            onChange={(e) => setNewCategoryName(e.target.value)}
+                            className="input flex-1"
+                            placeholder="Enter new category name"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleCreateCategory}
+                            className="ml-2 btn btn-primary"
+                            disabled={!newCategoryName.trim()}
+                          >
+                            Add
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setShowNewCategory(false)}
+                            className="ml-2 btn btn-secondary"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center">
+                          <select
+                            id="categoryId"
+                            name="categoryId"
+                            value={product.categoryId}
+                            onChange={handleInputChange}
+                            className="input flex-1"
+                            required
+                          >
+                            <option value="">Select a category</option>
+                            {categories.map((category) => {
+                              // Helper function to find a category's level in the hierarchy
+                              const findCategoryLevel = (cat, level = 0) => {
+                                if (!cat.parentId) return level;
+                                const parent = categories.find(c => c.id === cat.parentId);
+                                if (!parent) return level;
+                                return findCategoryLevel(parent, level + 1);
+                              };
+                              
+                              const level = findCategoryLevel(category);
+                              const indent = "\u00A0\u00A0".repeat(level); // Non-breaking spaces
+                              const prefix = level > 0 ? "↳ " : "";
+                              
+                              return (
+                                <option key={category.id} value={category.id}>
+                                  {indent}{prefix}{category.name}
+                                </option>
+                              );
+                            })}
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => setShowNewCategory(true)}
+                            className="ml-2 btn btn-secondary"
+                          >
+                            Create New
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>                        
               <div className="mb-6">
               <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
                   Tags
