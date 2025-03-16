@@ -3,13 +3,15 @@ import Modal from '../../components/ui/Modal';
 import { FormField } from '../../components/ui/FormField';
 import { Button } from '../../components/ui/Button';
 import { FiImage, FiX } from 'react-icons/fi';
-import { renderCategoryImage, getDefaultCategoryImage } from '../../utils/category-image-utils';
+import { apiService } from '../../api/config';
+import { renderCategoryImage } from '../../utils/category-image-utils';
 
-const EditCategoryModal = ({ isOpen, onClose, category, onUpdate }) => {
+const EditCategoryModal = ({ isOpen, onClose, category, categories = [], onUpdate, storeId }) => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    status: 'Active'
+    status: 'Active',
+    parentCategoryId: ''
   });
   
   const [imageFile, setImageFile] = useState(null);
@@ -23,7 +25,8 @@ const EditCategoryModal = ({ isOpen, onClose, category, onUpdate }) => {
       setFormData({
         name: category.name || '',
         description: category.description || '',
-        status: category.status || 'Active'
+        status: category.status || 'Active',
+        parentCategoryId: category.parentCategoryId || ''
       });
       setImagePreview(category.image || '');
     }
@@ -54,6 +57,21 @@ const EditCategoryModal = ({ isOpen, onClose, category, onUpdate }) => {
     setImagePreview('');
   };
 
+  const uploadImage = async () => {
+    if (!imageFile) return null;
+
+    const formData = new FormData();
+    formData.append('file', imageFile);
+
+    try {
+      const response = await apiService.uploadFile('/categories/upload-image', formData);
+      return response.data; // URL of the uploaded image
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      return null;
+    }
+  };
+
   const handleSubmit = async () => {
     // Validate form
     if (!formData.name.trim()) {
@@ -61,32 +79,92 @@ const EditCategoryModal = ({ isOpen, onClose, category, onUpdate }) => {
       return;
     }
 
+    // Prevent selecting itself as parent
+    if (formData.parentCategoryId === category.id) {
+      setError('A category cannot be its own parent');
+      return;
+    }
+
+    // Check for circular references in the hierarchy
+    const checkCircularReference = (parentId, categoryId) => {
+      if (!parentId) return false;
+      
+      const parent = categories.find(cat => cat.id === parentId);
+      if (!parent) return false;
+      
+      // If the potential parent has this category as an ancestor, it's circular
+      if (parent.parentCategoryId === categoryId) return true;
+      
+      // Recursively check up the hierarchy
+      return checkCircularReference(parent.parentCategoryId, categoryId);
+    };
+    
+    if (checkCircularReference(formData.parentCategoryId, category.id)) {
+      setError('This would create a circular parent-child relationship');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
     try {
-      // In a real implementation, you would upload the image and update the category via API
-      // For now, we'll just simulate a successful API call
+      // Upload image if selected
+      let imageUrl = null;
+      if (imageFile) {
+        imageUrl = await uploadImage();
+      }
+
+      // Prepare category data
+      const categoryData = {
+        id: category.id,
+        name: formData.name,
+        description: formData.description,
+        status: formData.status,
+        parentCategoryId: formData.parentCategoryId || null,
+        imageUrl: imageUrl || imagePreview || category.image
+      };
+
+      // Update category
+      const response = await apiService.put(`/categories/${category.id}`, categoryData);
       
-      setTimeout(() => {
-        const updatedCategory = {
-          ...category,
-          name: formData.name,
-          description: formData.description,
-          status: formData.status,
-          image: imagePreview || category.image
-        };
-        
-        onUpdate(updatedCategory);
-        setLoading(false);
-        onClose();
-      }, 1000);
+      const updatedCategory = {
+        ...response.data,
+        productCount: category.productCount, // Preserve the product count
+        image: imageUrl || imagePreview || category.image
+      };
+      
+      onUpdate(updatedCategory);
+      onClose();
     } catch (err) {
       console.error('Error updating category:', err);
-      setError('Failed to update category. Please try again.');
+      setError(err.response?.data?.message || 'Failed to update category. Please try again.');
+    } finally {
       setLoading(false);
     }
   };
+
+  // Recursively flatten categories for select dropdown, excluding the current category and its children
+  const flattenCategoriesExcluding = (cats, excludeId, level = 0, result = []) => {
+    if (!cats || !Array.isArray(cats)) return result;
+    
+    cats.forEach(cat => {
+      if (cat.id !== excludeId) {
+        result.push({
+          id: cat.id,
+          name: cat.name,
+          level
+        });
+        
+        if (cat.children && cat.children.length > 0) {
+          flattenCategoriesExcluding(cat.children, excludeId, level + 1, result);
+        }
+      }
+    });
+    
+    return result;
+  };
+
+  const flatCategories = flattenCategoriesExcluding(categories, category?.id);
 
   return (
     <Modal
@@ -159,7 +237,7 @@ const EditCategoryModal = ({ isOpen, onClose, category, onUpdate }) => {
             </div>
           ) : (
             <div
-              onClick={() => document.getElementById('category-image').click()}
+              onClick={() => document.getElementById('category-image-edit').click()}
               className="w-24 h-24 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-primary-500 dark:hover:border-primary-500"
             >
               <FiImage className="h-8 w-8 text-gray-400" />
@@ -169,7 +247,7 @@ const EditCategoryModal = ({ isOpen, onClose, category, onUpdate }) => {
           
           <input
             type="file"
-            id="category-image"
+            id="category-image-edit"
             accept="image/*"
             onChange={handleImageSelect}
             className="hidden"
@@ -190,6 +268,30 @@ const EditCategoryModal = ({ isOpen, onClose, category, onUpdate }) => {
             className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           />
         </FormField>
+        
+        {/* Parent Category */}
+        {flatCategories.length > 0 && (
+          <FormField 
+            label="Parent Category"
+            helpText="Leave empty for a top-level category"
+          >
+            <select
+              name="parentCategoryId"
+              value={formData.parentCategoryId}
+              onChange={handleChange}
+              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            >
+              <option value="">None (Top Level)</option>
+              {flatCategories.map(cat => (
+                <option key={cat.id} value={cat.id}>
+                  {/* Use non-breaking spaces for indentation */}
+                  {Array(cat.level).fill('\u00A0\u00A0').join('')}
+                  {cat.level > 0 ? '↳ ' : ''}{cat.name}
+                </option>
+              ))}
+            </select>
+          </FormField>
+        )}
         
         {/* Description */}
         <FormField 
