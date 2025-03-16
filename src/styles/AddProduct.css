@@ -47,13 +47,13 @@
     background-color: rgba(0, 123, 255, 0.1);
   }
   
-  .form-content {
+  /* .form-content {
     margin-left: 250px;
     padding: 30px;
     overflow-y: auto;
     flex: 1;
     height: 100vh;
-  }
+  } */
   
   .section {
     max-width: 800px;
@@ -231,3 +231,64 @@
       transform: translateY(0);
     }
   }
+
+  
+
+
+  /* Fix for the sidebar in AddProduct.css */
+
+.add-product-container {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 250px;
+  padding: 20px;
+  height: 100vh;
+  overflow-y: auto;
+  position: sticky;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.form-content {
+  flex: 1;
+  padding: 30px;
+  overflow-y: auto;
+  height: 100vh;
+}
+
+/* Make sure the main scrolling container works properly */
+body, html {
+  overflow: hidden;
+  height: 100%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .add-product-container {
+    flex-direction: column;
+    overflow-y: auto;
+    height: auto;
+  }
+  
+  .sidebar {
+    width: 100%;
+    position: relative;
+    height: auto;
+    min-height: auto;
+    padding: 15px;
+  }
+  
+  .form-content {
+    margin-left: 0px;
+    padding: 15px;
+    height: auto;
+    overflow-y: visible;
+  }
+}

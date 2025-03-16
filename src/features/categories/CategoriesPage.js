@@ -15,6 +15,7 @@ import AddCategoryModal from './AddCategoryModal';
 import EditCategoryModal from './EditCategoryModal';
 import CategoryDetailsModal from './CategoryDetailsModal';
 import ReorderCategoriesModal from './ReorderCategoriesModal';
+import { apiService } from '../../api/config';
 
 const CategoriesPage = () => {
   const { storeId } = useParams();
@@ -44,37 +45,41 @@ const CategoriesPage = () => {
   const fetchCategories = async () => {
     setLoading(true);
     try {
+      // const response = await api.get('/api/stores/my-stores');
+      const response = await apiService.get(`/categories/store/${storeId}`);
+      setCategories(response.data);
+        setLoading(false);
       // Placeholder for API call to fetch categories
       // In a real implementation, you would call your API
       
       // For development purposes, use mock data
-      setTimeout(() => {
-        const mockCategories = [
-          {
-            id: 1,
-            name: 'Spicy',
-            productCount: 1,
-            status: 'Active',
-            image: '/api/placeholder/50/50?text=Spicy'
-          },
-          {
-            id: 2,
-            name: 'Sweets',
-            productCount: 6,
-            status: 'Active',
-            image: '/api/placeholder/50/50?text=Sweets'
-          },
-          {
-            id: 3,
-            name: 'Make On Order',
-            productCount: 8,
-            status: 'Active',
-            image: '/api/placeholder/50/50?text=OnOrder'
-          }
-        ];
-        setCategories(mockCategories);
-        setLoading(false);
-      }, 500);
+      // setTimeout(() => {
+      //   const mockCategories = [
+      //     {
+      //       id: 1,
+      //       name: 'Spicy',
+      //       productCount: 1,
+      //       status: 'Active',
+      //       image: '/api/placeholder/50/50?text=Spicy'
+      //     },
+      //     {
+      //       id: 2,
+      //       name: 'Sweets',
+      //       productCount: 6,
+      //       status: 'Active',
+      //       image: '/api/placeholder/50/50?text=Sweets'
+      //     },
+      //     {
+      //       id: 3,
+      //       name: 'Make On Order',
+      //       productCount: 8,
+      //       status: 'Active',
+      //       image: '/api/placeholder/50/50?text=OnOrder'
+      //     }
+      //   ];
+      //   setCategories(mockCategories);
+      //   setLoading(false);
+      // }, 500);
     } catch (err) {
       console.error('Error fetching categories:', err);
       setError('Failed to load categories. Please try again.');

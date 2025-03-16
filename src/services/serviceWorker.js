@@ -1,4 +1,4 @@
-/ This optional code is used to register a service worker.
+// / This optional code is used to register a service worker.
 // registerServiceWorker function will not be included by default,
 // so make sure to add it in index.js if you decide to use this file.
 
