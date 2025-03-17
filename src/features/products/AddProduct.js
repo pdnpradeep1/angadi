@@ -20,6 +20,8 @@ import {
 import { apiService } from '../../api/config';
 import { isAuthenticated } from '../../utils/jwtUtils';
 import CategorySelector from '../categories/CategorySelector';
+import ProductVariantsComponent from './ProductVariantsComponent';
+
 
 const AddProduct = () => {
   const navigate = useNavigate();
@@ -37,6 +39,8 @@ const AddProduct = () => {
   const [selectedTags, setSelectedTags] = useState([]);
   const [newTag, setNewTag] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  const [variants, setVariants] = useState([]);
+
 
   // Product form state
   const [product, setProduct] = useState({
@@ -984,6 +988,10 @@ const AddProduct = () => {
                     </div>
                   </div>
                 )}
+                <ProductVariantsComponent 
+                  initialVariants={[]} 
+                  onChange={(updatedVariants) => setVariants(updatedVariants)} 
+                />
               </form>
             </div>
           </div>
