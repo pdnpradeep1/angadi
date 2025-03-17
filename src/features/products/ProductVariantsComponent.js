@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiPlus, FiTrash2, FiX, FiInfo } from 'react-icons/fi';
 
-const ProductVariantsComponent = () => {
+const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
   // State for options and their values
   const [optionTypes, setOptionTypes] = useState([
     { id: 1, name: '', values: [] }
@@ -11,7 +11,7 @@ const ProductVariantsComponent = () => {
   const [showModal, setShowModal] = useState(false);
   
   // State for generated variants
-  const [variants, setVariants] = useState([]);
+  const [variants, setVariants] = useState(initialVariants || []);
   
   // State for suggestions for common option types
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -30,6 +30,13 @@ const ProductVariantsComponent = () => {
       color: ['Red', 'Blue', 'Green', 'Black', 'White', 'Fire Brick', 'Yellow Green', 'Pink', 'Brown']
     }
   };
+  
+  // Update parent component when variants change
+  useEffect(() => {
+    if (onChange) {
+      onChange(variants);
+    }
+  }, [variants, onChange]);
   
   // Handle option name change
   const handleOptionNameChange = (id, value) => {
@@ -122,6 +129,7 @@ const ProductVariantsComponent = () => {
       inStock: true
     }));
     
+    // Update local state only, parent will handle saving to backend when appropriate
     setVariants(newVariants);
     setShowModal(false);
   };
@@ -142,16 +150,16 @@ const ProductVariantsComponent = () => {
   
   // Remove a variant
   const removeVariant = (id) => {
-    setVariants(variants.filter(variant => variant.id !== id));
+    const updatedVariants = variants.filter(variant => variant.id !== id);
+    setVariants(updatedVariants);
   };
   
   // Update variant details
   const updateVariant = (id, field, value) => {
-    setVariants(prev => 
-      prev.map(variant => 
-        variant.id === id ? { ...variant, [field]: value } : variant
-      )
+    const updatedVariants = variants.map(variant => 
+      variant.id === id ? { ...variant, [field]: value } : variant
     );
+    setVariants(updatedVariants);
   };
   
   // Determine if variants can be generated
@@ -684,6 +692,5 @@ const ProductVariantsComponent = () => {
       )}
     </div>
   );
-};
-
+}
 export default ProductVariantsComponent;

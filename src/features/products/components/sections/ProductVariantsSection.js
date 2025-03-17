@@ -1,5 +1,5 @@
 // src/features/products/components/sections/ProductVariantsSection.js
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FiSave } from 'react-icons/fi';
 import ProductVariantsComponent from '../../ProductVariantsComponent';
 
@@ -7,7 +7,7 @@ import ProductVariantsComponent from '../../ProductVariantsComponent';
  * Product Variants section for managing product options like size, color, etc.
  */
 const ProductVariantsSection = ({ 
-  variants, 
+  variants: initialVariants = [], 
   onVariantsChange, 
   onPrevious, 
   progress,
@@ -15,6 +15,8 @@ const ProductVariantsSection = ({
   isEditing,
   handleSubmit
 }) => {
+  const [variants, setVariants] = useState(initialVariants);
+
   // Helper function to render progress indicator
   const renderProgressIndicator = (progress) => (
     <div className="h-1.5 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -24,6 +26,15 @@ const ProductVariantsSection = ({
       ></div>
     </div>
   );
+
+  // Handle variants changes and pass them to parent component
+  const handleVariantsChange = (newVariants) => {
+    setVariants(newVariants);
+    // Only notify parent when we have updates, not on every render
+    if (onVariantsChange && JSON.stringify(newVariants) !== JSON.stringify(variants)) {
+      onVariantsChange(newVariants);
+    }
+  };
 
   return (
     <div className="p-6">
@@ -43,7 +54,7 @@ const ProductVariantsSection = ({
         <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-5">
           <ProductVariantsComponent 
             initialVariants={variants} 
-            onChange={onVariantsChange} 
+            onChange={handleVariantsChange} 
           />
         </div>
       </div>
