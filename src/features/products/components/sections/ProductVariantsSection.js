@@ -15,7 +15,39 @@ const ProductVariantsSection = ({
   isEditing,
   handleSubmit
 }) => {
-  const [variants, setVariants] = useState(initialVariants);
+  const [variants, setVariants] = useState([]);
+
+  // Initialize variants from props
+  useEffect(() => {
+    // Check if we're receiving variants from parent
+    if (initialVariants && initialVariants.length > 0) {
+      // Transform variants if needed (e.g., if coming from API with different structure)
+      const formattedVariants = initialVariants.map(variant => {
+        // If variant has attributes as a map, convert to array form for UI
+        let attributes = [];
+        if (variant.attributes && !Array.isArray(variant.attributes)) {
+          // If attributes is an object/map, convert to array of {name, value} pairs
+          attributes = Object.entries(variant.attributes).map(([name, value]) => ({
+            name,
+            value
+          }));
+        } else if (Array.isArray(variant.attributes)) {
+          attributes = variant.attributes;
+        }
+        
+        return {
+          ...variant,
+          attributes,
+          // Ensure stockQuantity is properly formatted for the UI
+          stockQuantity: variant.stockQuantity === -1 ? 'Unlimited' : variant.stockQuantity
+        };
+      });
+      
+      setVariants(formattedVariants);
+    } else {
+      setVariants([]);
+    }
+  }, [initialVariants]);
 
   // Helper function to render progress indicator
   const renderProgressIndicator = (progress) => (
@@ -30,8 +62,9 @@ const ProductVariantsSection = ({
   // Handle variants changes and pass them to parent component
   const handleVariantsChange = (newVariants) => {
     setVariants(newVariants);
-    // Only notify parent when we have updates, not on every render
-    if (onVariantsChange && JSON.stringify(newVariants) !== JSON.stringify(variants)) {
+    
+    // Only notify parent when we have updates
+    if (onVariantsChange) {
       onVariantsChange(newVariants);
     }
   };

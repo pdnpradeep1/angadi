@@ -102,7 +102,10 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
   };
   
   // Generate all possible variant combinations
-  const generateVariants = () => {
+  const generateVariants = (e) => {
+    // Prevent form submission
+    e && e.preventDefault();
+    
     // Check if we have options and values
     const validOptions = optionTypes.filter(
       option => option.name && option.values.length > 0
@@ -199,6 +202,12 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
     );
   };
   
+  // Toggle modal display with preventing form submission
+  const toggleModal = (e) => {
+    e && e.preventDefault();
+    setShowModal(!showModal);
+  };
+  
   return (
     <div className="max-w-5xl mx-auto">
       {/* Main Variants Section */}
@@ -206,7 +215,8 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-800 dark:text-white">Variants</h2>
           <button 
-            onClick={() => setShowModal(true)}
+            type="button"
+            onClick={toggleModal}
             className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md"
           >
             Add variants
@@ -274,7 +284,7 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
                     <tr key={variant.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                       <td className="px-4 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <button className="mr-3">
+                          <button type="button" className="mr-3">
                             <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -376,7 +386,8 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
             
             <div className="mt-4">
               <button
-                onClick={() => setShowModal(true)}
+                type="button"
+                onClick={toggleModal}
                 className="text-primary-600 dark:text-primary-400 border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-md"
               >
                 Edit or add variants
@@ -386,7 +397,8 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
         ) : (
           <div className="text-center py-8">
             <button
-              onClick={() => setShowModal(true)}
+              type="button"
+              onClick={toggleModal}
               className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-md"
             >
               Add variants
@@ -403,7 +415,8 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Add variants</h3>
                 <button 
-                  onClick={() => setShowModal(false)}
+                  type="button"
+                  onClick={toggleModal}
                   className="text-gray-400 hover:text-gray-500"
                 >
                   <FiX size={24} />
@@ -484,7 +497,9 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
                                 ></span>
                                 {color}
                                 <button
-                                  onClick={() => {
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
                                     const newValues = [...option.values];
                                     newValues.splice(idx, 1);
                                     setOptionTypes(prev => 
@@ -509,6 +524,7 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
                               className="w-full p-2 focus:outline-none focus:ring-1 focus:ring-primary-500 bg-transparent border border-gray-300 dark:border-gray-600 rounded-md"
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter' && e.target.value.trim() !== '') {
+                                  e.preventDefault();
                                   setOptionTypes(prev => 
                                     prev.map(opt => 
                                       opt.id === option.id ? 
@@ -526,10 +542,12 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
                           <div className="mt-3 flex flex-wrap gap-2">
                             {['#FF0000', '#0000FF', '#008000', '#000000', '#FFFFFF', '#FFA500', '#FFFF00', '#800080', '#FFC0CB', '#A52A2A', '#B22222', '#9ACD32'].map((color, idx) => (
                               <button
+                                type="button"
                                 key={idx}
                                 className="w-6 h-6 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                                 style={{ backgroundColor: color }}
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.preventDefault();
                                   // Map color code to name
                                   const colorNames = {
                                     '#FF0000': 'Red',
@@ -573,7 +591,9 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
                               >
                                 {size}
                                 <button
-                                  onClick={() => {
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
                                     const newValues = [...option.values];
                                     newValues.splice(idx, 1);
                                     setOptionTypes(prev => 
@@ -604,9 +624,11 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
                             <div className="flex flex-wrap gap-2">
                               {['S', 'M', 'L', 'XL', 'XXL'].map((size) => (
                                 <button
+                                  type="button"
                                   key={size}
                                   className="px-2 py-1 text-sm bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
-                                  onClick={() => {
+                                  onClick={(e) => {
+                                    e.preventDefault();
                                     if (!option.values.includes(size)) {
                                       setOptionTypes(prev => 
                                         prev.map(opt => 
@@ -635,7 +657,9 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
                       )}
                       
                       <button 
-                        onClick={() => {
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
                           const trashIcon = document.getElementById(`trash-${option.id}`);
                           trashIcon.classList.add('text-red-500');
                           setTimeout(() => {
@@ -654,8 +678,10 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
               {/* Add another option button - only show if we have less than 2 options */}
               {optionTypes.length < 2 && (
                 <button
+                  type="button"
                   className="flex items-center text-primary-600 dark:text-primary-400 border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-md mb-6"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.preventDefault();
                     if (optionTypes.length < 2) {
                       setOptionTypes(prev => [
                         ...prev,
@@ -676,6 +702,7 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
               
               {/* Generate button */}
               <button
+                type="button"
                 onClick={generateVariants}
                 className={`w-full py-3 rounded-md ${
                   canGenerateVariants 

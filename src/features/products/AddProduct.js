@@ -1,9 +1,7 @@
-// src/features/products/AddProduct.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
   FiSave, 
-  FiImage, 
   FiAlertCircle, 
   FiCheckCircle,
   FiArrowLeft,
@@ -101,8 +99,8 @@ const AddProduct = () => {
     // Categorization progress
     const categorizationProgress = product.categoryId ? 100 : 0;
     
-    // Variants progress
-    const variantsProgress = variants.length > 0 ? 100 : 0;
+    // Variants progress - consider complete if any variants exist or if deliberately left empty
+    const variantsProgress = 100; // Always consider complete, as variants are optional
 
     setSectionProgress({
       'product-info': basicInfoProgress,
@@ -121,11 +119,29 @@ const AddProduct = () => {
       const response = await apiService.get(`/products/${storeId}/${id}`);
       const productData = response.data;
 
-      setProduct(productData);
-      setSelectedTags(productData.tags || []);
+      // Normalize product data
+      const normalizedProduct = {
+        ...productData,
+        stockQuantity: productData.stockQuantity === -1 ? 'Unlimited' : productData.stockQuantity
+      };
+
+      setProduct(normalizedProduct);
+      
+      // Set tags if available
+      if (productData.tags && productData.tags.length > 0) {
+        setSelectedTags(productData.tags.map(tag => tag.id));
+      }
+      
+      // Set variants if available
+      if (productData.variants && productData.variants.length > 0) {
+        setVariants(productData.variants);
+      }
+      
+      // Set image preview
       if (productData.imageUrl) {
         setPreviewUrl(productData.imageUrl);
       }
+      
       setFetchingProduct(false);
     } catch (err) {
       console.error('Error fetching product data:', err);
@@ -212,7 +228,7 @@ const AddProduct = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     setLoading(true);
     setError(null);
     setSuccess(false);
@@ -232,14 +248,39 @@ const AddProduct = () => {
         }
       }
       
+      // Transform variants data for API
+      const transformedVariants = variants.map(variant => {
+        // Convert attributes from array to map if needed
+        let attributes = {};
+        if (variant.attributes && Array.isArray(variant.attributes)) {
+          variant.attributes.forEach(attr => {
+            if (attr.name && attr.value) {
+              attributes[attr.name] = attr.value;
+            }
+          });
+        } else {
+          attributes = variant.attributes || {};
+        }
+        
+        return {
+          id: variant.id, // Include ID for existing variants
+          sku: variant.sku || `${product.sku || 'SKU'}-${Math.floor(Math.random() * 1000)}`,
+          price: parseFloat(variant.price) || parseFloat(product.price),
+          stockQuantity: variant.stockQuantity === 'Unlimited' ? -1 : parseInt(variant.stockQuantity, 10),
+          imageUrl: variant.imageUrl || product.imageUrl,
+          attributes
+        };
+      });
+      
       // Create product object for API
       const productData = {
         ...product,
         imageUrl,
         price: parseFloat(product.price),
-        originalPrice: product.originalPrice ? parseFloat(product.originalPrice) : parseFloat(product.price),
+        originalPrice: product.originalPrice ? parseFloat(product.originalPrice) : null,
         stockQuantity: product.stockQuantity === 'Unlimited' ? -1 : parseInt(product.stockQuantity, 10),
-        variants: variants.length > 0 ? variants : undefined
+        tags: selectedTags.map(id => ({ id })),
+        variants: transformedVariants
       };
       
       // Send API request - different endpoints for create vs update
