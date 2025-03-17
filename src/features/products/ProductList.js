@@ -78,34 +78,90 @@ const ProductList = () => {
     setSearchParams(params, { replace: true });
   }, [filters, searchTerm]);
 
-  const fetchProducts = async () => {
-    setLoading(true);
-    try {
-      // Build query parameters
-      const params = new URLSearchParams();
-      if (searchTerm) params.append('search', searchTerm);
-      if (filters.status !== 'all') params.append('status', filters.status);
-      if (filters.minPrice) params.append('minPrice', filters.minPrice);
-      if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
-      if (filters.category !== 'all') params.append('categoryId', filters.category);
-      if (filters.inStock === 'true') params.append('inStock', true);
+  // const fetchProducts = async () => {
+  //   setLoading(true);
+  //   try {
+  //     // Build query parameters
+  //     const params = new URLSearchParams();
+  //     if (searchTerm) params.append('search', searchTerm);
+  //     if (filters.status !== 'all') params.append('status', filters.status);
+  //     if (filters.minPrice) params.append('minPrice', filters.minPrice);
+  //     if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
+  //     if (filters.category !== 'all') params.append('categoryId', filters.category);
+  //     if (filters.inStock === 'true') params.append('inStock', true);
       
-      const response = await api.get(`/products/store/${storeId}?${params}`);
+  //     const response = await api.get(`/products/store/${storeId}?${params}`);
+  //     setProducts(response.data);
+  //     setLoading(false);
+  //   } catch (err) {
+  //     console.error('Error fetching products:', err);
+  //     setError('Failed to load products');
+      
+  //     // For development, use mock data as fallback
+  //     if (process.env.NODE_ENV === 'development') {
+  //       const mockProducts = generateMockProducts(10);
+  //       setProducts(mockProducts);
+  //     }
+      
+  //     setLoading(false);
+  //   }
+  // };
+
+  // Updated fetchProducts function for ProductList.js
+const fetchProducts = async () => {
+  setLoading(true);
+  try {
+    // Build query parameters
+    const params = new URLSearchParams();
+    if (searchTerm) params.append('search', searchTerm);
+    
+    if (filters.status !== 'all') params.append('status', filters.status);
+    
+    if (filters.minPrice) params.append('minPrice', filters.minPrice);
+    if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
+    
+    if (filters.category !== 'all') params.append('categoryId', filters.category);
+    
+    if (filters.inStock === 'true') params.append('inStock', true);
+    else if (filters.inStock === 'false') params.append('inStock', false);
+    
+    // Add pagination parameters
+    params.append('page', 0); // Start at page 0
+    params.append('size', 50); // Get 50 items per page
+    params.append('sort', 'createdAt,desc'); // Sort by creation date, newest first
+    
+    const response = await api.get(`/products/store/${storeId}?${params}`);
+    
+    // Handle both array responses and page responses
+    if (Array.isArray(response.data)) {
       setProducts(response.data);
-      setLoading(false);
-    } catch (err) {
-      console.error('Error fetching products:', err);
-      setError('Failed to load products');
-      
-      // For development, use mock data as fallback
-      if (process.env.NODE_ENV === 'development') {
-        const mockProducts = generateMockProducts(10);
-        setProducts(mockProducts);
-      }
-      
-      setLoading(false);
+    } else if (response.data.content) {
+      // Response is a Page object
+      setProducts(response.data.content);
+      // You can also use pagination info if needed:
+      // setTotalPages(response.data.totalPages);
+      // setTotalItems(response.data.totalElements);
+    } else {
+      console.warn('Unexpected response format:', response.data);
+      setProducts([]);
     }
-  };
+    
+    setLoading(false);
+  } catch (err) {
+    console.error('Error fetching products:', err);
+    setError('Failed to load products');
+    
+    // For development, use mock data as fallback
+    if (process.env.NODE_ENV === 'development') {
+      const mockProducts = generateMockProducts(10);
+      setProducts(mockProducts);
+    }
+    
+    setLoading(false);
+  }
+};
+
+  
 
   const fetchCategories = async () => {
     try {
