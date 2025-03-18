@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiPlus, FiTrash2, FiX, FiInfo } from 'react-icons/fi';
 
-const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
+const ProductVariantsComponent = ({ initialVariants = [], onChange, productId }) => {
   // State for options and their values
   const [optionTypes, setOptionTypes] = useState([
     { id: 1, name: '', values: [] }
@@ -102,41 +102,6 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
   };
   
   // Generate all possible variant combinations
-  // const generateVariants = (e) => {
-  //   // Prevent form submission
-  //   e && e.preventDefault();
-    
-  //   // Check if we have options and values
-  //   const validOptions = optionTypes.filter(
-  //     option => option.name && option.values.length > 0
-  //   );
-    
-  //   if (validOptions.length === 0) {
-  //     return;
-  //   }
-    
-  //   const combinations = getCombinations(validOptions);
-    
-  //   // Create variant objects
-  //   const newVariants = combinations.map(combo => ({
-  //     id: Math.random().toString(36).substr(2, 9),
-  //     options: combo,
-  //     price: 'Eg. 99',
-  //     discountedPrice: 'Eg. 99',
-  //     sku: 'Eg. 1000000001',
-  //     quantity: 'Unlimited',
-  //     weight: '1.2',
-  //     weightUnit: 'kg',
-  //     gtin: 'Enter GTIN',
-  //     googleCategory: 'Enter Category name',
-  //     inStock: true
-  //   }));
-    
-  //   // Update local state only, parent will handle saving to backend when appropriate
-  //   setVariants(newVariants);
-  //   setShowModal(false);
-  // };
-
   const generateVariants = (e) => {
     // Prevent form submission
     e && e.preventDefault();
@@ -152,23 +117,30 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
     
     const combinations = getCombinations(validOptions);
     
-    // Create variant objects
-    const newVariants = combinations.map(combo => ({
-      // Use a numeric ID (current timestamp + random number) instead of alphanumeric
-      id: Date.now() + Math.floor(Math.random() * 1000),
-      options: combo,
-      price: 'Eg. 99',
-      discountedPrice: 'Eg. 99',
-      sku: 'Eg. 1000000001',
-      quantity: 'Unlimited',
-      weight: '1.2',
-      weightUnit: 'kg',
-      gtin: 'Enter GTIN',
-      googleCategory: 'Enter Category name',
-      inStock: true
-    }));
+    // Create variant objects with composite key structure
+    const newVariants = combinations.map(combo => {
+      // Generate a unique variantId
+      const timestamp = Date.now();
+      const random = Math.floor(Math.random() * 1000);
+      const variantId = timestamp + random;
+      
+      return {
+        variantId: variantId,
+        productId: productId, // Use the productId passed as prop
+        options: combo,
+        price: '',
+        discountedPrice: '',
+        sku: `SKU-${variantId}`,
+        quantity: 'Unlimited',
+        weight: '',
+        weightUnit: 'kg',
+        gtin: '',
+        googleCategory: '',
+        inStock: true
+      };
+    });
 
-        setVariants(newVariants);
+    setVariants(newVariants);
     setShowModal(false);
   };
   
@@ -187,15 +159,15 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
   };
   
   // Remove a variant
-  const removeVariant = (id) => {
-    const updatedVariants = variants.filter(variant => variant.id !== id);
+  const removeVariant = (variantId) => {
+    const updatedVariants = variants.filter(variant => variant.variantId !== variantId);
     setVariants(updatedVariants);
   };
   
   // Update variant details
-  const updateVariant = (id, field, value) => {
+  const updateVariant = (variantId, field, value) => {
     const updatedVariants = variants.map(variant => 
-      variant.id === id ? { ...variant, [field]: value } : variant
+      variant.variantId === variantId ? { ...variant, [field]: value } : variant
     );
     setVariants(updatedVariants);
   };
@@ -316,7 +288,7 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
                 </thead>
                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                   {variants.map((variant) => (
-                    <tr key={variant.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <tr key={variant.variantId} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                       <td className="px-4 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <button type="button" className="mr-3">
@@ -326,7 +298,7 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
                             </svg>
                           </button>
                           <div>
-                            {variant.options.map((option, idx) => (
+                            {variant.options && variant.options.map((option, idx) => (
                               <span key={idx} className="flex items-center">
                                 {option.name.toLowerCase().includes('color') 
                                   ? getColorDisplay(option.value) 
@@ -348,7 +320,7 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
                             className="pl-6 block w-full border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm py-2"
                             placeholder="Eg. 99"
                             value={variant.price}
-                            onChange={(e) => updateVariant(variant.id, 'price', e.target.value)}
+                            onChange={(e) => updateVariant(variant.variantId, 'price', e.target.value)}
                           />
                         </div>
                       </td>
@@ -362,7 +334,7 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
                             className="pl-6 block w-full border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm py-2"
                             placeholder="Eg. 99"
                             value={variant.discountedPrice}
-                            onChange={(e) => updateVariant(variant.id, 'discountedPrice', e.target.value)}
+                            onChange={(e) => updateVariant(variant.variantId, 'discountedPrice', e.target.value)}
                           />
                         </div>
                       </td>
@@ -372,7 +344,7 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
                           className="block w-full border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm py-2"
                           placeholder="Eg. 1000000001"
                           value={variant.sku}
-                          onChange={(e) => updateVariant(variant.id, 'sku', e.target.value)}
+                          onChange={(e) => updateVariant(variant.variantId, 'sku', e.target.value)}
                         />
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
@@ -381,7 +353,7 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
                           className="block w-full border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm py-2"
                           placeholder="Unlimited"
                           value={variant.quantity}
-                          onChange={(e) => updateVariant(variant.id, 'quantity', e.target.value)}
+                          onChange={(e) => updateVariant(variant.variantId, 'quantity', e.target.value)}
                         />
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
@@ -391,11 +363,11 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
                             className="block w-full border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm py-2"
                             placeholder="Eg. 1.2"
                             value={variant.weight || ''}
-                            onChange={(e) => updateVariant(variant.id, 'weight', e.target.value)}
+                            onChange={(e) => updateVariant(variant.variantId, 'weight', e.target.value)}
                           />
                           <select 
                             className="ml-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm py-2"
-                            onChange={(e) => updateVariant(variant.id, 'weightUnit', e.target.value)}
+                            onChange={(e) => updateVariant(variant.variantId, 'weightUnit', e.target.value)}
                             value={variant.weightUnit || 'kg'}
                           >
                             <option value="kg">kg</option>
@@ -410,7 +382,7 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
                           className="block w-full border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm py-2"
                           placeholder="Enter GTIN"
                           value={variant.gtin || ''}
-                          onChange={(e) => updateVariant(variant.id, 'gtin', e.target.value)}
+                          onChange={(e) => updateVariant(variant.variantId, 'gtin', e.target.value)}
                         />
                       </td>
                     </tr>
@@ -501,13 +473,16 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
                     </div>
                   </div>
                   
+                  {/* Value input section - conditional based on option type */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Option values <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
+                      {/* Color picker UI */}
                       {option.name.toLowerCase() === 'color picker' || option.name.toLowerCase() === 'color' ? (
                         <div className="border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2.5 bg-white dark:bg-gray-700">
+                          {/* Selected colors */}
                           <div className="flex flex-wrap gap-2 mb-3">
                             {option.values.map((color, idx) => (
                               <div
@@ -551,7 +526,7 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
                             ))}
                           </div>
                           
-                          {/* Modern Color picker input */}
+                          {/* Color input */}
                           <div className="relative">
                             <input
                               type="text"
@@ -754,5 +729,6 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
       )}
     </div>
   );
-}
+};
+
 export default ProductVariantsComponent;

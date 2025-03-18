@@ -262,13 +262,10 @@ const AddProduct = () => {
           attributes = variant.attributes || {};
         }
         
-        // Ensure variant.id is always a number
-        const variantId = typeof variant.id === 'string' && isNaN(parseInt(variant.id)) 
-          ? null  // If ID is non-numeric string, send null to let server generate ID
-          : variant.id; // Otherwise, use the existing ID (server will handle type conversion)
-        
+        // Create the variant request object with composite key structure
         return {
-          id: variantId,
+          variantId: variant.variantId || Date.now() + Math.floor(Math.random() * 1000),
+          productId: isEditing ? parseInt(productId) : null, // For editing, use existing product ID
           sku: variant.sku || `${product.sku || 'SKU'}-${Math.floor(Math.random() * 1000)}`,
           price: parseFloat(variant.price) || parseFloat(product.price),
           stockQuantity: variant.stockQuantity === 'Unlimited' ? -1 : parseInt(variant.stockQuantity, 10),
@@ -313,8 +310,28 @@ const AddProduct = () => {
   };
 
   const handleVariantsChange = (updatedVariants) => {
-    setVariants(updatedVariants);
+    // Ensure all variants have productId set
+    const processedVariants = updatedVariants.map(variant => {
+      // If editing a product, make sure productId is set
+      if (isEditing && productId) {
+        return {
+          ...variant,
+          productId: parseInt(productId),
+          // Ensure variantId exists (use existing or create new)
+          variantId: variant.variantId || variant.id || Date.now() + Math.floor(Math.random() * 1000)
+        };
+      }
+      // For new products, we'll set the productId after the product is created
+      return {
+        ...variant,
+        // Just ensure variantId exists
+        variantId: variant.variantId || variant.id || Date.now() + Math.floor(Math.random() * 1000)
+      };
+    });
+    
+    setVariants(processedVariants);
   };
+
 
   // Show loading state while fetching product data
   if (fetchingProduct) {
@@ -467,6 +484,7 @@ const AddProduct = () => {
                     loading={loading}
                     isEditing={isEditing}
                     handleSubmit={handleSubmit}
+                    productId={isEditing ? parseInt(productId) : null} // Pass product ID for editing mode
                   />
                 )}
               </form>
