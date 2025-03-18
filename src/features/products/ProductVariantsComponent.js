@@ -102,6 +102,41 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
   };
   
   // Generate all possible variant combinations
+  // const generateVariants = (e) => {
+  //   // Prevent form submission
+  //   e && e.preventDefault();
+    
+  //   // Check if we have options and values
+  //   const validOptions = optionTypes.filter(
+  //     option => option.name && option.values.length > 0
+  //   );
+    
+  //   if (validOptions.length === 0) {
+  //     return;
+  //   }
+    
+  //   const combinations = getCombinations(validOptions);
+    
+  //   // Create variant objects
+  //   const newVariants = combinations.map(combo => ({
+  //     id: Math.random().toString(36).substr(2, 9),
+  //     options: combo,
+  //     price: 'Eg. 99',
+  //     discountedPrice: 'Eg. 99',
+  //     sku: 'Eg. 1000000001',
+  //     quantity: 'Unlimited',
+  //     weight: '1.2',
+  //     weightUnit: 'kg',
+  //     gtin: 'Enter GTIN',
+  //     googleCategory: 'Enter Category name',
+  //     inStock: true
+  //   }));
+    
+  //   // Update local state only, parent will handle saving to backend when appropriate
+  //   setVariants(newVariants);
+  //   setShowModal(false);
+  // };
+
   const generateVariants = (e) => {
     // Prevent form submission
     e && e.preventDefault();
@@ -119,7 +154,8 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
     
     // Create variant objects
     const newVariants = combinations.map(combo => ({
-      id: Math.random().toString(36).substr(2, 9),
+      // Use a numeric ID (current timestamp + random number) instead of alphanumeric
+      id: Date.now() + Math.floor(Math.random() * 1000),
       options: combo,
       price: 'Eg. 99',
       discountedPrice: 'Eg. 99',
@@ -131,9 +167,8 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange }) => {
       googleCategory: 'Enter Category name',
       inStock: true
     }));
-    
-    // Update local state only, parent will handle saving to backend when appropriate
-    setVariants(newVariants);
+
+        setVariants(newVariants);
     setShowModal(false);
   };
   

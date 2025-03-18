@@ -262,8 +262,13 @@ const AddProduct = () => {
           attributes = variant.attributes || {};
         }
         
+        // Ensure variant.id is always a number
+        const variantId = typeof variant.id === 'string' && isNaN(parseInt(variant.id)) 
+          ? null  // If ID is non-numeric string, send null to let server generate ID
+          : variant.id; // Otherwise, use the existing ID (server will handle type conversion)
+        
         return {
-          id: variant.id, // Include ID for existing variants
+          id: variantId,
           sku: variant.sku || `${product.sku || 'SKU'}-${Math.floor(Math.random() * 1000)}`,
           price: parseFloat(variant.price) || parseFloat(product.price),
           stockQuantity: variant.stockQuantity === 'Unlimited' ? -1 : parseInt(variant.stockQuantity, 10),
