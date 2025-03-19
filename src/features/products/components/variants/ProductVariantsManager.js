@@ -2,7 +2,13 @@ import React, { useState, useEffect } from 'react';
 import VariantTable from './VariantTable';
 import VariantModal from './VariantModal';
 import { getCombinations, generateVariantId } from './utils/variantHelpers';
-import { normalizeVariantsForUI, prepareVariantsForAPI, extractOptionsMapForProduct, createEmptyVariant } from './utils/variantTransformers';
+import { 
+  normalizeVariantsForUI, 
+  prepareVariantsForAPI, 
+  extractOptionsMapForProduct,
+  extractOptionsMapFromOptionTypes, 
+  createEmptyVariant 
+} from './utils/variantTransformers';
 
 /**
  * Main component for managing product variants
@@ -117,23 +123,12 @@ const ProductVariantsManager = ({ initialVariants = [], onChange, productId }) =
     if (onChange) {
       // Extract options map directly from option types
       const optionsMap = extractOptionsMapFromOptionTypes(validOptions);
+      console.log('Generated optionsMap:', optionsMap);
+      
       // Prepare variants for API
       const variantsForAPI = prepareVariantsForAPI(newVariants, productId);
       onChange(variantsForAPI, optionsMap);
     }
-  };
-  
-  // Extract options map from option types
-  const extractOptionsMapFromOptionTypes = (options) => {
-    const optionsMap = {};
-    
-    options.forEach(option => {
-      if (option.name && option.values.length > 0) {
-        optionsMap[option.name] = [...option.values];
-      }
-    });
-    
-    return optionsMap;
   };
   
   // Update variant details
@@ -175,8 +170,13 @@ const ProductVariantsManager = ({ initialVariants = [], onChange, productId }) =
     
     // Notify parent of changes
     if (onChange) {
-      // Extract options map from option types
-      const optionsMap = extractOptionsMapFromOptionTypes(optionTypes);
+      // Extract options map from variants or from option types
+      const optionsMap = optionTypes.length > 0 
+        ? extractOptionsMapFromOptionTypes(optionTypes) 
+        : extractOptionsMapForProduct(updatedVariants);
+      
+      console.log('Updated optionsMap:', optionsMap);
+      
       // Prepare variants for API
       const variantsForAPI = prepareVariantsForAPI(updatedVariants, productId);
       onChange(variantsForAPI, optionsMap);
@@ -197,8 +197,13 @@ const ProductVariantsManager = ({ initialVariants = [], onChange, productId }) =
       
       // Notify parent of changes
       if (onChange) {
-        // Extract options map from option types
-        const optionsMap = extractOptionsMapFromOptionTypes(optionTypes);
+        // Extract options map from option types or from variants
+        const optionsMap = optionTypes.length > 0 
+          ? extractOptionsMapFromOptionTypes(optionTypes) 
+          : extractOptionsMapForProduct(updatedVariants);
+        
+        console.log('Deleted variant optionsMap:', optionsMap);
+        
         // Prepare variants for API
         const variantsForAPI = prepareVariantsForAPI(updatedVariants, productId);
         onChange(variantsForAPI, optionsMap);

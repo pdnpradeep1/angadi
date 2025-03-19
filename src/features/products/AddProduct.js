@@ -14,6 +14,7 @@ import ProductMediaSection from './components/sections/ProductMediaSection';
 import InventorySection from './components/sections/InventorySection';
 import CategorizationSection from './components/sections/CategorizationSection';
 import ProductVariantsSection from './components/sections/ProductVariantsSection';
+import { extractOptionsMapForProduct } from './components/variants/utils/variantTransformers';
 
 // Utilities and services
 import { apiService } from '../../api/config';
@@ -338,9 +339,16 @@ const AddProduct = () => {
     setVariants(processedVariants);
     
     // Save the options map to state
-    setOptionsMap(options);
-  };
-
+    if (options && Object.keys(options).length > 0) {
+      console.log('Setting options map:', options);
+      setOptionsMap(options);
+    } else {
+      // If no options map is provided, try to extract it from the variants
+      const extractedOptions = extractOptionsMapForProduct(processedVariants);
+      console.log('Extracted options map:', extractedOptions);
+      setOptionsMap(extractedOptions);
+    }
+  }
   // Show loading state while fetching product data
   if (fetchingProduct) {
     return (

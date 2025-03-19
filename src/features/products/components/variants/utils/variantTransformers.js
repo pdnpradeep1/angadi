@@ -198,6 +198,49 @@ export const normalizeVariantsForUI = (initialVariants = [], productId = null) =
             }
           }
         });
+      } else if (variant.attributes) {
+        // Also check attributes if options is not available
+        const attrs = variant.attributes;
+        if (Array.isArray(attrs)) {
+          attrs.forEach(attr => {
+            if (attr.name && attr.value) {
+              if (!optionsMap[attr.name]) {
+                optionsMap[attr.name] = [];
+              }
+              if (!optionsMap[attr.name].includes(attr.value)) {
+                optionsMap[attr.name].push(attr.value);
+              }
+            }
+          });
+        } else if (typeof attrs === 'object') {
+          // Handle object format attributes
+          Object.entries(attrs).forEach(([name, value]) => {
+            if (!optionsMap[name]) {
+              optionsMap[name] = [];
+            }
+            if (!optionsMap[name].includes(value)) {
+              optionsMap[name].push(value);
+            }
+          });
+        }
+      }
+    });
+    
+    return optionsMap;
+  };
+
+  /**
+   * Extract options map directly from option types
+   * This is used when generating variants based on option types
+   * @param {Array} optionTypes - Option types with values
+   * @returns {Object} Map of option name -> array of values
+   */
+  export const extractOptionsMapFromOptionTypes = (optionTypes = []) => {
+    const optionsMap = {};
+    
+    optionTypes.forEach(option => {
+      if (option.name && option.values && option.values.length > 0) {
+        optionsMap[option.name] = [...option.values];
       }
     });
     
