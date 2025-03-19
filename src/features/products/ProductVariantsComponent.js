@@ -38,22 +38,65 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange, productId })
   //   }
   // }, [variants, onChange]);
 
+
   useEffect(() => {
-    console.log('Initial variants in ProductVariantsComponent:', initialVariants);
-    
     if (initialVariants && initialVariants.length > 0) {
+      console.log('Initial variants received in ProductVariantsComponent:', initialVariants);
+      
       const processedVariants = initialVariants.map(variant => {
-        // Make sure we're using a consistent variantId field
+        // Make sure we're using a consistent ID field
+        const variantId = variant.variantId || variant.id || Date.now() + Math.floor(Math.random() * 1000);
+        
+        // Make sure we're using consistent field names
+        const stockQuantity = variant.stockQuantity === -1 ? 'Unlimited' : 
+                              variant.stockQuantity || variant.quantity || 0;
+        
+        const price = variant.price ? variant.price.toString() : '';
+        
+        // Original price might be in either field
+        const originalPrice = variant.originalPrice ? variant.originalPrice.toString() : 
+                             variant.discountedPrice ? variant.discountedPrice.toString() : '';
+        
+        // Convert options to the format the UI expects
+        let options = [];
+        if (variant.attributes) {
+          if (Array.isArray(variant.attributes)) {
+            options = [...variant.attributes];
+          } else {
+            // Convert object to array of {name, value} objects
+            options = Object.entries(variant.attributes).map(([name, value]) => ({
+              name,
+              value
+            }));
+          }
+        } else if (variant.options && Array.isArray(variant.options)) {
+          options = [...variant.options];
+        }
+        
         return {
           ...variant,
-          variantId: variant.variantId || variant.id || Date.now() + Math.floor(Math.random() * 1000),
-          // Add any other necessary transformations
+          id: variant.id, // Preserve original ID if it exists
+          variantId,      // Ensure variantId exists
+          stockQuantity,  // Normalize stockQuantity
+          quantity: stockQuantity, // Store in quantity field too for UI
+          price,          // Ensure price is a string
+          originalPrice,  // Ensure originalPrice is set
+          discountedPrice: originalPrice, // Store in discountedPrice field too for UI
+          options,        // Ensure options array exists
+          attributes: options, // Store in attributes field too
         };
       });
+      
+      console.log('Processed variants for UI:', processedVariants);
       setVariants(processedVariants);
+      
+      // Notify parent of the processed variants
+      if (onChange) {
+        onChange(processedVariants);
+      }
     }
-    
-  }, [initialVariants]);
+  }, [initialVariants, onChange]);
+  
   
   // Handle option name change
   const handleOptionNameChange = (id, value) => {
@@ -134,30 +177,46 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange, productId })
     
     const combinations = getCombinations(validOptions);
     
-    // Create variant objects with composite key structure
+    // Create variant objects with consistent field structure
     const newVariants = combinations.map(combo => {
       // Generate a unique variantId
       const timestamp = Date.now();
       const random = Math.floor(Math.random() * 1000);
       const variantId = timestamp + random;
       
+      // Convert options array to attributes format
+      const attributes = combo.reduce((acc, option) => {
+        acc[option.name] = option.value;
+        return acc;
+      }, {});
+      
       return {
-        variantId: variantId,
-        productId: productId, // Use the productId passed as prop
-        options: combo,
-        price: '',
-        discountedPrice: '',
-        sku: `SKU-${variantId}`,
-        quantity: 'Unlimited',
+        id: variantId,              // Include id field for backend API
+        variantId: variantId,       // Include variantId for UI components
+        productId: productId,       // Use the productId passed as prop
+        options: combo,             // Keep the options array for UI
+        attributes: attributes,     // Include formatted attributes for API
+        price: '',                  // Empty price field
+        originalPrice: '',          // Empty originalPrice field
+        discountedPrice: '',        // Empty discountedPrice field for UI compatibility
+        sku: `SKU-${variantId}`,    // Generate a SKU
+        stockQuantity: 'Unlimited', // Default to unlimited stock
+        quantity: 'Unlimited',      // Duplicate field for UI compatibility
         weight: '',
         weightUnit: 'kg',
         gtin: '',
-        googleCategory: '',
         inStock: true
       };
     });
-
+  
+    console.log('Generated variants:', newVariants);
     setVariants(newVariants);
+    
+    // Notify parent of the new variants
+    if (onChange) {
+      onChange(newVariants);
+    }
+    
     setShowModal(false);
   };
   
@@ -183,10 +242,41 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange, productId })
   
   // Update variant details
   const updateVariant = (variantId, field, value) => {
-    const updatedVariants = variants.map(variant => 
-      variant.variantId === variantId ? { ...variant, [field]: value } : variant
-    );
+    console.log(`Updating variant ${variantId}, field: ${field}, value: ${value}`);
+    
+    const updatedVariants = variants.map(variant => {
+      if (variant.variantId === variantId || variant.id === variantId) {
+        // For certain fields, update both the UI and API versions of the field
+        if (field === 'price') {
+          return { ...variant, price: value };
+        } 
+        else if (field === 'discountedPrice' || field === 'originalPrice') {
+          return { 
+            ...variant, 
+            discountedPrice: value,
+            originalPrice: value  // Store in both fields
+          };
+        }
+        else if (field === 'quantity' || field === 'stockQuantity') {
+          return { 
+            ...variant, 
+            quantity: value,
+            stockQuantity: value  // Store in both fields
+          };
+        }
+        // Default case
+        return { ...variant, [field]: value };
+      }
+      return variant;
+    });
+    
+    console.log('Updated variants array:', updatedVariants);
     setVariants(updatedVariants);
+    
+    // IMPORTANT: Always notify parent component
+    if (onChange) {
+      onChange(updatedVariants);
+    }
   };
   
   // Determine if variants can be generated
@@ -335,9 +425,12 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange, productId })
                           <input
                             type="text"
                             className="pl-6 block w-full border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm py-2"
-                            placeholder="Eg. 99"
-                            value={variant.price}
-                            onChange={(e) => updateVariant(variant.variantId, 'price', e.target.value)}
+                            placeholder="Enter price"
+                            value={variant.price || ''}
+                            onChange={(e) => {
+                              console.log(`Updating price for variant ${variant.variantId} to ${e.target.value}`);
+                              updateVariant(variant.variantId, 'price', e.target.value);
+                            }}
                           />
                         </div>
                       </td>
@@ -349,9 +442,13 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange, productId })
                           <input
                             type="text"
                             className="pl-6 block w-full border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm py-2"
-                            placeholder="Eg. 99"
-                            value={variant.discountedPrice}
-                            onChange={(e) => updateVariant(variant.variantId, 'discountedPrice', e.target.value)}
+                            placeholder="Enter original price"
+                            value={variant.originalPrice || variant.discountedPrice || ''}
+                            onChange={(e) => {
+                              console.log(`Updating original price for variant ${variant.variantId} to ${e.target.value}`);
+                              // Update both fields to ensure compatibility
+                              updateVariant(variant.variantId, 'originalPrice', e.target.value);
+                            }}
                           />
                         </div>
                       </td>
@@ -365,13 +462,17 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange, productId })
                         />
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
-                        <input
-                          type="text"
-                          className="block w-full border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm py-2"
-                          placeholder="Unlimited"
-                          value={variant.quantity}
-                          onChange={(e) => updateVariant(variant.variantId, 'quantity', e.target.value)}
-                        />
+                      <input
+                        type="text"
+                        className="block w-full border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm py-2"
+                        placeholder="Unlimited"
+                        value={variant.stockQuantity || variant.quantity || ''}
+                        onChange={(e) => {
+                          console.log(`Updating quantity for variant ${variant.variantId} to ${e.target.value}`);
+                          // Update both fields to ensure compatibility
+                          updateVariant(variant.variantId, 'stockQuantity', e.target.value);
+                        }}
+                      />
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
                         <div className="flex items-center">

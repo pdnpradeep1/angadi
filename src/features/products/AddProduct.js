@@ -324,7 +324,7 @@ const AddProduct = () => {
     
     try {
       // Form validation
-      if (!product.name || !product.price || !product.categoryId) {
+      if (!product.name || !product.price) {
         throw new Error('Please fill in all required fields');
       }
       
@@ -337,30 +337,83 @@ const AddProduct = () => {
         }
       }
       
-      // Transform variants data for API
+      // FIXED: Transform variants data for API
       const transformedVariants = variants.map(variant => {
+        console.log('Processing variant for API submission:', variant);
+        
         // Convert attributes from array to map if needed
         let attributes = {};
-        if (variant.attributes && Array.isArray(variant.attributes)) {
-          variant.attributes.forEach(attr => {
-            if (attr.name && attr.value) {
-              attributes[attr.name] = attr.value;
-            }
-          });
-        } else {
-          attributes = variant.attributes || {};
+        
+        // Handle different formats of attributes and options
+        if (variant.attributes) {
+          if (Array.isArray(variant.attributes)) {
+            variant.attributes.forEach(attr => {
+              if (attr.name && attr.value) {
+                attributes[attr.name] = attr.value;
+              }
+            });
+          } else if (typeof variant.attributes === 'object') {
+            attributes = { ...variant.attributes };
+          }
         }
         
-        // Create the variant request object with composite key structure
-        return {
-          variantId: variant.variantId || Date.now() + Math.floor(Math.random() * 1000),
-          productId: isEditing ? parseInt(productId) : null, // For editing, use existing product ID
-          sku: variant.sku || `${product.sku || 'SKU'}-${Math.floor(Math.random() * 1000)}`,
-          price: parseFloat(variant.price) || parseFloat(product.price),
-          stockQuantity: variant.stockQuantity === 'Unlimited' ? -1 : parseInt(variant.stockQuantity, 10),
+        // Also check options field which might contain attribute data
+        if (variant.options && Array.isArray(variant.options)) {
+          variant.options.forEach(opt => {
+            if (opt.name && opt.value) {
+              attributes[opt.name] = opt.value;
+            }
+          });
+        }
+        
+        // Parse numeric values safely
+        const price = variant.price || product.price;
+        const variantPrice = price ? parseFloat(price) : parseFloat(product.price);
+        
+        // Handle different field names for stock quantity
+        let stockQuantity;
+        if (variant.stockQuantity === 'Unlimited' || variant.quantity === 'Unlimited') {
+          stockQuantity = -1;
+        } else if (variant.stockQuantity) {
+          stockQuantity = parseInt(variant.stockQuantity, 10);
+        } else if (variant.quantity) {
+          stockQuantity = parseInt(variant.quantity, 10);
+        } else {
+          stockQuantity = 0;
+        }
+        
+        // Handle different field names for original price
+        let originalPrice = null;
+        if (variant.originalPrice && variant.originalPrice.trim() !== '') {
+          originalPrice = parseFloat(variant.originalPrice);
+        } else if (variant.discountedPrice && variant.discountedPrice.trim() !== '') {
+          originalPrice = parseFloat(variant.discountedPrice);
+        }
+        
+        // Create the variant request object
+        const apiVariant = {
+          // For existing variants in edit mode, include the ID
+          id: isEditing && variant.id ? variant.id : undefined,
+          // Include variantId for reference
+          variantId: variant.variantId || variant.id || Date.now() + Math.floor(Math.random() * 1000),
+          // Include productId for existing products
+          productId: isEditing ? parseInt(productId) : null,
+          // Use the variant's SKU or generate a new one
+          sku: variant.sku || `SKU-${Date.now()}`,
+          // Set price with fallback to product price
+          price: variantPrice,
+          // Set originalPrice if available
+          originalPrice: originalPrice,
+          // Format stock quantity
+          stockQuantity: stockQuantity,
+          // Use variant image or fallback to product image
           imageUrl: variant.imageUrl || product.imageUrl,
+          // Add processed attributes
           attributes
         };
+        
+        console.log('Final variant data for API:', apiVariant);
+        return apiVariant;
       });
       
       // Create product object for API
@@ -370,17 +423,21 @@ const AddProduct = () => {
         price: parseFloat(product.price),
         originalPrice: product.originalPrice ? parseFloat(product.originalPrice) : null,
         stockQuantity: product.stockQuantity === 'Unlimited' ? -1 : parseInt(product.stockQuantity, 10),
-        tags: selectedTags.map(id => ({ id })),
-        variants: transformedVariants
+        tagIds: selectedTags, // Simply use the IDs directly
+        variants: transformedVariants // Include transformed variants
       };
+      
+      console.log('FINAL PRODUCT DATA FOR API:', JSON.stringify(productData, null, 2));
       
       // Send API request - different endpoints for create vs update
       if (isEditing) {
         // Update existing product
-        await apiService.put(`/products/${productId}`, productData);
+        const response = await apiService.put(`/products/${productId}`, productData);
+        console.log('Update product response:', response);
       } else {
         // Create new product
-        await apiService.post(`/products/${storeId}`, productData);
+        const response = await apiService.post(`/products/${storeId}`, productData);
+        console.log('Create product response:', response);
       }
       
       setSuccess(true);
@@ -397,7 +454,7 @@ const AddProduct = () => {
       setLoading(false);
     }
   };
-
+  
   const handleVariantsChange = (updatedVariants) => {
     // Ensure all variants have productId set
     const processedVariants = updatedVariants.map(variant => {

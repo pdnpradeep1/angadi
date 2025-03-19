@@ -50,6 +50,7 @@ const ProductVariantsSection = ({
   // }, [initialVariants]);
 
   // Initialize variants from props
+  // Initialize variants from props
   useEffect(() => {
     // Check if we're receiving variants from parent
     if (initialVariants && initialVariants.length > 0) {
