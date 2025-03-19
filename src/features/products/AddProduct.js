@@ -118,6 +118,7 @@ const AddProduct = () => {
     try {
       const response = await apiService.get(`/products/${storeId}/${id}`);
       const productData = response.data;
+      console.log('Product data from API:', productData); // Debug log
 
       // Normalize product data
       const normalizedProduct = {
@@ -134,7 +135,31 @@ const AddProduct = () => {
       
       // Set variants if available
       if (productData.variants && productData.variants.length > 0) {
-        setVariants(productData.variants);
+        // Transform variants from the backend format to the format expected by the component
+        const transformedVariants = productData.variants.map(variant => {
+          // Extract attributes from the variant
+          let attributes = [];
+          if (variant.attributes) {
+            // Convert attributes from object to array format expected by the UI
+            attributes = Object.entries(variant.attributes).map(([name, value]) => ({
+              name,
+              value
+            }));
+          }
+          
+          return {
+            ...variant,
+            id: variant.id || variant.variantId, // Make sure we have an ID
+            attributes,
+            stockQuantity: variant.stockQuantity === -1 ? 'Unlimited' : variant.stockQuantity,
+            price: variant.price ? variant.price.toString() : '',
+            originalPrice: variant.originalPrice ? variant.originalPrice.toString() : '',
+            // Add any other necessary transformations here
+          };
+        });
+        
+        console.log('Transformed variants:', transformedVariants); // Debug log
+        setVariants(transformedVariants);
       }
       
       // Set image preview
@@ -149,6 +174,70 @@ const AddProduct = () => {
       setFetchingProduct(false);
     }
   };
+
+  // const fetchProductData = async (id) => {
+  //   setFetchingProduct(true);
+  //   setError(null);
+    
+  //   try {
+  //     const response = await apiService.get(`/products/${storeId}/${id}`);
+  //     const productData = response.data;
+  //     console.log('Product data from API:', productData); // Debug log
+
+  //     // Normalize product data
+  //     const normalizedProduct = {
+  //       ...productData,
+  //       stockQuantity: productData.stockQuantity === -1 ? 'Unlimited' : productData.stockQuantity
+  //     };
+
+  //     setProduct(normalizedProduct);
+      
+  //     // Set tags if available
+  //     if (productData.tags && productData.tags.length > 0) {
+  //       setSelectedTags(productData.tags.map(tag => tag.id));
+  //     }
+      
+  //     // Set variants if available
+  //     if (productData.variants && productData.variants.length > 0) {
+  //       // Transform variants from the backend format to the format expected by the component
+  //       const transformedVariants = productData.variants.map(variant => {
+  //         // Extract attributes from the variant
+  //         let attributes = [];
+  //         if (variant.attributes) {
+  //           // Convert attributes from object to array format expected by the UI
+  //           attributes = Object.entries(variant.attributes).map(([name, value]) => ({
+  //             name,
+  //             value
+  //           }));
+  //         }
+          
+  //         return {
+  //           ...variant,
+  //           id: variant.id || variant.variantId, // Make sure we have an ID
+  //           attributes,
+  //           stockQuantity: variant.stockQuantity === -1 ? 'Unlimited' : variant.stockQuantity,
+  //           price: variant.price ? variant.price.toString() : '',
+  //           originalPrice: variant.originalPrice ? variant.originalPrice.toString() : '',
+  //           // Add any other necessary transformations here
+  //         };
+  //       });
+        
+  //       console.log('Transformed variants:', transformedVariants); // Debug log
+  //       setVariants(transformedVariants);
+  //     }
+      
+  //     // Set image preview
+  //     if (productData.imageUrl) {
+  //       setPreviewUrl(productData.imageUrl);
+  //     }
+      
+  //     setFetchingProduct(false);
+  //   } catch (err) {
+  //     console.error('Error fetching product data:', err);
+  //     setError('Failed to load product data. Please try again.');
+  //     setFetchingProduct(false);
+  //   }
+  // };
 
   const fetchCategories = async () => {
     setLoadingCategories(true);

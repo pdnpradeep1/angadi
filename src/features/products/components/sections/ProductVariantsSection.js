@@ -18,9 +18,43 @@ const ProductVariantsSection = ({
   const [variants, setVariants] = useState([]);
 
   // Initialize variants from props
+  // useEffect(() => {
+  //   // Check if we're receiving variants from parent
+  //   if (initialVariants && initialVariants.length > 0) {
+  //     // Transform variants if needed (e.g., if coming from API with different structure)
+  //     const formattedVariants = initialVariants.map(variant => {
+  //       // If variant has attributes as a map, convert to array form for UI
+  //       let attributes = [];
+  //       if (variant.attributes && !Array.isArray(variant.attributes)) {
+  //         // If attributes is an object/map, convert to array of {name, value} pairs
+  //         attributes = Object.entries(variant.attributes).map(([name, value]) => ({
+  //           name,
+  //           value
+  //         }));
+  //       } else if (Array.isArray(variant.attributes)) {
+  //         attributes = variant.attributes;
+  //       }
+        
+  //       return {
+  //         ...variant,
+  //         attributes,
+  //         // Ensure stockQuantity is properly formatted for the UI
+  //         stockQuantity: variant.stockQuantity === -1 ? 'Unlimited' : variant.stockQuantity
+  //       };
+  //     });
+      
+  //     setVariants(formattedVariants);
+  //   } else {
+  //     setVariants([]);
+  //   }
+  // }, [initialVariants]);
+
+  // Initialize variants from props
   useEffect(() => {
     // Check if we're receiving variants from parent
     if (initialVariants && initialVariants.length > 0) {
+      console.log('Received variants in ProductVariantsSection:', initialVariants);
+      
       // Transform variants if needed (e.g., if coming from API with different structure)
       const formattedVariants = initialVariants.map(variant => {
         // If variant has attributes as a map, convert to array form for UI
@@ -35,14 +69,22 @@ const ProductVariantsSection = ({
           attributes = variant.attributes;
         }
         
+        // Ensure all required fields exist
         return {
           ...variant,
+          // Make sure we have a consistent ID field
+          variantId: variant.variantId || variant.id || Date.now() + Math.floor(Math.random() * 1000),
           attributes,
           // Ensure stockQuantity is properly formatted for the UI
-          stockQuantity: variant.stockQuantity === -1 ? 'Unlimited' : variant.stockQuantity
+          stockQuantity: variant.stockQuantity === -1 ? 'Unlimited' : variant.stockQuantity,
+          // Ensure price is a string
+          price: variant.price !== undefined ? variant.price.toString() : '',
+          // Add any other important fields that might be missing
+          sku: variant.sku || `SKU-${Date.now()}`
         };
       });
       
+      console.log('Formatted variants for UI:', formattedVariants);
       setVariants(formattedVariants);
     } else {
       setVariants([]);

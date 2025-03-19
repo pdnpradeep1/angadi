@@ -32,11 +32,28 @@ const ProductVariantsComponent = ({ initialVariants = [], onChange, productId })
   };
   
   // Update parent component when variants change
+  // useEffect(() => {
+  //   if (onChange) {
+  //     onChange(variants);
+  //   }
+  // }, [variants, onChange]);
+
   useEffect(() => {
-    if (onChange) {
-      onChange(variants);
+    console.log('Initial variants in ProductVariantsComponent:', initialVariants);
+    
+    if (initialVariants && initialVariants.length > 0) {
+      const processedVariants = initialVariants.map(variant => {
+        // Make sure we're using a consistent variantId field
+        return {
+          ...variant,
+          variantId: variant.variantId || variant.id || Date.now() + Math.floor(Math.random() * 1000),
+          // Add any other necessary transformations
+        };
+      });
+      setVariants(processedVariants);
     }
-  }, [variants, onChange]);
+    
+  }, [initialVariants]);
   
   // Handle option name change
   const handleOptionNameChange = (id, value) => {
