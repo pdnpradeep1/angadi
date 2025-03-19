@@ -50,6 +50,8 @@ const AddProduct = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [optionsMap, setOptionsMap] = useState({});
+
 
   // Section progress tracking
   const [sectionProgress, setSectionProgress] = useState({
@@ -175,70 +177,6 @@ const AddProduct = () => {
     }
   };
 
-  // const fetchProductData = async (id) => {
-  //   setFetchingProduct(true);
-  //   setError(null);
-    
-  //   try {
-  //     const response = await apiService.get(`/products/${storeId}/${id}`);
-  //     const productData = response.data;
-  //     console.log('Product data from API:', productData); // Debug log
-
-  //     // Normalize product data
-  //     const normalizedProduct = {
-  //       ...productData,
-  //       stockQuantity: productData.stockQuantity === -1 ? 'Unlimited' : productData.stockQuantity
-  //     };
-
-  //     setProduct(normalizedProduct);
-      
-  //     // Set tags if available
-  //     if (productData.tags && productData.tags.length > 0) {
-  //       setSelectedTags(productData.tags.map(tag => tag.id));
-  //     }
-      
-  //     // Set variants if available
-  //     if (productData.variants && productData.variants.length > 0) {
-  //       // Transform variants from the backend format to the format expected by the component
-  //       const transformedVariants = productData.variants.map(variant => {
-  //         // Extract attributes from the variant
-  //         let attributes = [];
-  //         if (variant.attributes) {
-  //           // Convert attributes from object to array format expected by the UI
-  //           attributes = Object.entries(variant.attributes).map(([name, value]) => ({
-  //             name,
-  //             value
-  //           }));
-  //         }
-          
-  //         return {
-  //           ...variant,
-  //           id: variant.id || variant.variantId, // Make sure we have an ID
-  //           attributes,
-  //           stockQuantity: variant.stockQuantity === -1 ? 'Unlimited' : variant.stockQuantity,
-  //           price: variant.price ? variant.price.toString() : '',
-  //           originalPrice: variant.originalPrice ? variant.originalPrice.toString() : '',
-  //           // Add any other necessary transformations here
-  //         };
-  //       });
-        
-  //       console.log('Transformed variants:', transformedVariants); // Debug log
-  //       setVariants(transformedVariants);
-  //     }
-      
-  //     // Set image preview
-  //     if (productData.imageUrl) {
-  //       setPreviewUrl(productData.imageUrl);
-  //     }
-      
-  //     setFetchingProduct(false);
-  //   } catch (err) {
-  //     console.error('Error fetching product data:', err);
-  //     setError('Failed to load product data. Please try again.');
-  //     setFetchingProduct(false);
-  //   }
-  // };
-
   const fetchCategories = async () => {
     setLoadingCategories(true);
     try {
@@ -337,85 +275,6 @@ const AddProduct = () => {
         }
       }
       
-      // FIXED: Transform variants data for API
-      const transformedVariants = variants.map(variant => {
-        console.log('Processing variant for API submission:', variant);
-        
-        // Convert attributes from array to map if needed
-        let attributes = {};
-        
-        // Handle different formats of attributes and options
-        if (variant.attributes) {
-          if (Array.isArray(variant.attributes)) {
-            variant.attributes.forEach(attr => {
-              if (attr.name && attr.value) {
-                attributes[attr.name] = attr.value;
-              }
-            });
-          } else if (typeof variant.attributes === 'object') {
-            attributes = { ...variant.attributes };
-          }
-        }
-        
-        // Also check options field which might contain attribute data
-        if (variant.options && Array.isArray(variant.options)) {
-          variant.options.forEach(opt => {
-            if (opt.name && opt.value) {
-              attributes[opt.name] = opt.value;
-            }
-          });
-        }
-        
-        // Parse numeric values safely
-        const price = variant.price || product.price;
-        const variantPrice = price ? parseFloat(price) : parseFloat(product.price);
-        
-        // Handle different field names for stock quantity
-        let stockQuantity;
-        if (variant.stockQuantity === 'Unlimited' || variant.quantity === 'Unlimited') {
-          stockQuantity = -1;
-        } else if (variant.stockQuantity) {
-          stockQuantity = parseInt(variant.stockQuantity, 10);
-        } else if (variant.quantity) {
-          stockQuantity = parseInt(variant.quantity, 10);
-        } else {
-          stockQuantity = 0;
-        }
-        
-        // Handle different field names for original price
-        let originalPrice = null;
-        if (variant.originalPrice && variant.originalPrice.trim() !== '') {
-          originalPrice = parseFloat(variant.originalPrice);
-        } else if (variant.discountedPrice && variant.discountedPrice.trim() !== '') {
-          originalPrice = parseFloat(variant.discountedPrice);
-        }
-        
-        // Create the variant request object
-        const apiVariant = {
-          // For existing variants in edit mode, include the ID
-          id: isEditing && variant.id ? variant.id : undefined,
-          // Include variantId for reference
-          variantId: variant.variantId || variant.id || Date.now() + Math.floor(Math.random() * 1000),
-          // Include productId for existing products
-          productId: isEditing ? parseInt(productId) : null,
-          // Use the variant's SKU or generate a new one
-          sku: variant.sku || `SKU-${Date.now()}`,
-          // Set price with fallback to product price
-          price: variantPrice,
-          // Set originalPrice if available
-          originalPrice: originalPrice,
-          // Format stock quantity
-          stockQuantity: stockQuantity,
-          // Use variant image or fallback to product image
-          imageUrl: variant.imageUrl || product.imageUrl,
-          // Add processed attributes
-          attributes
-        };
-        
-        console.log('Final variant data for API:', apiVariant);
-        return apiVariant;
-      });
-      
       // Create product object for API
       const productData = {
         ...product,
@@ -424,7 +283,8 @@ const AddProduct = () => {
         originalPrice: product.originalPrice ? parseFloat(product.originalPrice) : null,
         stockQuantity: product.stockQuantity === 'Unlimited' ? -1 : parseInt(product.stockQuantity, 10),
         tagIds: selectedTags, // Simply use the IDs directly
-        variants: transformedVariants // Include transformed variants
+        variants: variants,   // Include transformed variants
+        optionsMap: optionsMap || {} // Use the optionsMap state
       };
       
       console.log('FINAL PRODUCT DATA FOR API:', JSON.stringify(productData, null, 2));
@@ -454,8 +314,8 @@ const AddProduct = () => {
       setLoading(false);
     }
   };
-  
-  const handleVariantsChange = (updatedVariants) => {
+
+  const handleVariantsChange = (updatedVariants, options = {}) => {
     // Ensure all variants have productId set
     const processedVariants = updatedVariants.map(variant => {
       // If editing a product, make sure productId is set
@@ -476,8 +336,10 @@ const AddProduct = () => {
     });
     
     setVariants(processedVariants);
+    
+    // Save the options map to state
+    setOptionsMap(options);
   };
-
 
   // Show loading state while fetching product data
   if (fetchingProduct) {

@@ -31,6 +31,8 @@ export const normalizeVariantsForUI = (initialVariants = [], productId = null) =
       
       // Convert options to the format the UI expects
       let options = [];
+      let name = variant.name || ''; // Use the name field if it exists
+      
       if (variant.attributes) {
         if (Array.isArray(variant.attributes)) {
           options = [...variant.attributes];
@@ -45,10 +47,16 @@ export const normalizeVariantsForUI = (initialVariants = [], productId = null) =
         options = [...variant.options];
       }
       
+      // If there's no name but there are options, create a name from options
+      if (!name && options.length > 0) {
+        name = options.map(opt => opt.value).join(' / ');
+      }
+      
       return {
         ...variant,
         id: variant.id, // Preserve original ID if it exists
         variantId,      // Ensure variantId exists
+        name,           // Ensure name field exists
         productId: productId || variant.productId,  // Use passed productId or existing one
         stockQuantity,  // Normalize stockQuantity
         quantity: stockQuantity, // Store in quantity field too for UI
@@ -71,8 +79,11 @@ export const normalizeVariantsForUI = (initialVariants = [], productId = null) =
     return variants.map(variant => {
       console.log('Processing variant for API submission:', variant);
       
-      // Convert attributes from array to map if needed
+      // Extract attributes from the variant
       let attributes = {};
+      
+      // Create a name for the variant based on options
+      let variantName = variant.name || '';
       
       // Handle different formats of attributes and options
       if (variant.attributes) {
@@ -87,8 +98,12 @@ export const normalizeVariantsForUI = (initialVariants = [], productId = null) =
         }
       }
       
-      // Also check options field which might contain attribute data
+      // Check options field and build variant name if not already set
       if (variant.options && Array.isArray(variant.options)) {
+        if (!variantName) {
+          variantName = variant.options.map(opt => opt.value).join(' / ');
+        }
+        
         variant.options.forEach(opt => {
           if (opt.name && opt.value) {
             attributes[opt.name] = opt.value;
@@ -114,10 +129,26 @@ export const normalizeVariantsForUI = (initialVariants = [], productId = null) =
       
       // Handle different field names for original price
       let originalPrice = null;
-      if (variant.originalPrice && variant.originalPrice.trim() !== '') {
-        originalPrice = parseFloat(variant.originalPrice);
-      } else if (variant.discountedPrice && variant.discountedPrice.trim() !== '') {
-        originalPrice = parseFloat(variant.discountedPrice);
+      if (variant.originalPrice) {
+        // First, convert to string if it's not already a string
+        const originalPriceStr = typeof variant.originalPrice === 'string' 
+          ? variant.originalPrice 
+          : String(variant.originalPrice);
+        
+        // Then check if it's not an empty string after trimming
+        if (originalPriceStr.trim() !== '') {
+          originalPrice = parseFloat(originalPriceStr);
+        }
+      } else if (variant.discountedPrice) {
+        // First, convert to string if it's not already a string
+        const discountedPriceStr = typeof variant.discountedPrice === 'string'
+          ? variant.discountedPrice
+          : String(variant.discountedPrice);
+        
+        // Then check if it's not an empty string after trimming
+        if (discountedPriceStr.trim() !== '') {
+          originalPrice = parseFloat(discountedPriceStr);
+        }
       }
       
       // Create the variant request object
@@ -128,6 +159,8 @@ export const normalizeVariantsForUI = (initialVariants = [], productId = null) =
         variantId: variant.variantId || variant.id || Date.now() + Math.floor(Math.random() * 1000),
         // Include productId for existing products
         productId: productId || variant.productId,
+        // Include variant name
+        name: variantName || `Variant ${variant.variantId}`,
         // Use the variant's SKU or generate a new one
         sku: variant.sku || `SKU-${Date.now()}`,
         // Set price with fallback to product price
@@ -145,6 +178,33 @@ export const normalizeVariantsForUI = (initialVariants = [], productId = null) =
   };
   
   /**
+   * Extract options map from variants for product payload
+   * @param {Array} variants - Variants array
+   * @returns {Object} Map of option name -> array of values
+   */
+  export const extractOptionsMapForProduct = (variants = []) => {
+    // Create a map of option name -> array of unique values
+    const optionsMap = {};
+    
+    variants.forEach(variant => {
+      if (variant.options && Array.isArray(variant.options)) {
+        variant.options.forEach(opt => {
+          if (opt.name && opt.value) {
+            if (!optionsMap[opt.name]) {
+              optionsMap[opt.name] = [];
+            }
+            if (!optionsMap[opt.name].includes(opt.value)) {
+              optionsMap[opt.name].push(opt.value);
+            }
+          }
+        });
+      }
+    });
+    
+    return optionsMap;
+  };
+  
+  /**
    * Create a new base variant
    * @param {number} productId - Optional product ID
    * @returns {Object} New variant object
@@ -155,6 +215,7 @@ export const normalizeVariantsForUI = (initialVariants = [], productId = null) =
     return {
       id: variantId,
       variantId: variantId,
+      name: '',
       productId: productId,
       options: [],
       attributes: {},

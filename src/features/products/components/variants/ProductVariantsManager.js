@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import VariantTable from './VariantTable';
 import VariantModal from './VariantModal';
 import { getCombinations, generateVariantId } from './utils/variantHelpers';
-import { normalizeVariantsForUI, prepareVariantsForAPI, createEmptyVariant } from './utils/variantTransformers';
+import { normalizeVariantsForUI, prepareVariantsForAPI, extractOptionsMapForProduct, createEmptyVariant } from './utils/variantTransformers';
 
 /**
  * Main component for managing product variants
@@ -87,9 +87,13 @@ const ProductVariantsManager = ({ initialVariants = [], onChange, productId }) =
         return acc;
       }, {});
       
+      // Generate name from option values
+      const name = combo.map(option => option.value).join(' / ');
+      
       return {
         id: variantId,              // Include id field for backend API
         variantId: variantId,       // Include variantId for UI components
+        name: name,                 // Generate name from option values
         productId: productId,       // Use the productId passed as prop
         options: combo,             // Keep the options array for UI
         attributes: attributes,     // Include formatted attributes for API
@@ -111,8 +115,25 @@ const ProductVariantsManager = ({ initialVariants = [], onChange, productId }) =
     
     // Notify parent of the new variants
     if (onChange) {
-      onChange(prepareVariantsForAPI(newVariants, productId));
+      // Extract options map directly from option types
+      const optionsMap = extractOptionsMapFromOptionTypes(validOptions);
+      // Prepare variants for API
+      const variantsForAPI = prepareVariantsForAPI(newVariants, productId);
+      onChange(variantsForAPI, optionsMap);
     }
+  };
+  
+  // Extract options map from option types
+  const extractOptionsMapFromOptionTypes = (options) => {
+    const optionsMap = {};
+    
+    options.forEach(option => {
+      if (option.name && option.values.length > 0) {
+        optionsMap[option.name] = [...option.values];
+      }
+    });
+    
+    return optionsMap;
   };
   
   // Update variant details
@@ -139,6 +160,10 @@ const ProductVariantsManager = ({ initialVariants = [], onChange, productId }) =
             stockQuantity: value  // Store in both fields
           };
         }
+        else if (field === 'name') {
+          // Handle name field separately
+          return { ...variant, name: value };
+        }
         // Default case
         return { ...variant, [field]: value };
       }
@@ -150,7 +175,34 @@ const ProductVariantsManager = ({ initialVariants = [], onChange, productId }) =
     
     // Notify parent of changes
     if (onChange) {
-      onChange(prepareVariantsForAPI(updatedVariants, productId));
+      // Extract options map from option types
+      const optionsMap = extractOptionsMapFromOptionTypes(optionTypes);
+      // Prepare variants for API
+      const variantsForAPI = prepareVariantsForAPI(updatedVariants, productId);
+      onChange(variantsForAPI, optionsMap);
+    }
+  };
+  
+  // Delete a variant by ID
+  const deleteVariant = (variantId) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this variant?");
+    
+    if (confirmDelete) {
+      const updatedVariants = variants.filter(variant => 
+        variant.variantId !== variantId && variant.id !== variantId
+      );
+      
+      console.log('Variants after deletion:', updatedVariants);
+      setVariants(updatedVariants);
+      
+      // Notify parent of changes
+      if (onChange) {
+        // Extract options map from option types
+        const optionsMap = extractOptionsMapFromOptionTypes(optionTypes);
+        // Prepare variants for API
+        const variantsForAPI = prepareVariantsForAPI(updatedVariants, productId);
+        onChange(variantsForAPI, optionsMap);
+      }
     }
   };
   
@@ -192,6 +244,7 @@ const ProductVariantsManager = ({ initialVariants = [], onChange, productId }) =
             variants={variants} 
             onVariantUpdate={updateVariant}
             onEditVariants={toggleModal}
+            onDeleteVariant={deleteVariant}
           />
         ) : (
           <div className="text-center py-8">
