@@ -228,7 +228,7 @@ const ProductVariantsManager = ({ initialVariants = [], onChange, productId }) =
     <div className="max-w-5xl mx-auto">
       {/* Main Variants Section */}
       <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-8">
-        <div className="flex justify-between items-center mb-4">
+        {/* <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-800 dark:text-white">Variants</h2>
           <button 
             type="button"
@@ -237,7 +237,7 @@ const ProductVariantsManager = ({ initialVariants = [], onChange, productId }) =
           >
             Add variants
           </button>
-        </div>
+        </div> */}
         
         <p className="text-gray-600 dark:text-gray-400 mb-6">
           Customize variants for size, color, and more to cater to all your customers' preferences.
