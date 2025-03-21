@@ -14,7 +14,6 @@ import api from '../../api/config';
 
 // Utility Imports
 import { formatCurrency } from '../../utils/currencyUtils';
-import { generateMockProducts } from '../../utils/mock-data-utils';
 import { getCategoryBreadcrumb } from '../../utils/category-image-utils';
 
 // UI Component Imports
@@ -22,6 +21,7 @@ import GenericDataList from '../../components/common/GenericDataList';
 import { EmptyStates } from '../../utils/loading-error-states';
 import ProductImportExport from '../importexport/ProductImportExport';
 import { Button } from '../../components/ui/Button';
+import Pagination from '../../components/ui/Pagination';
 
 const ProductList = () => {
   const { storeId } = useParams();
@@ -40,6 +40,12 @@ const ProductList = () => {
   const [filterOpen, setFilterOpen] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState({});
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get('page')) || 0); // Backend uses 0-based indexing
+  const [pageSize, setPageSize] = useState(parseInt(searchParams.get('size')) || 10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
 
   // Filters state
   const [filters, setFilters] = useState({
@@ -62,9 +68,9 @@ const ProductList = () => {
       // Expand all parent categories of the selected category
       expandParentCategories(categoryId);
     }
-  }, [storeId]);
+  }, [storeId, currentPage, pageSize, searchParams]); // Add dependencies to reload when they change
 
-  // Update URL when filters change
+  // Update URL when filters or pagination change
   useEffect(() => {
     const params = new URLSearchParams();
     
@@ -75,93 +81,73 @@ const ProductList = () => {
     if (filters.category !== 'all') params.set('category', filters.category);
     if (filters.inStock !== 'all') params.set('inStock', filters.inStock);
     
+    // Add pagination params (backend uses 0-based indexing)
+    params.set('page', currentPage.toString());
+    params.set('size', pageSize.toString());
+    
     setSearchParams(params, { replace: true });
-  }, [filters, searchTerm]);
+  }, [filters, searchTerm, currentPage, pageSize]);
 
-  // const fetchProducts = async () => {
-  //   setLoading(true);
-  //   try {
-  //     // Build query parameters
-  //     const params = new URLSearchParams();
-  //     if (searchTerm) params.append('search', searchTerm);
-  //     if (filters.status !== 'all') params.append('status', filters.status);
-  //     if (filters.minPrice) params.append('minPrice', filters.minPrice);
-  //     if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
-  //     if (filters.category !== 'all') params.append('categoryId', filters.category);
-  //     if (filters.inStock === 'true') params.append('inStock', true);
+  // Updated fetchProducts function to work with backend pagination
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      // Build query parameters
+      const params = new URLSearchParams();
       
-  //     const response = await api.get(`/products/store/${storeId}?${params}`);
-  //     setProducts(response.data);
-  //     setLoading(false);
-  //   } catch (err) {
-  //     console.error('Error fetching products:', err);
-  //     setError('Failed to load products');
+      // Add search term if provided
+      if (searchTerm) params.append('search', searchTerm);
       
-  //     // For development, use mock data as fallback
-  //     if (process.env.NODE_ENV === 'development') {
-  //       const mockProducts = generateMockProducts(10);
-  //       setProducts(mockProducts);
-  //     }
+      // Add filters if they are not the default values
+      if (filters.status !== 'all') params.append('status', filters.status);
+      if (filters.minPrice) params.append('minPrice', filters.minPrice);
+      if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
+      if (filters.category !== 'all') params.append('categoryId', filters.category);
+      if (filters.inStock === 'true') params.append('inStock', true);
+      else if (filters.inStock === 'false') params.append('inStock', false);
       
-  //     setLoading(false);
-  //   }
-  // };
-
-  // Updated fetchProducts function for ProductList.js
-const fetchProducts = async () => {
-  setLoading(true);
-  try {
-    // Build query parameters
-    const params = new URLSearchParams();
-    if (searchTerm) params.append('search', searchTerm);
-    
-    if (filters.status !== 'all') params.append('status', filters.status);
-    
-    if (filters.minPrice) params.append('minPrice', filters.minPrice);
-    if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
-    
-    if (filters.category !== 'all') params.append('categoryId', filters.category);
-    
-    if (filters.inStock === 'true') params.append('inStock', true);
-    else if (filters.inStock === 'false') params.append('inStock', false);
-    
-    // Add pagination parameters
-    params.append('page', 0); // Start at page 0
-    params.append('size', 50); // Get 50 items per page
-    params.append('sort', 'createdAt,desc'); // Sort by creation date, newest first
-    
-    const response = await api.get(`/products/store/${storeId}?${params}`);
-    
-    // Handle both array responses and page responses
-    if (Array.isArray(response.data)) {
-      setProducts(response.data);
-    } else if (response.data.content) {
-      // Response is a Page object
-      setProducts(response.data.content);
-      // You can also use pagination info if needed:
-      // setTotalPages(response.data.totalPages);
-      // setTotalItems(response.data.totalElements);
-    } else {
-      console.warn('Unexpected response format:', response.data);
+      // Add pagination parameters (backend uses 0-based indexing)
+      params.append('page', currentPage.toString());
+      params.append('size', pageSize.toString());
+      params.append('sort', 'createdAt,desc'); // Sort by creation date, newest first
+      
+      // Make API request
+      const response = await api.get(`/products/store/${storeId}?${params}`);
+      
+      // Check if the response is a Spring Page object
+      if (response.data && 
+          response.data.content !== undefined && 
+          response.data.totalElements !== undefined && 
+          response.data.totalPages !== undefined) {
+        
+        // Extract data from Spring Page response
+        setProducts(response.data.content);
+        setTotalPages(response.data.totalPages);
+        setTotalItems(response.data.totalElements);
+        
+      } else if (Array.isArray(response.data)) {
+        // Fallback for array response
+        console.warn('API returned array instead of Page. Pagination may not work correctly.');
+        setProducts(response.data);
+        setTotalPages(Math.ceil(response.data.length / pageSize));
+        setTotalItems(response.data.length);
+      } else {
+        console.error('Unexpected API response format:', response.data);
+        setProducts([]);
+        setTotalPages(1);
+        setTotalItems(0);
+      }
+      
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching products:', err);
+      setError('Failed to load products. Please try again.');
       setProducts([]);
+      setTotalPages(1);
+      setTotalItems(0);
+      setLoading(false);
     }
-    
-    setLoading(false);
-  } catch (err) {
-    console.error('Error fetching products:', err);
-    setError('Failed to load products');
-    
-    // For development, use mock data as fallback
-    if (process.env.NODE_ENV === 'development') {
-      const mockProducts = generateMockProducts(10);
-      setProducts(mockProducts);
-    }
-    
-    setLoading(false);
-  }
-};
-
-  
+  };
 
   const fetchCategories = async () => {
     try {
@@ -169,28 +155,7 @@ const fetchProducts = async () => {
       setCategories(response.data);
     } catch (err) {
       console.error('Error fetching categories:', err);
-      
-      // For development, use mock data
-      if (process.env.NODE_ENV === 'development') {
-        const mockCategories = [
-          {
-            id: 1,
-            name: 'Spicy',
-            productCount: 12,
-            status: 'Active',
-            image: '/api/placeholder/50/50?text=Spicy'
-          },
-          {
-            id: 2,
-            name: 'Sweets',
-            productCount: 24,
-            status: 'Active',
-            image: '/api/placeholder/50/50?text=Sweets'
-          },
-          // Add more mock categories as needed
-        ];
-        setCategories(mockCategories);
-      }
+      setCategories([]);
     }
   };
 
@@ -200,23 +165,7 @@ const fetchProducts = async () => {
       setCategoryHierarchy(response.data);
     } catch (err) {
       console.error('Error fetching category hierarchy:', err);
-      
-      // For development, create a mock hierarchy based on flat categories
-      if (process.env.NODE_ENV === 'development') {
-        setTimeout(() => {
-          // Build hierarchy from flat categories
-          const buildHierarchy = (cats, parentId = null) => {
-            const children = cats.filter(cat => cat.parentId === parentId);
-            return children.map(child => ({
-              ...child,
-              children: buildHierarchy(cats, child.id)
-            }));
-          };
-          
-          const mockHierarchy = buildHierarchy(categories);
-          setCategoryHierarchy(mockHierarchy);
-        }, 500);
-      }
+      setCategoryHierarchy([]);
     }
   };
 
@@ -245,6 +194,20 @@ const fetchProducts = async () => {
       ...prev,
       [categoryId]: !prev[categoryId]
     }));
+  };
+
+  // Handle page change - Note the +1 conversion since backend uses 0-based indexing but UI uses 1-based
+  const handlePageChange = (page) => {
+    // Convert from 1-based (UI) to 0-based (backend)
+    setCurrentPage(page - 1);
+    // Scroll to top when changing page
+    window.scrollTo(0, 0);
+  };
+
+  // Handle page size change
+  const handlePageSizeChange = (size) => {
+    setPageSize(size);
+    setCurrentPage(0); // Reset to first page when changing page size
   };
 
   // Recursively build category options for filter
@@ -320,6 +283,7 @@ const fetchProducts = async () => {
     // Build hierarchical options
     return [...options, ...buildCategoryOptions(categoriesWithHasChildren)];
   };
+  
   const handleSelectAllItems = (itemIds) => {
     if (itemIds.length === 0) {
       // Deselect all
@@ -338,8 +302,8 @@ const fetchProducts = async () => {
       value: filters.status,
       options: [
         { value: 'all', label: 'All Products' },
-        { value: 'active', label: 'Active' },
-        { value: 'inactive', label: 'Inactive' }
+        { value: 'Active', label: 'Active' },
+        { value: 'Inactive', label: 'Inactive' }
       ]
     },
     category: {
@@ -382,11 +346,13 @@ const fetchProducts = async () => {
 
   // Apply filters on search
   const handleSearch = () => {
+    setCurrentPage(0); // Reset to first page when applying search
     fetchProducts();
   };
 
   // Apply filters when filter panel is closed
   const applyFilters = () => {
+    setCurrentPage(0); // Reset to first page when applying filters
     fetchProducts();
     setFilterOpen(false);
   };
@@ -401,6 +367,7 @@ const fetchProducts = async () => {
       inStock: 'all'
     });
     setSearchTerm('');
+    setCurrentPage(0); // Reset to first page when clearing filters
     setFilterOpen(false);
   };
 
@@ -422,6 +389,10 @@ const fetchProducts = async () => {
         await api.delete(`/products/${product.id}`);
         setProducts(products.filter(p => p.id !== product.id));
       }
+      
+      // Refresh product list after deletion
+      fetchProducts();
+      
     } catch (err) {
       console.error('Error deleting product(s):', err);
       setError('Failed to delete product(s). Please try again.');
@@ -716,15 +687,23 @@ const fetchProducts = async () => {
     );
   };
 
-  // const handleSelectAll = (itemIds) => {
-  //   if (itemIds.length === 0) {
-  //     // Deselect all
-  //     setSelectedProducts([]);
-  //   } else {
-  //     // Select all
-  //     setSelectedProducts(itemIds);
-  //   }
-  // };
+  // Pagination controls - Convert from 0-based (backend) to 1-based (UI)
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+
+    return (
+      <Pagination 
+        currentPage={currentPage + 1} // Convert 0-based to 1-based for display
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        maxVisiblePages={5}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageSizeChange={handlePageSizeChange}
+        pageSizeOptions={[10, 25, 50, 100]}
+      />
+    );
+  };
 
   return (
     <>
@@ -734,7 +713,7 @@ const fetchProducts = async () => {
         </div>
       )}
       
-      {/* <GenericDataList
+      <GenericDataList
         title="Products"
         data={products}
         columns={columns}
@@ -753,10 +732,10 @@ const fetchProducts = async () => {
           />
         }
         actionButtons={actionButtons}
-        viewMode="list"
-        onViewModeChange={mode => console.log(`View mode changed to ${mode}`)}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
         showViewModeToggle={true}
-        renderGridView={data => renderGridView(data)}
+        renderGridView={renderGridView}
         bulkActions={bulkActions}
         selectedItems={selectedProducts}
         onItemSelect={(id) => {
@@ -766,51 +745,14 @@ const fetchProducts = async () => {
               : [...prev, id]
           );
         }}
+        onSelectAll={handleSelectAllItems}
         filterOpen={filterOpen}
         setFilterOpen={setFilterOpen}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         entityName="product"
-      /> */}
-      <GenericDataList
-          title="Products"
-          data={products}
-          columns={columns}
-          filters={filterConfig}
-          onSearch={handleSearch}
-          onFilterChange={handleFilterChange}
-          onApplyFilters={applyFilters}
-          onClearFilters={clearFilters}
-          onDelete={handleDeleteProduct}
-          onAdd={() => navigate(`/store-dashboard/${storeId}/all-products/add-product`)}
-          loading={loading}
-          error={error}
-          emptyState={
-            <EmptyStates.Products 
-              onAction={() => navigate(`/store-dashboard/${storeId}/all-products/add-product`)}
-            />
-          }
-          actionButtons={actionButtons}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          showViewModeToggle={true}
-          renderGridView={renderGridView}
-          bulkActions={bulkActions}
-          selectedItems={selectedProducts}
-          onItemSelect={(id) => {
-            setSelectedProducts(prev => 
-              prev.includes(id) 
-                ? prev.filter(itemId => itemId !== id)
-                : [...prev, id]
-            );
-          }}
-          filterOpen={filterOpen}
-          setFilterOpen={setFilterOpen}
-          searchTerm={searchTerm}
-          onSelectAll={handleSelectAllItems}
-          setSearchTerm={setSearchTerm}
-          entityName="product"
-        />
+        pagination={renderPagination()}
+      />
     </>
   );
 };

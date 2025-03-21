@@ -1,4 +1,3 @@
-// src/components/common/GenericDataList.js
 import React, { useState } from 'react';
 import { 
   FiSearch, 
@@ -17,6 +16,7 @@ import { EmptyState } from '../../utils/loading-error-states';
 
 /**
  * A reusable component for displaying, filtering, and managing lists of entities
+ * with added pagination support
  */
 const GenericDataList = ({
   title,
@@ -45,7 +45,8 @@ const GenericDataList = ({
   setFilterOpen,
   searchTerm = '',
   setSearchTerm,
-  entityName = 'item'
+  entityName = 'item',
+  pagination = null // New pagination prop
 }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
@@ -272,6 +273,13 @@ const GenericDataList = ({
           />
         )}
       </Card>
+
+      {/* Pagination - render if provided */}
+      {pagination && !loading && data.length > 0 && (
+        <div className="mt-6">
+          {pagination}
+        </div>
+      )}
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
