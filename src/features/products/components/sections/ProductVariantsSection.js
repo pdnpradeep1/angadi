@@ -1,10 +1,9 @@
-// src/features/products/components/sections/ProductVariantsSection.js
 import React from 'react';
 import { FiSave } from 'react-icons/fi';
-import ProductVariantsComponent from '../../ProductVariantsComponent';
+import EnhancedProductVariantsManagement from '../../EnhancedProductVariantsManagement';
 
 /**
- * Product Variants section for managing product options like size, color, etc.
+ * Enhanced Product Variants section with media modal support for managing product options like size, color, etc.
  */
 const ProductVariantsSection = ({ 
   variants: initialVariants = [], 
@@ -14,7 +13,8 @@ const ProductVariantsSection = ({
   loading,
   isEditing,
   handleSubmit,
-  productId
+  productId,
+  productName
 }) => {
   // Helper function to render progress indicator
   const renderProgressIndicator = (progress) => (
@@ -38,14 +38,15 @@ const ProductVariantsSection = ({
       <div className="space-y-6">
         <p className="text-sm text-gray-600 dark:text-gray-400">
           Create variants if your product comes in different options like size, color, or style. 
-          Each variant can have its own price, inventory, and SKU.
+          Each variant can have its own price, inventory, SKU, and image.
         </p>
         
         <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-5">
-          <ProductVariantsComponent 
+          <EnhancedProductVariantsManagement 
             initialVariants={initialVariants} 
             onChange={onVariantsChange} 
             productId={productId}
+            productName={productName}
           />
         </div>
       </div>

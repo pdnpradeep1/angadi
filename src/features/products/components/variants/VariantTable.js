@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { getCommonColors } from './utils/variantHelpers';
+import VariantMediaModal from './VariantMediaModal';
 
 /**
- * Component for displaying variants in a table format
+ * Enhanced component for displaying variants in a table format
+ * With support for editing variant images through a modal
  * 
  * @param {Object} props - Component properties
  * @param {Array} props.variants - Array of variant objects
@@ -10,8 +12,17 @@ import { getCommonColors } from './utils/variantHelpers';
  * @param {Function} props.onEditVariants - Handler for editing all variants
  * @param {Function} props.onDeleteVariant - Handler for deleting a variant
  */
-const VariantTable = ({ variants = [], onVariantUpdate, onEditVariants, onDeleteVariant }) => {
+const VariantTable = ({ 
+  variants = [], 
+  onVariantUpdate, 
+  onEditVariants, 
+  onDeleteVariant 
+}) => {
   const commonColors = getCommonColors();
+  
+  // New state for the media modal
+  const [mediaModalOpen, setMediaModalOpen] = useState(false);
+  const [selectedVariant, setSelectedVariant] = useState(null);
   
   // For color display
   const getColorDisplay = (color) => {
@@ -27,6 +38,17 @@ const VariantTable = ({ variants = [], onVariantUpdate, onEditVariants, onDelete
         {color}
       </span>
     );
+  };
+  
+  // Open the media modal for a variant
+  const openMediaModal = (variant) => {
+    setSelectedVariant(variant);
+    setMediaModalOpen(true);
+  };
+  
+  // Handle image update from the modal
+  const handleImageUpdate = (variantId, imageUrl) => {
+    onVariantUpdate(variantId, 'imageUrl', imageUrl);
   };
   
   // If no variants, show placeholder
@@ -98,10 +120,7 @@ const VariantTable = ({ variants = [], onVariantUpdate, onEditVariants, onDelete
                   Quantity
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ width: "150px" }}>
-                  Weight
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ width: "150px" }}>
-                  GTIN
+                  Image
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ width: "80px" }}>
                   Actions
@@ -113,12 +132,6 @@ const VariantTable = ({ variants = [], onVariantUpdate, onEditVariants, onDelete
                 <tr key={variant.variantId} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                   <td className="sticky left-0 z-10 px-4 py-4 whitespace-nowrap bg-white dark:bg-gray-800 shadow-sm border-r border-gray-200 dark:border-gray-700">
                     <div className="flex items-center">
-                      <button type="button" className="mr-3">
-                        <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                      </button>
                       <div>
                         {variant.options && variant.options.map((option, idx) => (
                           <span key={idx} className="flex items-center">
@@ -185,33 +198,30 @@ const VariantTable = ({ variants = [], onVariantUpdate, onEditVariants, onDelete
                     />
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap" style={{ width: "150px" }}>
-                    <div className="flex items-center">
-                      <input
-                        type="text"
-                        className="block w-24 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm py-2"
-                        placeholder="Eg. 1.2"
-                        value={variant.weight || ''}
-                        onChange={(e) => onVariantUpdate(variant.variantId, 'weight', e.target.value)}
-                      />
-                      <select 
-                        className="ml-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm py-2 w-16"
-                        onChange={(e) => onVariantUpdate(variant.variantId, 'weightUnit', e.target.value)}
-                        value={variant.weightUnit || 'kg'}
-                      >
-                        <option value="kg">kg</option>
-                        <option value="g">g</option>
-                        <option value="lb">lb</option>
-                      </select>
+                    <div 
+                      className="w-16 h-16 border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden cursor-pointer hover:border-primary-500 transition-colors"
+                      onClick={() => openMediaModal(variant)}
+                    >
+                      {variant.imageUrl ? (
+                        <img 
+                          src={variant.imageUrl}
+                          alt={variant.name || 'Variant'}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = '/api/placeholder/64/64?text=Image';
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                          <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" className="w-8 h-8 text-gray-400" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                          </svg>
+                        </div>
+                      )}
                     </div>
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap" style={{ width: "150px" }}>
-                    <input
-                      type="text"
-                      className="block w-full border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm py-2"
-                      placeholder="Enter GTIN"
-                      value={variant.gtin || ''}
-                      onChange={(e) => onVariantUpdate(variant.variantId, 'gtin', e.target.value)}
-                    />
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap">
                     <button
@@ -245,6 +255,15 @@ const VariantTable = ({ variants = [], onVariantUpdate, onEditVariants, onDelete
           Edit or add variants
         </button>
       </div>
+
+      {/* Media Modal */}
+      <VariantMediaModal 
+        isOpen={mediaModalOpen}
+        onClose={() => setMediaModalOpen(false)}
+        variant={selectedVariant}
+        onImageUpdate={handleImageUpdate}
+        currentImage={selectedVariant?.imageUrl || ''}
+      />
     </div>
   );
 };

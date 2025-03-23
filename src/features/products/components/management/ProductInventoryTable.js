@@ -468,7 +468,7 @@ const ProductInventoryTable = ({ storeId, onViewHistory }) => {
               {products.map((product) => (
                 <React.Fragment key={product.id}>
                   <tr className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    {/* <td className="px-6 py-4 whitespace-nowrap">
                       <button
                         onClick={() => toggleProductExpand(product.id)}
                         className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
@@ -479,7 +479,24 @@ const ProductInventoryTable = ({ storeId, onViewHistory }) => {
                           <FiChevronRight size={20} />
                         )}
                       </button>
-                    </td>
+                    </td> */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+  {product.variants && product.variants.length > 0 ? (
+    <button
+      onClick={() => toggleProductExpand(product.id)}
+      className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+    >
+      {expandedProducts[product.id] ? (
+        <FiChevronDown size={20} />
+      ) : (
+        <FiChevronRight size={20} />
+      )}
+    </button>
+  ) : (
+    // Empty cell when no variants
+    <span></span>
+  )}
+</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         {product.imageUrl ? (
