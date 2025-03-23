@@ -4,6 +4,7 @@ import EnhancedProductVariantsManagement from '../../EnhancedProductVariantsMana
 
 /**
  * Enhanced Product Variants section with media modal support for managing product options like size, color, etc.
+ * With the ability to preserve existing variant data when updating options.
  */
 const ProductVariantsSection = ({ 
   variants: initialVariants = [], 
@@ -26,6 +27,14 @@ const ProductVariantsSection = ({
     </div>
   );
 
+  // Handler for variant changes with data preservation
+  const handleEnhancedVariantsChange = (updatedVariants, optionsMap) => {
+    if (onVariantsChange) {
+      // Pass along the updated variants and options map
+      onVariantsChange(updatedVariants, optionsMap);
+    }
+  };
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
@@ -44,7 +53,7 @@ const ProductVariantsSection = ({
         <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-5">
           <EnhancedProductVariantsManagement 
             initialVariants={initialVariants} 
-            onChange={onVariantsChange} 
+            onChange={handleEnhancedVariantsChange} 
             productId={productId}
             productName={productName}
           />

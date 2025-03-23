@@ -4,7 +4,10 @@ import VariantTable from './components/variants/VariantTable';
 import VariantModal from './components/variants/VariantModal';
 import VariantMediaModal from './components/variants/VariantMediaModal';
 import { getCombinations, generateVariantId } from './components/variants/utils/variantHelpers';
-import { extractOptionsMapFromOptionTypes } from './components/variants/utils/variantTransformers';
+import { 
+  extractOptionsMapFromOptionTypes, 
+  normalizeVariantsForUI 
+} from './components/variants/utils/variantTransformers';
 
 const EnhancedProductVariantsManagement = ({ 
   initialVariants = [], 
@@ -137,15 +140,32 @@ const EnhancedProductVariantsManagement = ({
     setShowVariantModal(true);
   };
   
-  // Generate variants based on option combinations
-  const generateVariants = (e) => {
-    // Prevent any default form submission behavior
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
+  // Generate variants based on option combinations while preserving existing data
+  const generateVariants = (newVariants) => {
+    console.log('Updating variants with preserved data:', newVariants.length);
+    
+    // If the system generated newVariants array already includes preservation logic,
+    // we can just use it directly
+    if (newVariants && newVariants.length > 0) {
+      setVariants(newVariants);
+      
+      // Notify parent component of changes - NO API CALLS should happen from this
+      if (onChange) {
+        // Extract options map for API
+        const validOptions = optionTypes.filter(
+          option => option.name && option.values.length > 0
+        );
+        const optionsMap = extractOptionsMapFromOptionTypes(validOptions);
+        
+        // Only update the parent component's state, don't trigger any API calls
+        onChange(newVariants, optionsMap);
+      }
+      return;
     }
     
-    console.log('Generating variants...');
+    // If no newVariants were provided (shouldn't happen with our enhanced modal),
+    // fallback to traditional variant generation
+    console.log('Generating variants the old way...');
     
     // Filter out option types without values or names
     const validOptions = optionTypes.filter(
@@ -161,8 +181,38 @@ const EnhancedProductVariantsManagement = ({
     const combinations = getCombinations(validOptions);
     console.log(`Generated ${combinations.length} combinations`);
     
-    // Create variant objects for each combination
-    const newVariants = combinations.map(combo => {
+    // Create a map of existing variants by their option signature
+    const existingVariantMap = {};
+    variants.forEach(variant => {
+      if (variant.options && Array.isArray(variant.options)) {
+        // Create a signature based on the sorted options
+        const signature = variant.options
+          .slice()
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map(opt => `${opt.name}:${opt.value}`)
+          .join('|');
+        existingVariantMap[signature] = variant;
+      }
+    });
+    
+    // Create variant objects for each combination, preserving existing data
+    const updatedVariants = combinations.map(combo => {
+      // Create signature for this combination
+      const signature = combo
+        .slice()
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map(opt => `${opt.name}:${opt.value}`)
+        .join('|');
+      
+      // If this variant already exists, preserve its data
+      if (existingVariantMap[signature]) {
+        const existingVariant = existingVariantMap[signature];
+        return {
+          ...existingVariant,
+          options: combo // Update options to ensure they match the latest structure
+        };
+      }
+      
       // Generate a unique variant ID
       const variantId = generateVariantId();
       
@@ -194,16 +244,16 @@ const EnhancedProductVariantsManagement = ({
     });
     
     // Update local state first
-    setVariants(newVariants);
+    setVariants(updatedVariants);
     setShowVariantModal(false);
     
     // Notify parent component of changes - NO API CALLS should happen from this
     if (onChange) {
-      console.log(`Notifying parent component of ${newVariants.length} variants`);
+      console.log(`Notifying parent component of ${updatedVariants.length} variants`);
       // Extract options map for API
       const optionsMap = extractOptionsMapFromOptionTypes(validOptions);
       // Only update the parent component's state, don't trigger any API calls
-      onChange(newVariants, optionsMap);
+      onChange(updatedVariants, optionsMap);
     }
   };
   
@@ -378,13 +428,14 @@ const EnhancedProductVariantsManagement = ({
         )}
       </div>
       
-      {/* Variant creation modal */}
+      {/* Variant creation modal - now with enhanced preservation */}
       <VariantModal 
         isOpen={showVariantModal}
         onClose={() => setShowVariantModal(false)}
         optionTypes={optionTypes}
         onOptionTypesChange={setOptionTypes}
         onGenerateVariants={generateVariants}
+        existingVariants={variants} // Pass existing variants for preservation
       />
       
       {/* Media modal */}

@@ -1,22 +1,30 @@
 import React, { useState } from 'react';
 import { FiPlus } from 'react-icons/fi';
 import VariantAttributeEditor from './VariantAttributeEditor';
-import { canGenerateVariants } from './utils/variantHelpers';
+import { 
+  canGenerateVariants, 
+  getCombinations,
+  mergeVariantsIntelligently,
+  getVariantSignature
+} from './utils/variantHelpers';
 
 /**
- * Component for managing variant option types like size, color, etc.
+ * Enhanced component for managing variant option types like size, color, etc.
+ * With improved preservation of existing variant data
  * 
  * @param {Object} props - Component properties
  * @param {Array} props.optionTypes - Array of option type objects
  * @param {Function} props.onOptionTypesChange - Handler for option types changes
  * @param {Function} props.onGenerateVariants - Handler for generating variants
  * @param {Array} props.suggestions - Optional suggestions for option types
+ * @param {Array} props.existingVariants - Existing variants to preserve when updating
  */
 const VariantOptionTypes = ({ 
   optionTypes = [],
   onOptionTypesChange,
   onGenerateVariants,
-  suggestions = []
+  suggestions = [],
+  existingVariants = []
 }) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeSuggestionField, setActiveSuggestionField] = useState(null);
@@ -24,10 +32,10 @@ const VariantOptionTypes = ({
   // Sample suggestions if not provided
   const defaultSuggestions = {
     optionTypes: [
-      { id: 'size', name: 'size' },
-      { id: 'color', name: 'color picker' },
-      { id: 'material', name: 'material' },
-      { id: 'style', name: 'style' }
+      { id: 'size', name: 'Size' },
+      { id: 'color', name: 'Color' },
+      { id: 'material', name: 'Material' },
+      { id: 'style', name: 'Style' }
     ]
   };
   
@@ -87,13 +95,16 @@ const VariantOptionTypes = ({
   
   // Handle adding a new option
   const handleAddOption = (e) => {
-    // Prevent any default behavior
-    if (e) {
+    // Safely handle event prevention
+    if (e && typeof e.preventDefault === 'function') {
       e.preventDefault();
+    }
+    
+    if (e && typeof e.stopPropagation === 'function') {
       e.stopPropagation();
     }
     
-    if (optionTypes.length < 2) {
+    if (optionTypes.length < 3) { // Allow up to 3 option types
       const newOption = { 
         id: Date.now(), 
         name: '', 
@@ -104,19 +115,45 @@ const VariantOptionTypes = ({
     }
   };
   
-  // Create a safe handler for generate variants
+  // Enhanced generate variants handler with preservation
   const handleGenerateVariants = (e) => {
-    // Prevent any form submission
-    if (e) {
+    // Safely handle event prevention
+    if (e && typeof e.preventDefault === 'function') {
       e.preventDefault();
+    }
+    
+    if (e && typeof e.stopPropagation === 'function') {
       e.stopPropagation();
     }
     
     console.log('Generate variants button clicked');
     
-    // Call the parent handler if variants can be generated
-    if (canGenerate && onGenerateVariants) {
-      onGenerateVariants(e);
+    // Check if we can generate variants
+    if (!canGenerate) {
+      console.log('Cannot generate variants - invalid options');
+      return;
+    }
+    
+    // Filter valid options
+    const validOptions = optionTypes.filter(
+      option => option.name && option.values.length > 0
+    );
+    
+    // Generate combinations
+    const combinations = getCombinations(validOptions);
+    
+    // If we have existing variants, merge intelligently
+    if (existingVariants && existingVariants.length > 0) {
+      const mergedVariants = mergeVariantsIntelligently(existingVariants, combinations);
+      
+      if (onGenerateVariants) {
+        onGenerateVariants(mergedVariants);
+      }
+    } else {
+      // No existing variants to preserve
+      if (onGenerateVariants) {
+        onGenerateVariants(combinations);
+      }
     }
   };
   
@@ -140,8 +177,8 @@ const VariantOptionTypes = ({
         />
       ))}
       
-      {/* Add another option button - only show if less than 2 options */}
-      {optionTypes.length < 2 && (
+      {/* Add another option button - allow up to 3 options */}
+      {optionTypes.length < 3 && (
         <button
           type="button" // Explicitly set type to button
           className="flex items-center text-primary-600 dark:text-primary-400 border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-md mb-6"
@@ -162,7 +199,7 @@ const VariantOptionTypes = ({
         }`}
         disabled={!canGenerate}
       >
-        Add variants
+        {existingVariants && existingVariants.length > 0 ? 'Update variants' : 'Add variants'}
       </button>
     </div>
   );
