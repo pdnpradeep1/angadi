@@ -86,7 +86,13 @@ const VariantOptionTypes = ({
   };
   
   // Handle adding a new option
-  const handleAddOption = () => {
+  const handleAddOption = (e) => {
+    // Prevent any default behavior
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     if (optionTypes.length < 2) {
       const newOption = { 
         id: Date.now(), 
@@ -95,6 +101,22 @@ const VariantOptionTypes = ({
       };
       
       onOptionTypesChange([...optionTypes, newOption]);
+    }
+  };
+  
+  // Create a safe handler for generate variants
+  const handleGenerateVariants = (e) => {
+    // Prevent any form submission
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    console.log('Generate variants button clicked');
+    
+    // Call the parent handler if variants can be generated
+    if (canGenerate && onGenerateVariants) {
+      onGenerateVariants(e);
     }
   };
   
@@ -114,14 +136,14 @@ const VariantOptionTypes = ({
           suggestions={typeSuggestions}
           showSuggestions={showSuggestions && activeSuggestionField === option.id}
           onSuggestionSelect={handleSelectSuggestion}
-          onNameFocus={handleInputFocus}
+          onNameFocus={() => handleInputFocus(option.id)}
         />
       ))}
       
       {/* Add another option button - only show if less than 2 options */}
       {optionTypes.length < 2 && (
         <button
-          type="button"
+          type="button" // Explicitly set type to button
           className="flex items-center text-primary-600 dark:text-primary-400 border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-md mb-6"
           onClick={handleAddOption}
         >
@@ -131,8 +153,8 @@ const VariantOptionTypes = ({
       
       {/* Generate variants button */}
       <button
-        type="button"
-        onClick={onGenerateVariants}
+        type="button" // Explicitly set type to button
+        onClick={handleGenerateVariants}
         className={`w-full py-3 rounded-md ${
           canGenerate 
             ? 'bg-primary-600 hover:bg-primary-700 text-white' 

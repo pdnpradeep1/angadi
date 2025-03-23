@@ -82,23 +82,39 @@ const EnhancedProductVariantsManagement = ({
   };
   
   // Open the variant creation modal
-  const handleOpenVariantModal = () => {
+  const handleOpenVariantModal = (e) => {
+    // Prevent any default form submission behavior
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    console.log("Opening variant modal");
     setShowVariantModal(true);
   };
   
   // Generate variants based on option combinations
-  const generateVariants = () => {
+  const generateVariants = (e) => {
+    // Prevent any default form submission behavior
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    console.log('Generating variants...');
+    
     // Filter out option types without values or names
     const validOptions = optionTypes.filter(
       option => option.name && option.values.length > 0
     );
     
     if (validOptions.length === 0) {
+      console.log('No valid options to generate variants from');
       return;
     }
     
     // Generate all possible combinations of options
     const combinations = getCombinations(validOptions);
+    console.log(`Generated ${combinations.length} combinations`);
     
     // Create variant objects for each combination
     const newVariants = combinations.map(combo => {
@@ -132,22 +148,27 @@ const EnhancedProductVariantsManagement = ({
       };
     });
     
+    // Update local state first
     setVariants(newVariants);
     setShowVariantModal(false);
     
-    // Notify parent component of changes
+    // Notify parent component of changes - NO API CALLS should happen from this
     if (onChange) {
+      console.log(`Notifying parent component of ${newVariants.length} variants`);
       // Extract options map for API
       const optionsMap = extractOptionsMapFromOptionTypes(validOptions);
+      // Only update the parent component's state, don't trigger any API calls
       onChange(newVariants, optionsMap);
     }
   };
   
   // Update a variant field
   const handleUpdateVariant = (variantId, field, value) => {
+    console.log(`Updating variant ${variantId}, field: ${field}`);
+    
     const updatedVariants = variants.map(variant => {
       if (variant.variantId === variantId || variant.id === variantId) {
-        // For certain fields, update both the UI and API versions
+        // For certain fields, update both UI and API versions of the field
         if (field === 'price') {
           return { ...variant, price: value };
         } 
@@ -172,29 +193,40 @@ const EnhancedProductVariantsManagement = ({
       return variant;
     });
     
+    // Update local state
     setVariants(updatedVariants);
     
-    // Notify parent component of changes
+    // Notify parent component of changes - NO API CALLS
     if (onChange) {
+      console.log('Notifying parent of variant updates');
+      // Just update the parent component's state
       onChange(updatedVariants);
     }
   };
   
   // Delete a variant
   const handleDeleteVariant = (variantId) => {
+    console.log(`Attempting to delete variant ${variantId}`);
+    
     const confirmDelete = window.confirm('Are you sure you want to delete this variant?');
     
     if (confirmDelete) {
+      console.log('Deletion confirmed');
       const updatedVariants = variants.filter(variant => 
         variant.variantId !== variantId && variant.id !== variantId
       );
       
+      // Update local state
       setVariants(updatedVariants);
       
-      // Notify parent component of changes
+      // Notify parent component of changes - NO API CALLS
       if (onChange) {
+        console.log('Notifying parent of variant deletion');
+        // Just update the parent component's state
         onChange(updatedVariants);
       }
+    } else {
+      console.log('Deletion cancelled');
     }
   };
   
@@ -211,17 +243,29 @@ const EnhancedProductVariantsManagement = ({
         
         {variants.length === 0 ? (
           <button
-            type="button"
-            onClick={handleOpenVariantModal}
+            type="button" // Explicitly set type to button to prevent form submission
+            onClick={(e) => {
+              // Prevent any default form submission behavior
+              e.preventDefault();
+              e.stopPropagation();
+              console.log("Create Variants button clicked");
+              handleOpenVariantModal();
+            }}
             className="flex items-center space-x-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md"
           >
             <FiPlus size={18} />
-            <span>Add Variants</span>
+            <span>Create Variants</span>
           </button>
         ) : (
           <button
-            type="button"
-            onClick={handleOpenVariantModal}
+            type="button" // Explicitly set type to button to prevent form submission
+            onClick={(e) => {
+              // Prevent any default form submission behavior 
+              e.preventDefault();
+              e.stopPropagation();
+              console.log("Edit Variants button clicked");
+              handleOpenVariantModal();
+            }}
             className="flex items-center space-x-2 border border-primary-500 text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 px-4 py-2 rounded-md"
           >
             <FiEdit2 size={18} />
@@ -273,7 +317,14 @@ const EnhancedProductVariantsManagement = ({
               Each variant can have its own price, inventory, and image.
             </p>
             <button
-              onClick={handleOpenVariantModal}
+              type="button" // Explicitly set type to button to prevent form submission
+              onClick={(e) => {
+                // Prevent default form submission
+                e.preventDefault();
+                e.stopPropagation();
+                console.log("Create Variants button (in empty state) clicked");
+                handleOpenVariantModal();
+              }}
               className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
             >
               Create Variants
