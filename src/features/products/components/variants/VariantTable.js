@@ -119,9 +119,9 @@ const VariantTable = ({
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ width: "120px" }}>
                   Quantity
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ width: "150px" }}>
+                {/* <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ width: "150px" }}>
                   Image
-                </th>
+                </th> */}
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" style={{ width: "80px" }}>
                   Actions
                 </th>
@@ -139,6 +139,30 @@ const VariantTable = ({
           {variant.name}
         </div>
       )}
+       <div 
+          className="w-16 h-16 border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden cursor-pointer hover:border-primary-500 transition-colors"
+          onClick={() => openMediaModal(variant)}
+        >
+          {variant.imageUrl ? (
+            <img 
+              src={variant.imageUrl}
+              alt={variant.name || 'Variant'}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = '/api/placeholder/64/64?text=Image';
+              }}
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+              <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" className="w-8 h-8 text-gray-400" xmlns="http://www.w3.org/2000/svg">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+              </svg>
+            </div>
+          )}
+        </div>
       
       {/* Display individual options - check both options array and attributes object */}
       {variant.options && variant.options.length > 0 ? (
@@ -223,7 +247,7 @@ const VariantTable = ({
                       }}
                     />
                   </td>
-                  <td className="px-4 py-4 whitespace-nowrap" style={{ width: "150px" }}>
+                  {/* <td className="px-4 py-4 whitespace-nowrap" style={{ width: "150px" }}>
                     <div 
                       className="w-16 h-16 border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden cursor-pointer hover:border-primary-500 transition-colors"
                       onClick={() => openMediaModal(variant)}
@@ -248,7 +272,7 @@ const VariantTable = ({
                         </div>
                       )}
                     </div>
-                  </td>
+                  </td> */}
                   <td className="px-4 py-4 whitespace-nowrap">
                     <button
                       type="button"
