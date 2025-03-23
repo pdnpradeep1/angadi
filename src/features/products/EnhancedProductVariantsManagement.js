@@ -31,30 +31,69 @@ const EnhancedProductVariantsManagement = ({
       setVariants(initialVariants);
       
       // Extract option types from variants if they exist
-      const extractedOptionTypes = {};
-      
-      initialVariants.forEach(variant => {
-        if (variant.options && Array.isArray(variant.options)) {
-          variant.options.forEach(option => {
-            if (!extractedOptionTypes[option.name]) {
-              extractedOptionTypes[option.name] = {
-                id: generateVariantId(),
-                name: option.name,
-                values: []
-              };
+      if (initialVariants[0].options || initialVariants[0].attributes) {
+        const extractedOptionTypes = {};
+        
+        initialVariants.forEach(variant => {
+          // Handle options array first (preferred format)
+          if (variant.options && Array.isArray(variant.options)) {
+            variant.options.forEach(option => {
+              if (!extractedOptionTypes[option.name]) {
+                extractedOptionTypes[option.name] = {
+                  id: generateVariantId(),
+                  name: option.name,
+                  values: []
+                };
+              }
+              
+              if (!extractedOptionTypes[option.name].values.includes(option.value)) {
+                extractedOptionTypes[option.name].values.push(option.value);
+              }
+            });
+          }
+          // Fallback to attributes object if no options array
+          else if (variant.attributes) {
+            // Handle array format
+            if (Array.isArray(variant.attributes)) {
+              variant.attributes.forEach(attr => {
+                if (!extractedOptionTypes[attr.name]) {
+                  extractedOptionTypes[attr.name] = {
+                    id: generateVariantId(),
+                    name: attr.name,
+                    values: []
+                  };
+                }
+                
+                if (!extractedOptionTypes[attr.name].values.includes(attr.value)) {
+                  extractedOptionTypes[attr.name].values.push(attr.value);
+                }
+              });
+            } 
+            // Handle object format
+            else if (typeof variant.attributes === 'object') {
+              Object.entries(variant.attributes).forEach(([name, value]) => {
+                if (!extractedOptionTypes[name]) {
+                  extractedOptionTypes[name] = {
+                    id: generateVariantId(),
+                    name: name,
+                    values: []
+                  };
+                }
+                
+                if (!extractedOptionTypes[name].values.includes(value)) {
+                  extractedOptionTypes[name].values.push(value);
+                }
+              });
             }
-            
-            if (!extractedOptionTypes[option.name].values.includes(option.value)) {
-              extractedOptionTypes[option.name].values.push(option.value);
-            }
-          });
+          }
+        });
+        
+        // Convert to array and set if we found any option types
+        const optionTypesArray = Object.values(extractedOptionTypes);
+        if (optionTypesArray.length > 0) {
+          setOptionTypes(optionTypesArray);
+          console.log('Extracted option types:', optionTypesArray);
         }
-      });
-      
-      // Convert to array and set if we found any option types
-      const optionTypesArray = Object.values(extractedOptionTypes);
-      if (optionTypesArray.length > 0) {
-        setOptionTypes(optionTypesArray);
       }
     }
   }, [initialVariants]);
@@ -88,7 +127,13 @@ const EnhancedProductVariantsManagement = ({
       e.preventDefault();
       e.stopPropagation();
     }
-    console.log("Opening variant modal");
+    
+    // If no option types are set yet, initialize with defaults
+    if (optionTypes.length === 0) {
+      setOptionTypes([{ id: generateVariantId(), name: '', values: [] }]);
+    }
+    
+    console.log("Opening variant modal with option types:", optionTypes);
     setShowVariantModal(true);
   };
   
