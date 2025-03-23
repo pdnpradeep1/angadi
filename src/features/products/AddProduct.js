@@ -178,6 +178,82 @@ const AddProduct = () => {
   //   }
   // };
 
+  // const fetchProductData = async (id) => {
+  //   setFetchingProduct(true);
+  //   setError(null);
+    
+  //   try {
+  //     const response = await apiService.get(`/products/${storeId}/${id}`);
+  //     const productData = response.data;
+  //     console.log('Product data from API:', productData); // Debug log
+  
+  //     // Normalize product data
+  //     const normalizedProduct = {
+  //       ...productData,
+  //       stockQuantity: productData.stockQuantity === -1 ? 'Unlimited' : productData.stockQuantity
+  //     };
+  
+  //     setProduct(normalizedProduct);
+      
+  //     // Set tags if available
+  //     if (productData.tags && productData.tags.length > 0) {
+  //       setSelectedTags(productData.tags.map(tag => tag.id));
+  //     }
+      
+  //     // Set variants if available
+  //     if (productData.variants && productData.variants.length > 0) {
+  //       // Ensure each variant has a name
+  //       const processedVariants = productData.variants.map(variant => {
+  //         // Generate name from attributes if not present
+  //         let variantName = variant.name || '';
+          
+  //         if (!variantName && variant.attributes) {
+  //           // Convert attributes to array of strings for name generation
+  //           const attributeStrings = [];
+  //           if (Array.isArray(variant.attributes)) {
+  //             attributeStrings.push(...variant.attributes.map(attr => attr.value));
+  //           } else if (typeof variant.attributes === 'object') {
+  //             attributeStrings.push(...Object.values(variant.attributes));
+  //           }
+            
+  //           if (attributeStrings.length > 0) {
+  //             variantName = attributeStrings.join(' / ');
+  //           }
+  //         }
+          
+  //         // Fallback name if still empty
+  //         if (!variantName) {
+  //           variantName = `Variant ${variant.id || variant.variantId}`;
+  //         }
+          
+  //         return {
+  //           ...variant,
+  //           id: variant.id || variant.variantId, // Make sure we have an ID
+  //           variantId: variant.variantId || variant.id,
+  //           name: variantName, // Set processed name
+  //           stockQuantity: variant.stockQuantity === -1 ? 'Unlimited' : variant.stockQuantity,
+  //           price: variant.price ? variant.price.toString() : '',
+  //           originalPrice: variant.originalPrice ? variant.originalPrice.toString() : ''
+  //         };
+  //       });
+        
+  //       console.log('Processed variants:', processedVariants); // Debug log
+  //       setVariants(processedVariants);
+  //     }
+      
+  //     // Set image preview
+  //     if (productData.imageUrl) {
+  //       setPreviewUrl(productData.imageUrl);
+  //     }
+      
+  //     setFetchingProduct(false);
+  //   } catch (err) {
+  //     console.error('Error fetching product data:', err);
+  //     setError('Failed to load product data. Please try again.');
+  //     setFetchingProduct(false);
+  //   }
+  // };
+
   const fetchProductData = async (id) => {
     setFetchingProduct(true);
     setError(null);
@@ -185,7 +261,7 @@ const AddProduct = () => {
     try {
       const response = await apiService.get(`/products/${storeId}/${id}`);
       const productData = response.data;
-      console.log('Product data from API:', productData); // Debug log
+      console.log('Product data from API:', productData);
   
       // Normalize product data
       const normalizedProduct = {
@@ -202,23 +278,37 @@ const AddProduct = () => {
       
       // Set variants if available
       if (productData.variants && productData.variants.length > 0) {
-        // Ensure each variant has a name
+        // Process each variant to ensure it has all the needed properties in the right format
         const processedVariants = productData.variants.map(variant => {
           // Generate name from attributes if not present
           let variantName = variant.name || '';
           
-          if (!variantName && variant.attributes) {
-            // Convert attributes to array of strings for name generation
-            const attributeStrings = [];
+          // Process options array from attributes
+          let options = [];
+          
+          // Handle different formats of attributes
+          if (variant.attributes) {
+            // If attributes is an array, use it directly
             if (Array.isArray(variant.attributes)) {
-              attributeStrings.push(...variant.attributes.map(attr => attr.value));
-            } else if (typeof variant.attributes === 'object') {
-              attributeStrings.push(...Object.values(variant.attributes));
+              options = [...variant.attributes];
+            } 
+            // If attributes is an object, convert to array of {name, value} objects
+            else if (typeof variant.attributes === 'object') {
+              options = Object.entries(variant.attributes).map(([name, value]) => ({
+                name,
+                value
+              }));
             }
-            
-            if (attributeStrings.length > 0) {
-              variantName = attributeStrings.join(' / ');
-            }
+          }
+          
+          // If options already exists and is an array, use it
+          if (variant.options && Array.isArray(variant.options)) {
+            options = [...variant.options];
+          }
+          
+          // If no name but we have options, generate name from options
+          if (!variantName && options.length > 0) {
+            variantName = options.map(opt => opt.value).join(' / ');
           }
           
           // Fallback name if still empty
@@ -226,19 +316,28 @@ const AddProduct = () => {
             variantName = `Variant ${variant.id || variant.variantId}`;
           }
           
+          // Return the properly formatted variant
           return {
             ...variant,
             id: variant.id || variant.variantId, // Make sure we have an ID
             variantId: variant.variantId || variant.id,
-            name: variantName, // Set processed name
+            name: variantName,
+            options: options, // Ensure options array exists
+            attributes: variant.attributes || {}, // Ensure attributes exists
             stockQuantity: variant.stockQuantity === -1 ? 'Unlimited' : variant.stockQuantity,
+            quantity: variant.stockQuantity === -1 ? 'Unlimited' : variant.stockQuantity, // For UI compatibility
             price: variant.price ? variant.price.toString() : '',
-            originalPrice: variant.originalPrice ? variant.originalPrice.toString() : ''
+            originalPrice: variant.originalPrice ? variant.originalPrice.toString() : '',
+            discountedPrice: variant.originalPrice ? variant.originalPrice.toString() : '' // For UI compatibility
           };
         });
         
-        console.log('Processed variants:', processedVariants); // Debug log
+        console.log('Processed variants for UI:', processedVariants);
         setVariants(processedVariants);
+        
+        // Extract options map from the processed variants
+        const optionsMap = extractOptionsMapForProduct(processedVariants);
+        setOptionsMap(optionsMap);
       }
       
       // Set image preview
@@ -253,6 +352,7 @@ const AddProduct = () => {
       setFetchingProduct(false);
     }
   };
+  
   const fetchCategories = async () => {
     setLoadingCategories(true);
     try {

@@ -130,8 +130,8 @@ const VariantTable = ({
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {variants.map((variant) => (
                 <tr key={variant.variantId} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                  <td className="sticky left-0 z-10 px-4 py-4 whitespace-nowrap bg-white dark:bg-gray-800 shadow-sm border-r border-gray-200 dark:border-gray-700">
-                  <div className="flex items-center">
+                 <td className="sticky left-0 z-10 px-4 py-4 whitespace-nowrap bg-white dark:bg-gray-800 shadow-sm border-r border-gray-200 dark:border-gray-700">
+  <div className="flex items-center">
     <div>
       {/* Display variant name if available */}
       {variant.name && (
@@ -140,11 +140,11 @@ const VariantTable = ({
         </div>
       )}
       
-      {/* Display individual options */}
-      {variant.options && variant.options.length > 0 && (
+      {/* Display individual options - check both options array and attributes object */}
+      {variant.options && variant.options.length > 0 ? (
         <div className="text-sm text-gray-600 dark:text-gray-400">
           {variant.options.map((option, idx) => (
-            <span key={idx} className="flex items-center">
+            <span key={idx} className="inline-flex items-center">
               <span className="font-medium">{option.name}:</span>&nbsp;
               {option.name.toLowerCase().includes('color') 
                 ? getColorDisplay(option.value) 
@@ -153,14 +153,10 @@ const VariantTable = ({
             </span>
           ))}
         </div>
-      )}
-      
-      {/* Alternative display if no options but attributes exist as an object */}
-      {(!variant.options || variant.options.length === 0) && variant.attributes && 
-       typeof variant.attributes === 'object' && Object.keys(variant.attributes).length > 0 && (
+      ) : variant.attributes && typeof variant.attributes === 'object' && Object.keys(variant.attributes).length > 0 ? (
         <div className="text-sm text-gray-600 dark:text-gray-400">
           {Object.entries(variant.attributes).map(([key, value], idx, arr) => (
-            <span key={key} className="flex items-center">
+            <span key={key} className="inline-flex items-center">
               <span className="font-medium">{key}:</span>&nbsp;
               {key.toLowerCase().includes('color') 
                 ? getColorDisplay(value) 
@@ -169,7 +165,7 @@ const VariantTable = ({
             </span>
           ))}
         </div>
-      )}
+      ) : null}
       
       <div className="text-sm text-green-500">In stock</div>
     </div>
