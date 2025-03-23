@@ -131,20 +131,50 @@ const VariantTable = ({
               {variants.map((variant) => (
                 <tr key={variant.variantId} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                   <td className="sticky left-0 z-10 px-4 py-4 whitespace-nowrap bg-white dark:bg-gray-800 shadow-sm border-r border-gray-200 dark:border-gray-700">
-                    <div className="flex items-center">
-                      <div>
-                        {variant.options && variant.options.map((option, idx) => (
-                          <span key={idx} className="flex items-center">
-                            {option.name.toLowerCase().includes('color') 
-                              ? getColorDisplay(option.value) 
-                              : option.value}
-                            {idx < variant.options.length - 1 && <span className="mx-1">|</span>}
-                          </span>
-                        ))}
-                        <div className="text-sm text-green-500">In stock</div>
-                      </div>
-                    </div>
-                  </td>
+                  <div className="flex items-center">
+    <div>
+      {/* Display variant name if available */}
+      {variant.name && (
+        <div className="font-medium text-gray-900 dark:text-white mb-1">
+          {variant.name}
+        </div>
+      )}
+      
+      {/* Display individual options */}
+      {variant.options && variant.options.length > 0 && (
+        <div className="text-sm text-gray-600 dark:text-gray-400">
+          {variant.options.map((option, idx) => (
+            <span key={idx} className="flex items-center">
+              <span className="font-medium">{option.name}:</span>&nbsp;
+              {option.name.toLowerCase().includes('color') 
+                ? getColorDisplay(option.value) 
+                : option.value}
+              {idx < variant.options.length - 1 && <span className="mx-1">|</span>}
+            </span>
+          ))}
+        </div>
+      )}
+      
+      {/* Alternative display if no options but attributes exist as an object */}
+      {(!variant.options || variant.options.length === 0) && variant.attributes && 
+       typeof variant.attributes === 'object' && Object.keys(variant.attributes).length > 0 && (
+        <div className="text-sm text-gray-600 dark:text-gray-400">
+          {Object.entries(variant.attributes).map(([key, value], idx, arr) => (
+            <span key={key} className="flex items-center">
+              <span className="font-medium">{key}:</span>&nbsp;
+              {key.toLowerCase().includes('color') 
+                ? getColorDisplay(value) 
+                : value}
+              {idx < arr.length - 1 && <span className="mx-1">|</span>}
+            </span>
+          ))}
+        </div>
+      )}
+      
+      <div className="text-sm text-green-500">In stock</div>
+    </div>
+  </div>
+</td>
                   <td className="px-4 py-4 whitespace-nowrap" style={{ width: "150px" }}>
                     <div className="relative">
                       <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">

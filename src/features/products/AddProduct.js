@@ -114,6 +114,70 @@ const AddProduct = () => {
     });
   };
 
+  // const fetchProductData = async (id) => {
+  //   setFetchingProduct(true);
+  //   setError(null);
+    
+  //   try {
+  //     const response = await apiService.get(`/products/${storeId}/${id}`);
+  //     const productData = response.data;
+  //     console.log('Product data from API:', productData); // Debug log
+
+  //     // Normalize product data
+  //     const normalizedProduct = {
+  //       ...productData,
+  //       stockQuantity: productData.stockQuantity === -1 ? 'Unlimited' : productData.stockQuantity
+  //     };
+
+  //     setProduct(normalizedProduct);
+      
+  //     // Set tags if available
+  //     if (productData.tags && productData.tags.length > 0) {
+  //       setSelectedTags(productData.tags.map(tag => tag.id));
+  //     }
+      
+  //     // Set variants if available
+  //     if (productData.variants && productData.variants.length > 0) {
+  //       // Transform variants from the backend format to the format expected by the component
+  //       const transformedVariants = productData.variants.map(variant => {
+  //         // Extract attributes from the variant
+  //         let attributes = [];
+  //         if (variant.attributes) {
+  //           // Convert attributes from object to array format expected by the UI
+  //           attributes = Object.entries(variant.attributes).map(([name, value]) => ({
+  //             name,
+  //             value
+  //           }));
+  //         }
+          
+  //         return {
+  //           ...variant,
+  //           id: variant.id || variant.variantId, // Make sure we have an ID
+  //           attributes,
+  //           stockQuantity: variant.stockQuantity === -1 ? 'Unlimited' : variant.stockQuantity,
+  //           price: variant.price ? variant.price.toString() : '',
+  //           originalPrice: variant.originalPrice ? variant.originalPrice.toString() : '',
+  //           // Add any other necessary transformations here
+  //         };
+  //       });
+        
+  //       console.log('Transformed variants:', transformedVariants); // Debug log
+  //       setVariants(transformedVariants);
+  //     }
+      
+  //     // Set image preview
+  //     if (productData.imageUrl) {
+  //       setPreviewUrl(productData.imageUrl);
+  //     }
+      
+  //     setFetchingProduct(false);
+  //   } catch (err) {
+  //     console.error('Error fetching product data:', err);
+  //     setError('Failed to load product data. Please try again.');
+  //     setFetchingProduct(false);
+  //   }
+  // };
+
   const fetchProductData = async (id) => {
     setFetchingProduct(true);
     setError(null);
@@ -122,13 +186,13 @@ const AddProduct = () => {
       const response = await apiService.get(`/products/${storeId}/${id}`);
       const productData = response.data;
       console.log('Product data from API:', productData); // Debug log
-
+  
       // Normalize product data
       const normalizedProduct = {
         ...productData,
         stockQuantity: productData.stockQuantity === -1 ? 'Unlimited' : productData.stockQuantity
       };
-
+  
       setProduct(normalizedProduct);
       
       // Set tags if available
@@ -138,31 +202,43 @@ const AddProduct = () => {
       
       // Set variants if available
       if (productData.variants && productData.variants.length > 0) {
-        // Transform variants from the backend format to the format expected by the component
-        const transformedVariants = productData.variants.map(variant => {
-          // Extract attributes from the variant
-          let attributes = [];
-          if (variant.attributes) {
-            // Convert attributes from object to array format expected by the UI
-            attributes = Object.entries(variant.attributes).map(([name, value]) => ({
-              name,
-              value
-            }));
+        // Ensure each variant has a name
+        const processedVariants = productData.variants.map(variant => {
+          // Generate name from attributes if not present
+          let variantName = variant.name || '';
+          
+          if (!variantName && variant.attributes) {
+            // Convert attributes to array of strings for name generation
+            const attributeStrings = [];
+            if (Array.isArray(variant.attributes)) {
+              attributeStrings.push(...variant.attributes.map(attr => attr.value));
+            } else if (typeof variant.attributes === 'object') {
+              attributeStrings.push(...Object.values(variant.attributes));
+            }
+            
+            if (attributeStrings.length > 0) {
+              variantName = attributeStrings.join(' / ');
+            }
+          }
+          
+          // Fallback name if still empty
+          if (!variantName) {
+            variantName = `Variant ${variant.id || variant.variantId}`;
           }
           
           return {
             ...variant,
             id: variant.id || variant.variantId, // Make sure we have an ID
-            attributes,
+            variantId: variant.variantId || variant.id,
+            name: variantName, // Set processed name
             stockQuantity: variant.stockQuantity === -1 ? 'Unlimited' : variant.stockQuantity,
             price: variant.price ? variant.price.toString() : '',
-            originalPrice: variant.originalPrice ? variant.originalPrice.toString() : '',
-            // Add any other necessary transformations here
+            originalPrice: variant.originalPrice ? variant.originalPrice.toString() : ''
           };
         });
         
-        console.log('Transformed variants:', transformedVariants); // Debug log
-        setVariants(transformedVariants);
+        console.log('Processed variants:', processedVariants); // Debug log
+        setVariants(processedVariants);
       }
       
       // Set image preview
@@ -177,7 +253,6 @@ const AddProduct = () => {
       setFetchingProduct(false);
     }
   };
-
   const fetchCategories = async () => {
     setLoadingCategories(true);
     try {
@@ -255,6 +330,23 @@ const AddProduct = () => {
     }
   };
 
+  const sanitizedVariants = variants.map(variant => {
+    // Ensure stockQuantity is a number and 'Unlimited' is converted to -1
+    let stockQty = variant.stockQuantity;
+    if (stockQty === 'Unlimited') {
+      stockQty = -1;
+    } else if (isNaN(parseInt(stockQty))) {
+      stockQty = 0;
+    } else {
+      stockQty = parseInt(stockQty);
+    }
+    
+    return {
+      ...variant,
+      stockQuantity: stockQty
+    };
+  });
+
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     setLoading(true);
@@ -317,22 +409,28 @@ const AddProduct = () => {
   };
 
   const handleVariantsChange = (updatedVariants, options = {}) => {
-    // Ensure all variants have productId set
+    // Ensure all variants have productId set and stockQuantity is properly formatted
     const processedVariants = updatedVariants.map(variant => {
+      // Convert 'Unlimited' to -1 directly here
+      const stockQuantity = variant.stockQuantity === 'Unlimited' ? -1 : 
+                          (isNaN(parseInt(variant.stockQuantity)) ? 0 : parseInt(variant.stockQuantity));
+      
       // If editing a product, make sure productId is set
       if (isEditing && productId) {
         return {
           ...variant,
           productId: parseInt(productId),
           // Ensure variantId exists (use existing or create new)
-          variantId: variant.variantId || variant.id || Date.now() + Math.floor(Math.random() * 1000)
+          variantId: variant.variantId || variant.id || Date.now() + Math.floor(Math.random() * 1000),
+          stockQuantity: stockQuantity  // Use the converted value
         };
       }
       // For new products, we'll set the productId after the product is created
       return {
         ...variant,
         // Just ensure variantId exists
-        variantId: variant.variantId || variant.id || Date.now() + Math.floor(Math.random() * 1000)
+        variantId: variant.variantId || variant.id || Date.now() + Math.floor(Math.random() * 1000),
+        stockQuantity: stockQuantity  // Use the converted value
       };
     });
     

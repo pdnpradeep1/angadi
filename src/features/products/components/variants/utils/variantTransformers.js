@@ -8,67 +8,133 @@
  * @param {number} productId - Optional product ID for new variants
  * @returns {Array} Normalized variants for UI
  */
+// export const normalizeVariantsForUI = (initialVariants = [], productId = null) => {
+//     if (!initialVariants || initialVariants.length === 0) {
+//       return [];
+//     }
+    
+//     console.log('Normalizing variants for UI:', initialVariants);
+    
+//     return initialVariants.map(variant => {
+//       // Make sure we're using a consistent ID field
+//       const variantId = variant.variantId || variant.id || Date.now() + Math.floor(Math.random() * 1000);
+      
+//       // Make sure we're using consistent field names
+//       const stockQuantity = variant.stockQuantity === -1 ? 'Unlimited' : 
+//                             variant.stockQuantity || variant.quantity || 0;
+      
+//       const price = variant.price ? variant.price.toString() : '';
+      
+//       // Original price might be in either field
+//       const originalPrice = variant.originalPrice ? variant.originalPrice.toString() : 
+//                            variant.discountedPrice ? variant.discountedPrice.toString() : '';
+      
+//       // Convert options to the format the UI expects
+//       let options = [];
+//       let name = variant.name || ''; // Use the name field if it exists
+      
+//       if (variant.attributes) {
+//         if (Array.isArray(variant.attributes)) {
+//           options = [...variant.attributes];
+//         } else {
+//           // Convert object to array of {name, value} objects
+//           options = Object.entries(variant.attributes).map(([name, value]) => ({
+//             name,
+//             value
+//           }));
+//         }
+//       } else if (variant.options && Array.isArray(variant.options)) {
+//         options = [...variant.options];
+//       }
+      
+//       // If there's no name but there are options, create a name from options
+//       if (!name && options.length > 0) {
+//         name = options.map(opt => opt.value).join(' / ');
+//       }
+      
+//       return {
+//         ...variant,
+//         id: variant.id, // Preserve original ID if it exists
+//         variantId,      // Ensure variantId exists
+//         name,           // Ensure name field exists
+//         productId: productId || variant.productId,  // Use passed productId or existing one
+//         stockQuantity,  // Normalize stockQuantity
+//         quantity: stockQuantity, // Store in quantity field too for UI
+//         price,          // Ensure price is a string
+//         originalPrice,  // Ensure originalPrice is set
+//         discountedPrice: originalPrice, // Store in discountedPrice field too for UI
+//         options,        // Ensure options array exists
+//         attributes: options, // Store in attributes field too
+//       };
+//     });
+//   };
 export const normalizeVariantsForUI = (initialVariants = [], productId = null) => {
-    if (!initialVariants || initialVariants.length === 0) {
-      return [];
+  if (!initialVariants || initialVariants.length === 0) {
+    return [];
+  }
+  
+  console.log('Normalizing variants for UI:', initialVariants);
+  
+  return initialVariants.map(variant => {
+    // Make sure we're using a consistent ID field
+    const variantId = variant.variantId || variant.id || Date.now() + Math.floor(Math.random() * 1000);
+    
+    // Make sure we're using consistent field names
+    const stockQuantity = variant.stockQuantity === -1 ? 'Unlimited' : 
+                          variant.stockQuantity || variant.quantity || 0;
+    
+    const price = variant.price ? variant.price.toString() : '';
+    
+    // Original price might be in either field
+    const originalPrice = variant.originalPrice ? variant.originalPrice.toString() : 
+                         variant.discountedPrice ? variant.discountedPrice.toString() : '';
+    
+    // Process variant options or attributes
+    let options = [];
+    let variantName = variant.name || ''; // Use existing name if available
+    
+    // Handle different formats of variant attributes
+    if (variant.attributes) {
+      if (Array.isArray(variant.attributes)) {
+        options = [...variant.attributes];
+      } else if (typeof variant.attributes === 'object') {
+        // Convert object to array of {name, value} objects
+        options = Object.entries(variant.attributes).map(([name, value]) => ({
+          name,
+          value
+        }));
+      }
+    } else if (variant.options && Array.isArray(variant.options)) {
+      options = [...variant.options];
     }
     
-    console.log('Normalizing variants for UI:', initialVariants);
+    // Generate a name if it doesn't exist but we have attributes/options
+    if (!variantName && options.length > 0) {
+      variantName = options.map(opt => opt.value).join(' / ');
+    }
     
-    return initialVariants.map(variant => {
-      // Make sure we're using a consistent ID field
-      const variantId = variant.variantId || variant.id || Date.now() + Math.floor(Math.random() * 1000);
-      
-      // Make sure we're using consistent field names
-      const stockQuantity = variant.stockQuantity === -1 ? 'Unlimited' : 
-                            variant.stockQuantity || variant.quantity || 0;
-      
-      const price = variant.price ? variant.price.toString() : '';
-      
-      // Original price might be in either field
-      const originalPrice = variant.originalPrice ? variant.originalPrice.toString() : 
-                           variant.discountedPrice ? variant.discountedPrice.toString() : '';
-      
-      // Convert options to the format the UI expects
-      let options = [];
-      let name = variant.name || ''; // Use the name field if it exists
-      
-      if (variant.attributes) {
-        if (Array.isArray(variant.attributes)) {
-          options = [...variant.attributes];
-        } else {
-          // Convert object to array of {name, value} objects
-          options = Object.entries(variant.attributes).map(([name, value]) => ({
-            name,
-            value
-          }));
-        }
-      } else if (variant.options && Array.isArray(variant.options)) {
-        options = [...variant.options];
-      }
-      
-      // If there's no name but there are options, create a name from options
-      if (!name && options.length > 0) {
-        name = options.map(opt => opt.value).join(' / ');
-      }
-      
-      return {
-        ...variant,
-        id: variant.id, // Preserve original ID if it exists
-        variantId,      // Ensure variantId exists
-        name,           // Ensure name field exists
-        productId: productId || variant.productId,  // Use passed productId or existing one
-        stockQuantity,  // Normalize stockQuantity
-        quantity: stockQuantity, // Store in quantity field too for UI
-        price,          // Ensure price is a string
-        originalPrice,  // Ensure originalPrice is set
-        discountedPrice: originalPrice, // Store in discountedPrice field too for UI
-        options,        // Ensure options array exists
-        attributes: options, // Store in attributes field too
-      };
-    });
-  };
-  
+    // Fallback name if all else fails
+    if (!variantName) {
+      variantName = `Variant ${variantId}`;
+    }
+    
+    return {
+      ...variant,
+      id: variant.id, // Preserve original ID if it exists
+      variantId,      // Ensure variantId exists
+      name: variantName, // Use calculated name
+      productId: productId || variant.productId,  // Use passed productId or existing one
+      stockQuantity,  // Normalize stockQuantity
+      quantity: stockQuantity, // Store in quantity field too for UI
+      price,          // Ensure price is a string
+      originalPrice,  // Ensure originalPrice is set
+      discountedPrice: originalPrice, // Store in discountedPrice field too for UI
+      options,        // Ensure options array exists
+      attributes: options, // Store in attributes field too
+    };
+  });
+};
+
   /**
    * Prepare variants for API submission
    * @param {Array} variants - Variants from UI
