@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FiUploadCloud, FiImage, FiX, FiEdit, FiLink, FiCheck } from 'react-icons/fi';
 
 /**
@@ -19,10 +19,14 @@ const VariantMediaModal = ({
   onImageUpdate,
   currentImage = '' 
 }) => {
+  // Use refs to prevent unwanted renders and network requests
+  const initialRender = useRef(true);
+  
+  // State variables
   const [activeTab, setActiveTab] = useState('upload');
   const [selectedFile, setSelectedFile] = useState(null);
   const [imageUrl, setImageUrl] = useState('');
-  const [previewUrl, setPreviewUrl] = useState(currentImage);
+  const [previewUrl, setPreviewUrl] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState('');
@@ -31,14 +35,41 @@ const VariantMediaModal = ({
   // Reset state when variant changes or modal opens
   useEffect(() => {
     if (isOpen && variant) {
-      setPreviewUrl(currentImage || '');
+      // Don't set previewUrl immediately to avoid unwanted network requests
+      // Only set imageUrl to the current value
       setImageUrl(currentImage || '');
+      
+      // Clear other states
       setSelectedFile(null);
       setError('');
       setSuccess('');
       setUploadProgress(0);
+      
+      // Only set previewUrl for the current tab if there's a current image
+      if (currentImage && activeTab === 'upload') {
+        setPreviewUrl(currentImage);
+      } else {
+        setPreviewUrl('');
+      }
     }
-  }, [isOpen, variant, currentImage]);
+  }, [isOpen, variant, currentImage, activeTab]);
+
+  // Special effect to handle tab changes without triggering unwanted network requests
+  useEffect(() => {
+    // Skip on first render
+    if (initialRender.current) {
+      initialRender.current = false;
+      return;
+    }
+    
+    // Clear the preview URL when switching to URL tab
+    if (activeTab === 'url') {
+      setPreviewUrl('');
+    } else if (activeTab === 'upload' && currentImage) {
+      // Only set preview URL when switching to upload tab if there's a current image
+      setPreviewUrl(currentImage);
+    }
+  }, [activeTab, currentImage]);
 
   if (!isOpen) return null;
 
@@ -71,10 +102,35 @@ const VariantMediaModal = ({
     reader.readAsDataURL(file);
   };
 
-  // Handle URL input
+  // Handle URL input - FIXED to avoid immediate previewing
   const handleUrlChange = (e) => {
     setImageUrl(e.target.value);
-    setPreviewUrl(e.target.value);
+    // Don't set previewUrl here
+  };
+
+  // Preview button handler
+  const handlePreviewClick = () => {
+    if (imageUrl && imageUrl.trim() !== '') {
+      setPreviewUrl(imageUrl);
+    }
+  };
+
+  // Handle tab switching with safeguards against unwanted network requests
+  const handleTabSwitch = (tabName) => {
+    // Don't do anything if we're already on this tab
+    if (activeTab === tabName) return;
+    
+    // Clear preview before switching tab to prevent unwanted requests
+    setPreviewUrl('');
+    setActiveTab(tabName);
+    
+    // For upload tab, restore the current image preview if available
+    if (tabName === 'upload' && currentImage) {
+      // Small timeout to ensure state updates are processed
+      setTimeout(() => {
+        setPreviewUrl(currentImage);
+      }, 10);
+    }
   };
 
   // Simulate upload progress
@@ -167,11 +223,12 @@ const VariantMediaModal = ({
                   </p>
                 )}
                 
-                {/* Tab navigation */}
+                {/* Tab navigation - UPDATED to use handleTabSwitch function */}
                 <div className="mt-4 border-b border-gray-200 dark:border-gray-700">
                   <nav className="flex -mb-px" aria-label="Tabs">
                     <button
-                      onClick={() => setActiveTab('upload')}
+                      type="button"
+                      onClick={() => handleTabSwitch('upload')}
                       className={`py-2 px-4 text-sm font-medium border-b-2 ${
                         activeTab === 'upload'
                           ? 'border-primary-500 text-primary-600 dark:text-primary-400'
@@ -181,7 +238,8 @@ const VariantMediaModal = ({
                       Upload Image
                     </button>
                     <button
-                      onClick={() => setActiveTab('url')}
+                      type="button"
+                      onClick={() => handleTabSwitch('url')}
                       className={`py-2 px-4 text-sm font-medium border-b-2 ${
                         activeTab === 'url'
                           ? 'border-primary-500 text-primary-600 dark:text-primary-400'
@@ -206,6 +264,7 @@ const VariantMediaModal = ({
                             className="w-full h-full object-contain border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
                           />
                           <button
+                            type="button"
                             onClick={() => {
                               setSelectedFile(null);
                               setPreviewUrl('');
@@ -262,7 +321,7 @@ const VariantMediaModal = ({
                         <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                           Image URL
                         </label>
-                        <div className="relative">
+                        <div className="relative flex items-center">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <FiLink className="text-gray-500 dark:text-gray-400" />
                           </div>
@@ -274,6 +333,13 @@ const VariantMediaModal = ({
                             className="block w-full pl-10 p-2.5 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-md shadow-sm border border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500"
                             placeholder="https://example.com/image.jpg"
                           />
+                          <button
+                            type="button"
+                            onClick={handlePreviewClick}
+                            className="ml-2 inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                          >
+                            Preview
+                          </button>
                         </div>
                       </div>
                       
