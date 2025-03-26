@@ -217,6 +217,7 @@ const ProductInventoryTable = ({ storeId, onViewHistory }) => {
           <thead>
             <tr className="text-xs text-gray-500 dark:text-gray-400">
               <th className="py-2 px-4 text-left">Variant</th>
+              <th className="py-2 px-4 text-left">Image</th>
               <th className="py-2 px-4 text-left">SKU</th>
               <th className="py-2 px-4 text-left">Stock</th>
               <th className="py-2 px-4 text-left">Actions</th>
@@ -232,6 +233,27 @@ const ProductInventoryTable = ({ storeId, onViewHistory }) => {
                        .map(([key, value]) => `${key}: ${value}`)
                        .join(', ') : 
                      `Variant ${variant.id}`)}
+                </td>
+                <td className="py-2 px-4">
+                  {variant.imageUrl ? (
+                    <img 
+                      src={variant.imageUrl} 
+                      alt={variant.name || "Variant"}
+                      className="h-10 w-10 object-cover rounded-md"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = '/api/placeholder/64/64?text=No+Image';
+                      }}
+                    />
+                  ) : (
+                    <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-md flex items-center justify-center">
+                      <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 text-gray-400 dark:text-gray-500" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                        <polyline points="21 15 16 10 5 21"></polyline>
+                      </svg>
+                    </div>
+                  )}
                 </td>
                 <td className="py-2 px-4 text-gray-600 dark:text-gray-400">
                   {variant.sku || '-'}
