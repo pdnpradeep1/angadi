@@ -447,6 +447,67 @@ const AddProduct = () => {
     };
   });
 
+  // const handleSubmit = async (e) => {
+  //   if (e) e.preventDefault();
+  //   setLoading(true);
+  //   setError(null);
+  //   setSuccess(false);
+    
+  //   try {
+  //     // Form validation
+  //     if (!product.name || !product.price) {
+  //       throw new Error('Please fill in all required fields');
+  //     }
+      
+  //     // Upload image if selected
+  //     let imageUrl = product.imageUrl;
+  //     if (selectedFile) {
+  //       imageUrl = await uploadImage();
+  //       if (!imageUrl) {
+  //         throw new Error('Failed to upload image');
+  //       }
+  //     }
+      
+  //     // Create product object for API
+  //     const productData = {
+  //       ...product,
+  //       imageUrl,
+  //       price: parseFloat(product.price),
+  //       originalPrice: product.originalPrice ? parseFloat(product.originalPrice) : null,
+  //       stockQuantity: product.stockQuantity === 'Unlimited' ? -1 : parseInt(product.stockQuantity, 10),
+  //       tagIds: selectedTags, // Simply use the IDs directly
+  //       variants: variants,   // Include transformed variants
+  //       optionsMap: optionsMap || {} // Use the optionsMap state
+  //     };
+      
+  //     console.log('FINAL PRODUCT DATA FOR API:', JSON.stringify(productData, null, 2));
+      
+  //     // Send API request - different endpoints for create vs update
+  //     if (isEditing) {
+  //       // Update existing product
+  //       const response = await apiService.put(`/products/${productId}`, productData);
+  //       console.log('Update product response:', response);
+  //     } else {
+  //       // Create new product
+  //       const response = await apiService.post(`/products/${storeId}`, productData);
+  //       console.log('Create product response:', response);
+  //     }
+      
+  //     setSuccess(true);
+      
+  //     // Navigate back to products list after short delay
+  //     setTimeout(() => {
+  //       navigate(`/store-dashboard/${storeId}/all-products`);
+  //     }, 2000);
+      
+  //   } catch (err) {
+  //     console.error('Error saving product:', err);
+  //     setError(err.message || 'Failed to save product. Please try again.');
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     setLoading(true);
@@ -454,9 +515,25 @@ const AddProduct = () => {
     setSuccess(false);
     
     try {
-      // Form validation
-      if (!product.name || !product.price) {
-        throw new Error('Please fill in all required fields');
+      // Form validation - modified to handle variants case
+      const hasVariants = variants && variants.length > 0;
+      
+      // When no variants exist, main product must have price
+      if (!hasVariants && !product.name) {
+        throw new Error('Please enter a product name');
+      }
+      
+      // When no variants exist, main product must have price
+      if (!hasVariants && !product.price) {
+        throw new Error('Please enter a product price');
+      }
+      
+      // When variants exist, check if all variants have prices
+      if (hasVariants) {
+        const variantsWithoutPrice = variants.filter(variant => !variant.price);
+        if (variantsWithoutPrice.length > 0) {
+          throw new Error('All variants must have a price');
+        }
       }
       
       // Upload image if selected
@@ -472,8 +549,9 @@ const AddProduct = () => {
       const productData = {
         ...product,
         imageUrl,
-        price: parseFloat(product.price),
-        originalPrice: product.originalPrice ? parseFloat(product.originalPrice) : null,
+        // Only include price fields if no variants exist
+        price: hasVariants ? undefined : parseFloat(product.price),
+        originalPrice: hasVariants ? undefined : (product.originalPrice ? parseFloat(product.originalPrice) : null),
         stockQuantity: product.stockQuantity === 'Unlimited' ? -1 : parseInt(product.stockQuantity, 10),
         tagIds: selectedTags, // Simply use the IDs directly
         variants: variants,   // Include transformed variants
@@ -506,8 +584,8 @@ const AddProduct = () => {
     } finally {
       setLoading(false);
     }
-  };
-
+  }
+  
   const handleVariantsChange = (updatedVariants, options = {}) => {
     // Ensure all variants have productId set and stockQuantity is properly formatted
     const processedVariants = updatedVariants.map(variant => {
@@ -535,6 +613,15 @@ const AddProduct = () => {
     });
     
     setVariants(processedVariants);
+
+    if (processedVariants.length > 0) {
+      setProduct(prevProduct => ({
+        ...prevProduct,
+        price: '',
+        originalPrice: ''
+      }));
+    }
+    
     
     // Save the options map to state
     if (options && Object.keys(options).length > 0) {
@@ -634,12 +721,21 @@ const AddProduct = () => {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
               <form onSubmit={handleSubmit}>
                 {/* Basic Information Section */}
+                {/* {activeSection === 'product-info' && (
+                  <BasicInfoSection 
+                    product={product}
+                    handleInputChange={handleInputChange}
+                    progress={sectionProgress['product-info']}
+                    onNext={() => setActiveSection('product-media')}
+                  />
+                )} */}
                 {activeSection === 'product-info' && (
                   <BasicInfoSection 
                     product={product}
                     handleInputChange={handleInputChange}
                     progress={sectionProgress['product-info']}
                     onNext={() => setActiveSection('product-media')}
+                    variants={variants} // Pass variants to control price field state
                   />
                 )}
 

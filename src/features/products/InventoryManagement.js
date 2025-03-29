@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import InventoryMetrics from './components/management/InventoryMetrics';
+import { FiAlertCircle, FiPackage, FiFilter, FiRefreshCw } from 'react-icons/fi';
+import { fetchInventorySummary, fetchLowStockAlerts, fetchProductHistory } from './services/inventoryService';
+import { ProductInventoryTable, ProductInventoryHeader } from './components/management';
+import TransactionHistory from './components/management/TransactionHistory';
 import LowStockAlerts from './components/management/LowStockAlerts';
 import InventoryAdjustment from './components/management/InventoryAdjustment';
-import ProductInventoryTable from './components/management/ProductInventoryTable';
-import TransactionHistory from './components/management/TransactionHistory';
-import { fetchInventorySummary, fetchLowStockAlerts, fetchProductHistory } from './services/inventoryService';
-import { FiAlertCircle, FiCheck } from 'react-icons/fi';
+import SuccessAlert from '../common/SuccessAlert';
 
 const InventoryManagement = () => {
   const { storeId } = useParams();
@@ -19,11 +19,19 @@ const InventoryManagement = () => {
   const [success, setSuccess] = useState(null);
   const [showTransactionHistory, setShowTransactionHistory] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+  // Load inventory data on component mount or refresh
   useEffect(() => {
     loadInventoryData();
-  }, [storeId]);
+  }, [storeId, refreshTrigger]);
 
+  // Refresh data function
+  const refreshData = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
+
+  // Load inventory data from API
   const loadInventoryData = async () => {
     setLoading(true);
     setError(null);
@@ -43,6 +51,7 @@ const InventoryManagement = () => {
     }
   };
 
+  // Handle viewing a product's transaction history
   const handleViewProductHistory = async (productId, productName) => {
     setSelectedProduct({ id: productId, name: productName });
     setShowTransactionHistory(true);
@@ -56,15 +65,17 @@ const InventoryManagement = () => {
     }
   };
 
+  // Close transaction history modal
   const handleCloseTransactionHistory = () => {
     setShowTransactionHistory(false);
     setSelectedProduct(null);
     setTransactions([]);
   };
 
+  // Handle successful inventory adjustment
   const handleAdjustmentSuccess = (message) => {
     setSuccess(message || 'Inventory adjustment successful');
-    loadInventoryData();
+    loadInventoryData(); // Reload data to reflect changes
     
     // If the adjusted product is currently selected, refresh its history
     if (selectedProduct && showTransactionHistory) {
@@ -79,7 +90,7 @@ const InventoryManagement = () => {
 
   if (loading && !summary) {
     return (
-      <div className="flex justify-center items-center h-full p-8">
+      <div className="flex justify-center items-center h-64 p-8">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
         <span className="ml-3 text-lg text-gray-700 dark:text-gray-300">Loading inventory data...</span>
       </div>
@@ -89,13 +100,17 @@ const InventoryManagement = () => {
   return (
     <div className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Inventory Management</h2>
+        {/* Header section */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
+            <FiPackage className="mr-2 text-primary-500" />
+            Inventory Management
+          </h2>
           
-          <div className="flex space-x-2">
+          <div className="flex space-x-3 mt-4 md:mt-0">
             <button
               onClick={() => setActiveTab('overview')}
-              className={`px-4 py-2 rounded-md ${
+              className={`px-4 py-2 rounded-md transition-colors ${
                 activeTab === 'overview'
                   ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/20 dark:text-primary-300 font-medium'
                   : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
@@ -105,7 +120,7 @@ const InventoryManagement = () => {
             </button>
             <button
               onClick={() => setActiveTab('products')}
-              className={`px-4 py-2 rounded-md ${
+              className={`px-4 py-2 rounded-md transition-colors ${
                 activeTab === 'products'
                   ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/20 dark:text-primary-300 font-medium'
                   : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
@@ -113,9 +128,17 @@ const InventoryManagement = () => {
             >
               Products
             </button>
+            <button
+              onClick={refreshData}
+              className="p-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
+              title="Refresh data"
+            >
+              <FiRefreshCw />
+            </button>
           </div>
         </div>
 
+        {/* Error message */}
         {error && (
           <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-md">
             <div className="flex items-center">
@@ -125,46 +148,40 @@ const InventoryManagement = () => {
           </div>
         )}
 
-        {success && (
-          <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 rounded-md">
-            <div className="flex items-center">
-              <FiCheck className="text-green-500 mr-2" size={20} />
-              <span className="text-green-700 dark:text-green-400">{success}</span>
-            </div>
-          </div>
-        )}
+        {/* Success message */}
+        {success && <SuccessAlert message={success} />}
+
+        {/* Inventory metrics summary */}
+        <ProductInventoryHeader summary={summary} />
 
         {activeTab === 'overview' ? (
-          <>
-            <InventoryMetrics summary={summary} />
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-              <LowStockAlerts 
-                alerts={alerts} 
-                onViewProduct={handleViewProductHistory} 
-              />
-              
-              <InventoryAdjustment 
-                storeId={storeId}
-                productsList={summary?.lowStockProducts || []}
-                selectedProductId={selectedProduct?.id}
-                onSuccess={handleAdjustmentSuccess}
-                onError={setError}
-              />
-            </div>
-
-            {showTransactionHistory && (
-              <TransactionHistory 
-                productName={selectedProduct?.name}
-                transactions={transactions}
-                onClose={handleCloseTransactionHistory}
-              />
-            )}
-          </>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <LowStockAlerts 
+              alerts={alerts} 
+              onViewProduct={handleViewProductHistory} 
+            />
+            
+            <InventoryAdjustment 
+              storeId={storeId}
+              productsList={summary?.lowStockProducts || []}
+              selectedProductId={selectedProduct?.id}
+              onSuccess={handleAdjustmentSuccess}
+              onError={setError}
+            />
+          </div>
         ) : (
           <ProductInventoryTable 
             storeId={storeId}
             onViewHistory={handleViewProductHistory}
+          />
+        )}
+
+        {/* Transaction history modal */}
+        {showTransactionHistory && (
+          <TransactionHistory 
+            productName={selectedProduct?.name}
+            transactions={transactions}
+            onClose={handleCloseTransactionHistory}
           />
         )}
       </div>

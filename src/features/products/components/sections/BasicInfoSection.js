@@ -1,11 +1,20 @@
-// src/features/products/components/sections/BasicInfoSection.js
 import React from 'react';
-import { FiDollarSign } from 'react-icons/fi';
+import { FiDollarSign, FiInfo } from 'react-icons/fi';
 
 /**
- * Basic Information section for product add/edit form
+ * Enhanced Basic Information section for product add/edit form
+ * With support for disabling price fields when variants exist
  */
-const BasicInfoSection = ({ product, handleInputChange, progress, onNext }) => {
+const BasicInfoSection = ({ 
+  product, 
+  handleInputChange, 
+  progress, 
+  onNext,
+  variants = [] // Add variants as a prop
+}) => {
+  // Check if variants exist and have items
+  const hasVariants = Array.isArray(variants) && variants.length > 0;
+
   // Helper function to render progress indicator
   const renderProgressIndicator = (progress) => (
     <div className="h-1.5 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -64,10 +73,11 @@ const BasicInfoSection = ({ product, handleInputChange, progress, onNext }) => {
           <div>
             <label htmlFor="price" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Price <span className="text-red-500">*</span>
+              {hasVariants && <span className="ml-2 text-xs text-amber-600 dark:text-amber-400">(Set in variants)</span>}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiDollarSign className="text-gray-500 dark:text-gray-400" />
+                <FiDollarSign className={`${hasVariants ? 'text-gray-400 dark:text-gray-600' : 'text-gray-500 dark:text-gray-400'}`} />
               </div>
               <input
                 type="number"
@@ -75,22 +85,31 @@ const BasicInfoSection = ({ product, handleInputChange, progress, onNext }) => {
                 name="price"
                 value={product.price}
                 onChange={handleInputChange}
-                className="block w-full pl-10 p-2.5 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-md shadow-sm border border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500"
+                className={`block w-full pl-10 p-2.5 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-md shadow-sm border border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500 ${
+                  hasVariants ? 'opacity-60 cursor-not-allowed' : ''
+                }`}
                 placeholder="0.00"
                 min="0"
                 step="0.01"
                 required
+                disabled={hasVariants}
               />
             </div>
+            {hasVariants && (
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Price is managed at the variant level when variants exist.
+              </p>
+            )}
           </div>
           
           <div>
             <label htmlFor="originalPrice" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Original Price (for discounts)
+              {hasVariants && <span className="ml-2 text-xs text-amber-600 dark:text-amber-400">(Set in variants)</span>}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiDollarSign className="text-gray-500 dark:text-gray-400" />
+                <FiDollarSign className={`${hasVariants ? 'text-gray-400 dark:text-gray-600' : 'text-gray-500 dark:text-gray-400'}`} />
               </div>
               <input
                 type="number"
@@ -98,17 +117,39 @@ const BasicInfoSection = ({ product, handleInputChange, progress, onNext }) => {
                 name="originalPrice"
                 value={product.originalPrice}
                 onChange={handleInputChange}
-                className="block w-full pl-10 p-2.5 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-md shadow-sm border border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500"
+                className={`block w-full pl-10 p-2.5 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-md shadow-sm border border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500 ${
+                  hasVariants ? 'opacity-60 cursor-not-allowed' : ''
+                }`}
                 placeholder="0.00"
                 min="0"
                 step="0.01"
+                disabled={hasVariants}
               />
             </div>
             <p className="mt-1 text-sm text-gray-500">
-              Leave blank if not offering a discount
+              {hasVariants 
+                ? "Original price is managed at the variant level when variants exist."
+                : "Leave blank if not offering a discount"}
             </p>
           </div>
         </div>
+
+        {/* Info banner when variants exist */}
+        {hasVariants && (
+          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <FiInfo className="h-5 w-5 text-blue-400" aria-hidden="true" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  Price information is disabled because this product has variants. 
+                  Please set prices in the Variants section.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
         
         <div>
           <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
