@@ -1,8 +1,9 @@
+// src/pages/Login.js
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FiUser, FiLock, FiAlertCircle, FiMail } from "react-icons/fi";
-import { FcGoogle } from "react-icons/fc";
 import apiService from "../api/config";
+import GoogleLogin from "../features/auth/GoogleLogin";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -45,9 +46,10 @@ function Login() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    // Handle Google login logic
-    console.log("Google login functionality would be implemented here");
+  const handleGoogleLoginSuccess = (data) => {
+    // This will be called after successful Google login
+    console.log('Google login successful:', data);
+    navigate('/stores', { replace: true });
   };
 
   return (
@@ -182,14 +184,10 @@ function Login() {
           </div>
           
           <div>
-            <button
-              type="button"
-              onClick={handleGoogleLogin}
-              className="w-full flex justify-center items-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600"
-            >
-              <FcGoogle className="h-5 w-5 mr-2" />
-              Sign in with Google
-            </button>
+            <GoogleLogin 
+              onSuccess={handleGoogleLoginSuccess} 
+              buttonText="Sign in with Google"
+            />
           </div>
         </form>
       </div>

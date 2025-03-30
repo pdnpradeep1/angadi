@@ -1,7 +1,8 @@
+// src/pages/Signup.js
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FiUser, FiMail, FiLock, FiAlertCircle } from "react-icons/fi";
-import { FcGoogle } from "react-icons/fc";
+import GoogleLogin from "../features/auth/GoogleLogin";
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -39,7 +40,7 @@ const Signup = () => {
     if (!validateForm()) return;
     
     setLoading(true);
-    
+
     try {
       const response = await fetch('http://localhost:8080/auth/register', {
         method: 'POST',
@@ -48,8 +49,6 @@ const Signup = () => {
         },
         body: JSON.stringify({ name, email, password })
       });
-
-      
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -72,9 +71,13 @@ const Signup = () => {
     }
   };
 
-  const handleGoogleSignup = () => {
-    // Handle Google signup logic
-    console.log("Google signup functionality would be implemented here");
+  const handleGoogleSignup = (data) => {
+    // This will be called after successful Google login/signup
+    console.log('Google signup successful:', data);
+    
+    // Since Google authentication automatically creates an account if it doesn't exist,
+    // we can redirect the user directly to the stores page
+    navigate('/stores', { replace: true });
   };
 
   return (
@@ -237,17 +240,15 @@ const Signup = () => {
           </div>
           
           <div>
-            <button
-              type="button"
-              onClick={handleGoogleSignup}
-              className="w-full flex justify-center items-center py-2 px-4 border border-secondary-300 dark:border-secondary-600 rounded-md shadow-sm bg-white dark:bg-secondary-700 text-sm font-medium text-secondary-700 dark:text-white hover:bg-secondary-50 dark:hover:bg-secondary-600"
-            >
-              <FcGoogle className="h-5 w-5 mr-2" />
-              Sign up with Google
-            </button>
+            <GoogleLogin
+              onSuccess={handleGoogleSignup}
+              buttonText="Sign up with Google"
+            />
           </div>
         </form>
       </div>
     </div>
   );
-};export default Signup;
+};
+
+export default Signup;

@@ -447,67 +447,6 @@ const AddProduct = () => {
     };
   });
 
-  // const handleSubmit = async (e) => {
-  //   if (e) e.preventDefault();
-  //   setLoading(true);
-  //   setError(null);
-  //   setSuccess(false);
-    
-  //   try {
-  //     // Form validation
-  //     if (!product.name || !product.price) {
-  //       throw new Error('Please fill in all required fields');
-  //     }
-      
-  //     // Upload image if selected
-  //     let imageUrl = product.imageUrl;
-  //     if (selectedFile) {
-  //       imageUrl = await uploadImage();
-  //       if (!imageUrl) {
-  //         throw new Error('Failed to upload image');
-  //       }
-  //     }
-      
-  //     // Create product object for API
-  //     const productData = {
-  //       ...product,
-  //       imageUrl,
-  //       price: parseFloat(product.price),
-  //       originalPrice: product.originalPrice ? parseFloat(product.originalPrice) : null,
-  //       stockQuantity: product.stockQuantity === 'Unlimited' ? -1 : parseInt(product.stockQuantity, 10),
-  //       tagIds: selectedTags, // Simply use the IDs directly
-  //       variants: variants,   // Include transformed variants
-  //       optionsMap: optionsMap || {} // Use the optionsMap state
-  //     };
-      
-  //     console.log('FINAL PRODUCT DATA FOR API:', JSON.stringify(productData, null, 2));
-      
-  //     // Send API request - different endpoints for create vs update
-  //     if (isEditing) {
-  //       // Update existing product
-  //       const response = await apiService.put(`/products/${productId}`, productData);
-  //       console.log('Update product response:', response);
-  //     } else {
-  //       // Create new product
-  //       const response = await apiService.post(`/products/${storeId}`, productData);
-  //       console.log('Create product response:', response);
-  //     }
-      
-  //     setSuccess(true);
-      
-  //     // Navigate back to products list after short delay
-  //     setTimeout(() => {
-  //       navigate(`/store-dashboard/${storeId}/all-products`);
-  //     }, 2000);
-      
-  //   } catch (err) {
-  //     console.error('Error saving product:', err);
-  //     setError(err.message || 'Failed to save product. Please try again.');
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     setLoading(true);
@@ -519,7 +458,7 @@ const AddProduct = () => {
       const hasVariants = variants && variants.length > 0;
       
       // When no variants exist, main product must have price
-      if (!hasVariants && !product.name) {
+      if (!product.name) {
         throw new Error('Please enter a product name');
       }
       
@@ -545,13 +484,22 @@ const AddProduct = () => {
         }
       }
       
+      // Set product price to first variant price if variants exist
+      let productPrice = product.price;
+      let productOriginalPrice = product.originalPrice;
+      
+      if (hasVariants && variants[0].price) {
+        productPrice = parseFloat(variants[0].price);
+        productOriginalPrice = variants[0].originalPrice ? parseFloat(variants[0].originalPrice) : null;
+      }
+      
       // Create product object for API
       const productData = {
         ...product,
         imageUrl,
-        // Only include price fields if no variants exist
-        price: hasVariants ? undefined : parseFloat(product.price),
-        originalPrice: hasVariants ? undefined : (product.originalPrice ? parseFloat(product.originalPrice) : null),
+        // Always include price fields, using variant price if needed
+        price: hasVariants ? productPrice : parseFloat(product.price),
+        originalPrice: hasVariants ? productOriginalPrice : (product.originalPrice ? parseFloat(product.originalPrice) : null),
         stockQuantity: product.stockQuantity === 'Unlimited' ? -1 : parseInt(product.stockQuantity, 10),
         tagIds: selectedTags, // Simply use the IDs directly
         variants: variants,   // Include transformed variants
@@ -585,7 +533,8 @@ const AddProduct = () => {
       setLoading(false);
     }
   }
-  
+
+
   const handleVariantsChange = (updatedVariants, options = {}) => {
     // Ensure all variants have productId set and stockQuantity is properly formatted
     const processedVariants = updatedVariants.map(variant => {
