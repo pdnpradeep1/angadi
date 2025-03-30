@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { FiAlertCircle, FiPackage, FiFilter, FiRefreshCw } from 'react-icons/fi';
+import { FiAlertCircle, FiPackage, FiRefreshCw } from 'react-icons/fi';
 import { fetchInventorySummary, fetchLowStockAlerts, fetchProductHistory } from './services/inventoryService';
 import { ProductInventoryTable, ProductInventoryHeader } from './components/management';
 import TransactionHistory from './components/management/TransactionHistory';
@@ -116,17 +116,7 @@ const InventoryManagement = () => {
                   : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
               }`}
             >
-              Overview
-            </button>
-            <button
-              onClick={() => setActiveTab('products')}
-              className={`px-4 py-2 rounded-md transition-colors ${
-                activeTab === 'products'
-                  ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/20 dark:text-primary-300 font-medium'
-                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-              }`}
-            >
-              Products
+              Quick Tools
             </button>
             <button
               onClick={refreshData}
@@ -154,27 +144,32 @@ const InventoryManagement = () => {
         {/* Inventory metrics summary */}
         <ProductInventoryHeader summary={summary} />
 
-        {activeTab === 'overview' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <LowStockAlerts 
-              alerts={alerts} 
-              onViewProduct={handleViewProductHistory} 
-            />
-            
-            <InventoryAdjustment 
-              storeId={storeId}
-              productsList={summary?.lowStockProducts || []}
-              selectedProductId={selectedProduct?.id}
-              onSuccess={handleAdjustmentSuccess}
-              onError={setError}
-            />
-          </div>
-        ) : (
+        {/* Main Content Area */}
+        <div className="space-y-6">
+          {/* Products Table - Always visible */}
           <ProductInventoryTable 
             storeId={storeId}
             onViewHistory={handleViewProductHistory}
           />
-        )}
+
+          {/* Quick Tools (conditionally visible) */}
+          {activeTab === 'overview' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <LowStockAlerts 
+                alerts={alerts} 
+                onViewProduct={handleViewProductHistory} 
+              />
+              
+              <InventoryAdjustment 
+                storeId={storeId}
+                productsList={summary?.lowStockProducts || []}
+                selectedProductId={selectedProduct?.id}
+                onSuccess={handleAdjustmentSuccess}
+                onError={setError}
+              />
+            </div>
+          )}
+        </div>
 
         {/* Transaction history modal */}
         {showTransactionHistory && (
