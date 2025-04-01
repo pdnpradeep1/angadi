@@ -25,20 +25,20 @@ export const fetchInventorySummary = async (storeId) => {
  * @param {string|number} storeId - Store ID
  * @returns {Promise<Array>} - Array of low stock alerts
  */
-export const fetchLowStockAlerts = async (storeId) => {
-  try {
-    const response = await api.get(`/inventory/alerts/${storeId}`);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching low stock alerts:', error);
+// export const fetchLowStockAlerts = async (storeId) => {
+//   try {
+//     const response = await api.get(`/inventory/alerts/${storeId}`);
+//     return response.data;
+//   } catch (error) {
+//     console.error('Error fetching low stock alerts:', error);
     
-    // For development, return mock data
-    if (process.env.NODE_ENV === 'development') {
-      return getMockLowStockAlerts();
-    }
-    throw error;
-  }
-};
+//     // For development, return mock data
+//     if (process.env.NODE_ENV === 'development') {
+//       return getMockLowStockAlerts();
+//     }
+//     throw error;
+//   }
+// };
 
 /**
  * Fetch transaction history for a product

@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiDollarSign, FiInfo } from 'react-icons/fi';
 
 /**
  * Enhanced Basic Information section for product add/edit form
  * With support for disabling price fields when variants exist
+ * And display of discount percentage when original price is provided
  */
 const BasicInfoSection = ({ 
   product, 
@@ -14,6 +15,21 @@ const BasicInfoSection = ({
 }) => {
   // Check if variants exist and have items
   const hasVariants = Array.isArray(variants) && variants.length > 0;
+  
+  // State to track calculated discount percentage
+  const [discountPercentage, setDiscountPercentage] = useState(null);
+
+  // Calculate discount percentage when price or originalPrice changes
+  useEffect(() => {
+    if (product.originalPrice && product.price && Number(product.originalPrice) > Number(product.price)) {
+      const originalPrice = Number(product.originalPrice);
+      const currentPrice = Number(product.price);
+      const discount = ((originalPrice - currentPrice) / originalPrice) * 100;
+      setDiscountPercentage(Math.round(discount));
+    } else {
+      setDiscountPercentage(null);
+    }
+  }, [product.price, product.originalPrice]);
 
   // Helper function to render progress indicator
   const renderProgressIndicator = (progress) => (
@@ -102,11 +118,21 @@ const BasicInfoSection = ({
             )}
           </div>
           
-          <div>
+          <div className="relative">
             <label htmlFor="originalPrice" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Original Price (for discounts)
               {hasVariants && <span className="ml-2 text-xs text-amber-600 dark:text-amber-400">(Set in variants)</span>}
             </label>
+            
+            {/* Discount Percentage Badge - Top Right */}
+            {discountPercentage > 0 && !hasVariants && (
+              <div className="absolute top-0 right-0">
+                <span className="px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 text-xs font-medium rounded-full">
+                  -{discountPercentage}% OFF
+                </span>
+              </div>
+            )}
+            
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <FiDollarSign className={`${hasVariants ? 'text-gray-400 dark:text-gray-600' : 'text-gray-500 dark:text-gray-400'}`} />
@@ -129,7 +155,9 @@ const BasicInfoSection = ({
             <p className="mt-1 text-sm text-gray-500">
               {hasVariants 
                 ? "Original price is managed at the variant level when variants exist."
-                : "Leave blank if not offering a discount"}
+                : discountPercentage > 0 
+                  ? `Discount of ${discountPercentage}% will be applied` 
+                  : "Leave blank if not offering a discount"}
             </p>
           </div>
         </div>
