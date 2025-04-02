@@ -93,11 +93,13 @@ const StoreSidebar = () => {
            (path !== `/store-dashboard/${storeId}` && location.pathname.startsWith(path));
   };
 
+  // In the return statement, update the aside element and its children
   return (
-    <aside className="w-64 bg-secondary-800 text-white min-h-screen hidden md:block overflow-y-auto">
-      <div className="p-5">
+    <aside className="w-64 bg-secondary-800 text-white min-h-screen hidden md:flex flex-col relative">
+      {/* Fixed top section */}
+      <div className="sticky top-0 z-10 bg-secondary-800 p-5 border-b border-secondary-700">
         {/* Store Info */}
-        <div className="flex items-center space-x-3 mb-6">
+        <div className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-full bg-primary-600 flex items-center justify-center text-white font-bold">
             {currentStore?.name?.charAt(0) || 'S'}
           </div>
@@ -111,85 +113,93 @@ const StoreSidebar = () => {
             </Link>
           </div>
         </div>
+      </div>
 
-        {/* Navigation */}
-        <nav className="mt-8">
-          <ul className="space-y-2">
-            {menuItems.map((item) => (
-              <li key={item.name}>
-                {item.subItems ? (
-                  <div>
-                    <button
-                      onClick={
-                        item.name === "Products" ? toggleProducts : 
-                        item.name === "Delivery" ? toggleDelivery : 
-                        item.name === "Orders" ? toggleOrders : null
-                      }
-                      className={`w-full flex items-center justify-between p-3 rounded-md transition-colors ${
+      {/* Scrollable area */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
+        <div className="p-5">
+          {/* Navigation */}
+          <nav className="pb-32">
+            <ul className="space-y-2">
+              {menuItems.map((item) => (
+                <li key={item.name}>
+                  {item.subItems ? (
+                    <div>
+                      <button
+                        onClick={
+                          item.name === "Products" ? toggleProducts : 
+                          item.name === "Delivery" ? toggleDelivery : 
+                          item.name === "Orders" ? toggleOrders : null
+                        }
+                        className={`w-full flex items-center justify-between p-3 rounded-md transition-colors ${
+                          isActive(item.path)
+                            ? "bg-secondary-700 text-white"
+                            : "text-secondary-400 hover:bg-secondary-700 hover:text-white"
+                        }`}
+                      >
+                        <div className="flex items-center">
+                          <span className="mr-3">{item.icon}</span>
+                          <span>{item.name}</span>
+                        </div>
+                        {item.name === "Products" ? (
+                          isProductsOpen ? <FiChevronDown /> : <FiChevronRight />
+                        ) : item.name === "Delivery" ? (
+                          isDeliveryOpen ? <FiChevronDown /> : <FiChevronRight />
+                        ) : item.name === "Orders" ? (
+                          isOrdersOpen ? <FiChevronDown /> : <FiChevronRight />
+                        ) : null}
+                      </button>
+
+                      {(item.name === "Products" && isProductsOpen) || 
+                       (item.name === "Delivery" && isDeliveryOpen) || 
+                       (item.name === "Orders" && isOrdersOpen) ? (
+                        <ul className="ml-9 mt-2 space-y-1">
+                          {item.subItems.map((subItem) => (
+                            <li key={subItem.name}>
+                              <Link
+                                to={subItem.path}
+                                className={`flex items-center justify-between py-2 px-3 rounded-md text-sm ${
+                                  isActive(subItem.path)
+                                    ? "bg-secondary-700 text-white"
+                                    : "text-secondary-400 hover:bg-secondary-700 hover:text-white"
+                                }`}
+                              >
+                                <span>{subItem.name}</span>
+                                {subItem.count && (
+                                  <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none rounded-full bg-secondary-700 text-secondary-300">
+                                    {subItem.count}
+                                  </span>
+                                )}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <Link
+                      to={item.path}
+                      className={`flex items-center p-3 rounded-md transition-colors ${
                         isActive(item.path)
                           ? "bg-secondary-700 text-white"
                           : "text-secondary-400 hover:bg-secondary-700 hover:text-white"
                       }`}
                     >
-                      <div className="flex items-center">
-                        <span className="mr-3">{item.icon}</span>
-                        <span>{item.name}</span>
-                      </div>
-                      {item.name === "Products" ? (
-                        isProductsOpen ? <FiChevronDown /> : <FiChevronRight />
-                      ) : item.name === "Delivery" ? (
-                        isDeliveryOpen ? <FiChevronDown /> : <FiChevronRight />
-                      ) : item.name === "Orders" ? (
-                        isOrdersOpen ? <FiChevronDown /> : <FiChevronRight />
-                      ) : null}
-                    </button>
+                      <span className="mr-3">{item.icon}</span>
+                      <span>{item.name}</span>
+                    </Link>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </div>
+      </div>
 
-                    {(item.name === "Products" && isProductsOpen) || 
-                     (item.name === "Delivery" && isDeliveryOpen) || 
-                     (item.name === "Orders" && isOrdersOpen) ? (
-                      <ul className="ml-9 mt-2 space-y-1">
-                        {item.subItems.map((subItem) => (
-                          <li key={subItem.name}>
-                            <Link
-                              to={subItem.path}
-                              className={`flex items-center justify-between py-2 px-3 rounded-md text-sm ${
-                                isActive(subItem.path)
-                                  ? "bg-secondary-700 text-white"
-                                  : "text-secondary-400 hover:bg-secondary-700 hover:text-white"
-                              }`}
-                            >
-                              <span>{subItem.name}</span>
-                              {subItem.count && (
-                                <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none rounded-full bg-secondary-700 text-secondary-300">
-                                  {subItem.count}
-                                </span>
-                              )}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : null}
-                  </div>
-                ) : (
-                  <Link
-                    to={item.path}
-                    className={`flex items-center p-3 rounded-md transition-colors ${
-                      isActive(item.path)
-                        ? "bg-secondary-700 text-white"
-                        : "text-secondary-400 hover:bg-secondary-700 hover:text-white"
-                    }`}
-                  >
-                    <span className="mr-3">{item.icon}</span>
-                    <span>{item.name}</span>
-                  </Link>
-                )}
-              </li>
-            ))}
-          </ul>
-        </nav>
-
+      {/* Fixed bottom section */}
+      <div className="sticky bottom-0 z-10 bg-secondary-800 p-5 border-t border-secondary-700">
         {/* Credits Section */}
-        <div className="mt-8 bg-secondary-700 p-4 rounded-lg">
+        <div className="bg-secondary-700 p-4 rounded-lg">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium">Credits</span>
             <span className="text-sm font-bold">10</span>
@@ -203,7 +213,7 @@ const StoreSidebar = () => {
         {/* Logout Button */}
         <button
           onClick={handleLogout}
-          className="mt-8 flex items-center w-full p-3 rounded-md text-secondary-400 hover:bg-secondary-700 hover:text-white transition-colors"
+          className="mt-4 flex items-center w-full p-3 rounded-md text-secondary-400 hover:bg-secondary-700 hover:text-white transition-colors"
         >
           <FiLogOut className="mr-3" />
           <span>Logout</span>
