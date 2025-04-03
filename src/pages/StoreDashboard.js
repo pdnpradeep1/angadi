@@ -1,38 +1,43 @@
-import React, { useState, useEffect } from "react";
-import { useParams, Outlet, useNavigate, useLocation, Link } from "react-router-dom";
-import StoreSidebar from "../components/layouts/StoreSidebar";
-import { FiPackage, FiTruck, FiBarChart2, FiUsers, FiSettings, FiLoader } from "react-icons/fi";
+import React, { useState } from "react";
+import { useParams, Link, useLocation } from "react-router-dom";
+import { FiPackage, FiBarChart2, FiUsers } from "react-icons/fi";
 import { useStore } from "../contexts/StoreContext";
 
 const StoreDashboard = () => {
   const { storeId } = useParams();
-  const navigate = useNavigate();
   const location = useLocation();
-  const { currentStore, loading, error, fetchStoreData } = useStore();
+  const { currentStore } = useStore();
   const [activeTab, setActiveTab] = useState('overview');
-
-  useEffect(() => {
-    // Check if user is authenticated
-    const token = localStorage.getItem('jwtToken');
-    if (!token) {
-      navigate('/login');
-      return;
-    }
-
-    // Fetch store data if needed
-    const loadStore = async () => {
-      await fetchStoreData(storeId);
-    };
-    
-    loadStore();
-  }, [storeId, fetchStoreData, navigate]);
 
   // Determine if we should render an outlet or the dashboard
   const isMainDashboard = location.pathname === `/store-dashboard/${storeId}`;
-  const hasOutlet = !isMainDashboard;
 
-  const renderOverviewTab = () => (
+  return (
     <div className="space-y-6">
+      {/* Tabs for different dashboard views */}
+      <div className="flex space-x-4 border-b border-gray-200 dark:border-gray-700">
+        <button
+          className={`pb-2 px-1 text-sm font-medium ${
+            activeTab === 'overview'
+              ? 'text-primary-600 border-b-2 border-primary-600'
+              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+          }`}
+          onClick={() => setActiveTab('overview')}
+        >
+          Overview
+        </button>
+        <button
+          className={`pb-2 px-1 text-sm font-medium ${
+            activeTab === 'sales'
+              ? 'text-primary-600 border-b-2 border-primary-600'
+              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+          }`}
+          onClick={() => setActiveTab('sales')}
+        >
+          Sales
+        </button>
+      </div>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="card bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800">
@@ -152,107 +157,6 @@ const StoreDashboard = () => {
               </div>
             )}
           </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-100 dark:bg-gray-900">
-        <div className="text-center">
-          <FiLoader className="animate-spin h-10 w-10 text-primary-600 mx-auto" />
-          <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">Loading store dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error && !currentStore) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-100 dark:bg-gray-900">
-        <div className="text-center">
-          <div className="text-red-500 text-5xl mb-4">❌</div>
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Error Loading Dashboard</h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
-          <Link to="/stores" className="btn btn-primary">Return to Stores</Link>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
-      {/* Sidebar */}
-      <StoreSidebar />
-
-      {/* Main Content */}
-      <div className="flex-1 overflow-y-auto">
-        <header className="bg-white dark:bg-gray-800 shadow-sm p-4 md:p-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {currentStore?.name || 'Store Dashboard'}
-              {currentStore?.active === false && (
-                <span className="ml-2 text-sm font-medium text-red-500 dark:text-red-400">
-                  (Inactive)
-                </span>
-              )}
-            </h1>
-            <Link 
-              to={`/store-dashboard/${storeId}/settings`} 
-              className="p-2 rounded-md text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              <FiSettings size={20} />
-            </Link>
-          </div>
-          
-          {/* Store description if available */}
-          {currentStore?.description && (
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              {currentStore.description}
-            </p>
-          )}
-          
-          {/* Tabs for different dashboard views */}
-          {!hasOutlet && (
-            <div className="flex space-x-4 mt-4 border-b border-gray-200 dark:border-gray-700">
-              <button
-                className={`pb-2 px-1 text-sm font-medium ${
-                  activeTab === 'overview'
-                    ? 'text-primary-600 border-b-2 border-primary-600'
-                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                }`}
-                onClick={() => setActiveTab('overview')}
-              >
-                Overview
-              </button>
-              <button
-                className={`pb-2 px-1 text-sm font-medium ${
-                  activeTab === 'sales'
-                    ? 'text-primary-600 border-b-2 border-primary-600'
-                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                }`}
-                onClick={() => setActiveTab('sales')}
-              >
-                Sales
-              </button>
-              <button
-                className={`pb-2 px-1 text-sm font-medium ${
-                  activeTab === 'customers'
-                    ? 'text-primary-600 border-b-2 border-primary-600'
-                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                }`}
-                onClick={() => setActiveTab('customers')}
-              >
-                Customers
-              </button>
-            </div>
-          )}
-        </header>
-
-        <div className="p-4 md:p-6">
-          {/* Show outlet content if available, otherwise show dashboard overview */}
-          {hasOutlet ? <Outlet /> : renderOverviewTab()}
         </div>
       </div>
     </div>

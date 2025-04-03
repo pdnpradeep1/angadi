@@ -15,6 +15,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import { formatCurrency } from '../../utils/currencyUtils';
+import { LoadingState } from '../../utils/loading-error-states';
 
 
 const StoreAnalytics = () => {

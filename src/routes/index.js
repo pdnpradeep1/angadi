@@ -26,6 +26,7 @@ import AbandonedOrders from '../features/orders/AbandonedOrders';
 import StoreSettings from '../features/settings/index';
 import { isAuthenticated } from '../utils/jwtUtils';
 import CategoriesPage from '../features/categories/CategoriesPage';
+import StoreDashboardLayout from '../components/layouts/StoreDashboardLayout';
 
 
 // Auth guard component
@@ -117,13 +118,15 @@ function AppRoutes() {
       
       {/* Store dashboard and nested routes */}
       <Route
-        path="/store-dashboard/:storeId"
+        path="/store-dashboard/:storeId/*"
         element={
           <ProtectedRoute>
-            <StoreDashboard />
+            <StoreDashboardLayout />
           </ProtectedRoute>
         }
       >
+        <Route index element={<StoreDashboard />} />
+        
         {/* Product routes */}
         <Route path="all-products" element={<ProductList />} />
         <Route path="all-products/add-product" element={<AddProduct />} />

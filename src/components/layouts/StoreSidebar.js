@@ -89,8 +89,13 @@ const StoreSidebar = () => {
   ];
 
   const isActive = (path) => {
-    return location.pathname === path || 
-           (path !== `/store-dashboard/${storeId}` && location.pathname.startsWith(path));
+    // For the main dashboard route
+    if (path === `/store-dashboard/${storeId}`) {
+      return location.pathname === path;
+    }
+    
+    // For other routes, check if the current path starts with the given path
+    return location.pathname.startsWith(path);
   };
 
   // In the return statement, update the aside element and its children

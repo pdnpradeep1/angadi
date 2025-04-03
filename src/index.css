@@ -76,6 +76,7 @@ main {
   background-color: rgba(148, 163, 184, 0.3); /* secondary-400 with opacity */
   border-radius: 20px;
   transition: background-color 0.3s;
+  opacity: 0; /* Start with opacity 0 */
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
@@ -93,11 +94,183 @@ main {
 
 /* Make scrollbar only visible on hover/scroll */
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .custom-scrollbar:hover::-webkit-scrollbar-thumb,
 .custom-scrollbar:focus::-webkit-scrollbar-thumb,
-.custom-scrollbar:active::-webkit-scrollbar-thumb {
-  visibility: visible;
+.custom-scrollbar:active::-webkit-scrollbar-thumb,
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  opacity: 1;
+}
+
+/* Additional rule for Firefox */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.custom-scrollbar:hover {
+  scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
+}
+
+.dark .custom-scrollbar:hover {
+  scrollbar-color: rgba(71, 85, 105, 0.5) transparent;
+}
+
+/* Product Form Enhancements */
+.product-form-container {
+  @apply max-w-4xl mx-auto bg-white dark:bg-secondary-800 rounded-lg shadow-md overflow-hidden;
+}
+
+.product-form-header {
+  @apply px-6 py-4 bg-secondary-50 dark:bg-secondary-700 border-b border-secondary-200 dark:border-secondary-600;
+}
+
+.product-form-header h1 {
+  @apply text-xl font-semibold text-secondary-800 dark:text-white;
+}
+
+.product-form-section {
+  @apply p-6 border-b border-secondary-200 dark:border-secondary-700 last:border-b-0;
+}
+
+.product-form-section-title {
+  @apply text-lg font-medium text-secondary-800 dark:text-white mb-4 flex items-center;
+}
+
+.product-form-section-title svg {
+  @apply mr-2 text-primary-500;
+}
+
+.product-form-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+}
+
+.product-form-full-width {
+  @apply col-span-1 md:col-span-2;
+}
+
+.product-image-upload {
+  @apply border-2 border-dashed border-secondary-300 dark:border-secondary-600 rounded-lg p-6 text-center transition-colors hover:border-primary-500 dark:hover:border-primary-500 cursor-pointer;
+}
+
+.product-image-upload-active {
+  @apply border-primary-500 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/20;
+}
+
+.product-variant-table {
+  @apply w-full border-collapse;
+}
+
+.product-variant-table th {
+  @apply px-4 py-2 text-left text-sm font-medium text-secondary-700 dark:text-secondary-300 bg-secondary-50 dark:bg-secondary-700;
+}
+
+.product-variant-table td {
+  @apply px-4 py-2 border-t border-secondary-200 dark:border-secondary-700;
+}
+
+.product-form-actions {
+  @apply flex justify-end space-x-4 mt-6;
+}
+
+/* Form step indicator */
+.form-steps {
+  @apply flex items-center justify-between mb-8 px-2;
+}
+
+.form-step {
+  @apply flex flex-col items-center relative flex-1;
+}
+
+.form-step-number {
+  @apply w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium border-2 border-secondary-300 dark:border-secondary-600 bg-white dark:bg-secondary-800 text-secondary-700 dark:text-secondary-300 z-10;
+}
+
+.form-step-active .form-step-number {
+  @apply border-primary-500 bg-primary-500 text-white;
+}
+
+.form-step-completed .form-step-number {
+  @apply border-primary-500 bg-primary-500 text-white;
+}
+
+.form-step-label {
+  @apply mt-2 text-xs font-medium text-secondary-600 dark:text-secondary-400;
+}
+
+.form-step-active .form-step-label {
+  @apply text-primary-600 dark:text-primary-400;
+}
+
+.form-step-line {
+  @apply absolute top-4 w-full h-0.5 bg-secondary-200 dark:bg-secondary-700 -left-1/2;
+}
+
+.form-step:first-child .form-step-line {
+  @apply hidden;
+}
+
+.form-step-completed .form-step-line {
+  @apply bg-primary-500 dark:bg-primary-500;
+}
+
+/* Tooltip styles */
+.tooltip {
+  @apply relative inline-block;
+}
+
+.tooltip .tooltip-text {
+  @apply invisible absolute z-10 w-48 text-xs text-center text-white bg-secondary-800 rounded-md py-2 px-3 bottom-full left-1/2 transform -translate-x-1/2 mb-1 opacity-0 transition-opacity duration-300;
+}
+
+.tooltip:hover .tooltip-text {
+  @apply visible opacity-100;
+}
+
+/* Animation for form transitions */
+.form-fade-in {
+  @apply animate-fadeIn;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Top Bar Enhancements */
+.store-topbar {
+  @apply bg-white dark:bg-secondary-800 border-b border-secondary-200 dark:border-secondary-700 py-2;
+  height: 56px; /* Reduced height */
+}
+
+.store-topbar-content {
+  @apply flex items-center justify-between px-4;
+}
+
+.store-name-display {
+  @apply text-sm font-medium text-secondary-700 dark:text-secondary-300;
+  text-transform: lowercase; /* Make store name lowercase */
+}
+
+/* Hide duplicate store name */
+.store-name-duplicate {
+  @apply hidden;
+}
+
+/* Adjust top bar actions spacing */
+.topbar-actions {
+  @apply flex items-center space-x-3;
 }

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter as Router, useLocation } from "react-router-dom";
 import Navbar from "./components/layouts/Navbar";
 import Footer from "./components/layouts/Footer";
@@ -45,7 +45,24 @@ const AppContent = () => {
   );
 };
 
+// Initialize Google Auth when the app loads
+// const initGoogleAuth = () => {
+//   // Load Google API script if not already loaded
+//   if (!document.querySelector('script[src="https://accounts.google.com/gsi/client"]')) {
+//     const script = document.createElement('script');
+//     script.src = "https://accounts.google.com/gsi/client";
+//     script.async = true;
+//     script.defer = true;
+//     document.body.appendChild(script);
+//   }
+// };
+
 function App() {
+  // // Initialize Google Auth when the app loads
+  // useEffect(() => {
+  //   initGoogleAuth();
+  // }, []);
+
   return (
     <Router>
       <ThemeProvider>

@@ -4,7 +4,8 @@ import {
   FiSearch, 
   FiFilter,
   FiAlertCircle,
-  FiCheckCircle
+  FiCheckCircle,
+  FiPackage
 } from 'react-icons/fi';
 import { fetchProducts } from '../../services/inventoryService';
 import InventoryTableFilters from './InventoryTableFilters';

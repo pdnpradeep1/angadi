@@ -6,14 +6,19 @@ import {
   FiFile, 
   FiX, 
   FiAlertCircle, 
-  FiCheckCircle 
+  FiCheckCircle,
+  FiInfo
 } from 'react-icons/fi';
+import ImportFormatInfo from '../../components/products/ImportFormatInfo';
 
 const ProductImportExport = ({ storeId }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [exportFormat, setExportFormat] = useState('excel');
+  const [showShopifyInfo, setShowShopifyInfo] = useState(false);
+  const [showFormatInfo, setShowFormatInfo] = useState(false);
   
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
@@ -31,6 +36,7 @@ const ProductImportExport = ({ storeId }) => {
     const formData = new FormData();
     formData.append('file', selectedFile);
     formData.append('storeId', storeId);
+    formData.append('importType', 'shopify'); // Specify Shopify-compatible import
     
     setLoading(true);
     try {
@@ -50,147 +56,129 @@ const ProductImportExport = ({ storeId }) => {
     }
   };
   
-  const handleDownloadTemplate = async () => {
+  const handleExport = async () => {
+    setLoading(true);
+    setError(null);
+    
     try {
-      const token = localStorage.getItem('jwtToken');
+      const endpoint = `/products/import-export/export/${exportFormat === 'excel' ? 'excel' : 'csv'}/${storeId}?format=shopify`;
       
-      const response = await axios.get(
-        '/products/import-export/template',
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
-          responseType: 'blob'
-        }
-      );
+      // For file download, we need to handle the response differently
+      const response = await apiService.get(endpoint, { responseType: 'blob' });
       
-      // Create download link
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      // Create a download link and trigger it
+      const url = window.URL.createObjectURL(new Blob([response]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', 'product_import_template.xlsx');
+      link.setAttribute('download', `products-export-${new Date().toISOString().split('T')[0]}.${exportFormat === 'excel' ? 'xlsx' : 'csv'}`);
       document.body.appendChild(link);
       link.click();
       link.remove();
+      
+      setResult({ success: true, message: 'Products exported successfully' });
     } catch (err) {
-      console.error('Error downloading template:', err);
-      setError('Failed to download template');
+      console.error('Error exporting products:', err);
+      setError('Failed to export products');
+    } finally {
+      setLoading(false);
     }
   };
-  
-  const handleExport = async (format) => {
-    try {
-      const token = localStorage.getItem('jwtToken');
-      
-      const response = await axios.get(
-        `/products/import-export/export/${format}/${storeId}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Owner-Email': JSON.parse(atob(token.split('.')[1])).sub
-          },
-          responseType: 'blob'
-        }
-      );
-      
-      // Create download link
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      
-      const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-      link.setAttribute('download', `products_${storeId}_${date}.${format}`);
-      
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    } catch (err) {
-      console.error(`Error exporting products as ${format}:`, err);
-      setError(`Failed to export products as ${format}`);
-    }
-  };
+
+  // Shopify format information
+  const shopifyFormatInfo = (
+    <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
+      <h3 className="text-sm font-medium text-blue-800 dark:text-blue-300 flex items-center">
+        <FiInfo className="mr-2" /> Shopify Compatible Format
+      </h3>
+      <p className="mt-2 text-xs text-blue-700 dark:text-blue-400">
+        The export will include these columns:
+      </p>
+      <ul className="mt-1 text-xs text-blue-700 dark:text-blue-400 list-disc list-inside">
+        <li>Handle (URL slug)</li>
+        <li>Title (Product name)</li>
+        <li>Body (HTML) (Description)</li>
+        <li>Vendor (Brand)</li>
+        <li>Product Type (Category)</li>
+        <li>Tags</li>
+        <li>Option names and values</li>
+        <li>Variant details (SKU, price, inventory, etc.)</li>
+        <li>Images</li>
+      </ul>
+      <p className="mt-2 text-xs text-blue-700 dark:text-blue-400">
+        You can import this file directly into Shopify or edit it and import back into Angadi.
+      </p>
+    </div>
+  );
   
   return (
-    <div className="import-export-container p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
-      <h2 className="text-xl font-semibold mb-4">Import & Export Products</h2>
-      
-      {/* Import Section */}
-      <div className="mb-6">
-        <h3 className="text-lg font-medium mb-2">Import Products</h3>
-        
-        <div className="flex items-center mb-4">
-          <button
-            onClick={handleDownloadTemplate}
-            className="flex items-center px-4 py-2 text-sm bg-secondary-100 text-secondary-700 hover:bg-secondary-200 rounded-md mr-2"
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-lg font-medium text-gray-900 dark:text-white">Product Import & Export</h2>
+        <div className="flex space-x-4">
+          <button 
+            onClick={() => setShowFormatInfo(!showFormatInfo)}
+            className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center"
           >
-            <FiDownload className="mr-2" /> Download Template
+            <FiInfo className="mr-1" /> 
+            {showFormatInfo ? 'Hide Format Info' : 'Show Import Format'}
           </button>
+          <button 
+            onClick={() => setShowShopifyInfo(!showShopifyInfo)}
+            className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center"
+          >
+            <FiInfo className="mr-1" /> 
+            {showShopifyInfo ? 'Hide Shopify Info' : 'Show Shopify Format'}
+          </button>
+        </div>
+      </div>
+      
+      {showFormatInfo && <ImportFormatInfo />}
+      {showShopifyInfo && shopifyFormatInfo}
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+        {/* Import Section */}
+        <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+          <h3 className="text-md font-medium text-gray-800 dark:text-white mb-4">Import Products</h3>
           
-          <p className="text-sm text-secondary-500">
-            Download a template file to see the required format for importing products.
-          </p>
-        </div>
-        
-        <div className="border-2 border-dashed border-secondary-300 dark:border-secondary-700 rounded-lg p-6 mb-4">
-          {selectedFile ? (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <FiFile className="text-secondary-500 mr-2" size={20} />
-                <span className="text-secondary-700 dark:text-secondary-300">{selectedFile.name}</span>
-                <span className="ml-2 text-xs text-secondary-500">
-                  ({Math.round(selectedFile.size / 1024)} KB)
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Select File (CSV or Excel)
+            </label>
+            <div className="flex items-center">
+              <label className="flex-1 cursor-pointer bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600">
+                <span className="flex items-center">
+                  <FiFile className="mr-2" />
+                  {selectedFile ? selectedFile.name : 'Choose file...'}
                 </span>
-              </div>
-              
-              <button
-                onClick={() => setSelectedFile(null)}
-                className="text-secondary-500 hover:text-secondary-700"
-              >
-                <FiX size={18} />
-              </button>
+                <input
+                  type="file"
+                  className="hidden"
+                  accept=".csv,.xlsx,.xls"
+                  onChange={handleFileSelect}
+                />
+              </label>
+              {selectedFile && (
+                <button
+                  className="ml-2 p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                  onClick={() => setSelectedFile(null)}
+                >
+                  <FiX />
+                </button>
+              )}
             </div>
-          ) : (
-            <div className="text-center">
-              <FiUpload className="mx-auto h-10 w-10 text-secondary-400" />
-              <p className="mt-2 text-sm text-secondary-600 dark:text-secondary-400">
-                Drag and drop a file here, or click to select a file
-              </p>
-              <p className="text-xs text-secondary-500 dark:text-secondary-500 mt-1">
-                Supported formats: .csv, .xlsx, .xls
-              </p>
-              
-              <input
-                type="file"
-                id="fileUpload"
-                className="hidden"
-                accept=".csv,.xlsx,.xls"
-                onChange={handleFileSelect}
-              />
-              
-              <button
-                type="button"
-                onClick={() => document.getElementById('fileUpload').click()}
-                className="mt-4 px-4 py-2 border border-secondary-300 dark:border-secondary-600 rounded-md text-sm font-medium text-secondary-700 dark:text-secondary-300 hover:bg-secondary-50 dark:hover:bg-secondary-700"
-              >
-                Select File
-              </button>
-            </div>
-          )}
-        </div>
-        
-        {selectedFile && (
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Supported formats: CSV, Excel (.xlsx, .xls)
+            </p>
+          </div>
+          
           <button
+            className="w-full flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
             onClick={handleImport}
-            disabled={loading}
-            className="btn btn-primary w-full flex items-center justify-center"
+            disabled={!selectedFile || loading}
           >
             {loading ? (
               <>
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Importing...
+                <span className="animate-spin mr-2">⟳</span> Importing...
               </>
             ) : (
               <>
@@ -198,86 +186,99 @@ const ProductImportExport = ({ storeId }) => {
               </>
             )}
           </button>
-        )}
+        </div>
         
-        {/* Import Results */}
-        {result && (
-          <div className={`mt-4 p-4 rounded-md ${
-            result.failureCount === 0 ? 'bg-green-50 dark:bg-green-900/20' : 'bg-yellow-50 dark:bg-yellow-900/20'
-          }`}>
-            <div className="flex">
-              <div className="flex-shrink-0">
-                {result.failureCount === 0 ? (
-                  <FiCheckCircle className="h-5 w-5 text-green-400" />
-                ) : (
-                  <FiAlertCircle className="h-5 w-5 text-yellow-400" />
-                )}
-              </div>
-              <div className="ml-3">
-                <h3 className={`text-sm font-medium ${
-                  result.failureCount === 0 ? 'text-green-800 dark:text-green-300' : 'text-yellow-800 dark:text-yellow-300'
-                }`}>
-                  Import Results
-                </h3>
-                <div className="mt-2 text-sm">
-                  <p className="text-sm">
-                    Total rows: {result.totalRows}<br />
-                    Successfully imported: {result.successCount}<br />
-                    Failed rows: {result.failureCount}
-                  </p>
-                  
-                  {result.failureCount > 0 && (
-                    <div className="mt-3">
-                      <details>
-                        <summary className="text-sm font-medium cursor-pointer">View Errors</summary>
-                        <ul className="mt-2 pl-5 list-disc">
-                          {result.errors.map((error, index) => (
-                            <li key={index} className="text-xs text-yellow-700 dark:text-yellow-400">
-                              Row {error.rowNumber}: {error.errorMessage}
-                            </li>
-                          ))}
-                        </ul>
-                      </details>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-      
-      {/* Export Section */}
-      <div>
-        <h3 className="text-lg font-medium mb-2">Export Products</h3>
-        <p className="text-sm text-secondary-500 mb-4">
-          Export your products to CSV or Excel format for backup or editing.
-        </p>
-        
-        <div className="flex space-x-4">
-          <button
-            onClick={() => handleExport('csv')}
-            className="btn btn-secondary flex items-center"
-          >
-            <FiDownload className="mr-2" /> Export as CSV
-          </button>
+        {/* Export Section */}
+        <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+          <h3 className="text-md font-medium text-gray-800 dark:text-white mb-4">Export Products</h3>
           
-            <button
-            onClick={() => handleExport('excel')}
-            className="btn btn-primary flex items-center"
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Export Format
+            </label>
+            <div className="flex space-x-4">
+              <label className="inline-flex items-center">
+                <input
+                  type="radio"
+                  className="form-radio text-primary-600"
+                  name="exportFormat"
+                  value="excel"
+                  checked={exportFormat === 'excel'}
+                  onChange={() => setExportFormat('excel')}
+                />
+                <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Excel (.xlsx)</span>
+              </label>
+              <label className="inline-flex items-center">
+                <input
+                  type="radio"
+                  className="form-radio text-primary-600"
+                  name="exportFormat"
+                  value="csv"
+                  checked={exportFormat === 'csv'}
+                  onChange={() => setExportFormat('csv')}
+                />
+                <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">CSV</span>
+              </label>
+            </div>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Exports in Shopify-compatible format
+            </p>
+          </div>
+          
+          <button
+            className="w-full flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
+            onClick={handleExport}
+            disabled={loading}
           >
-            <FiDownload className="mr-2" /> Export as Excel
+            {loading ? (
+              <>
+                <span className="animate-spin mr-2">⟳</span> Exporting...
+              </>
+            ) : (
+              <>
+                <FiDownload className="mr-2" /> Export Products
+              </>
+            )}
           </button>
         </div>
       </div>
       
-      {/* Error Message */}
-      {error && (
-        <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-md">
-          <div className="flex">
-            <FiAlertCircle className="h-5 w-5 text-red-500" />
-            <span className="ml-2 text-red-700 dark:text-red-400">{error}</span>
-          </div>
+      {/* Results/Errors */}
+      {(result || error) && (
+        <div className={`mt-6 p-4 rounded-md ${error ? 'bg-red-50 dark:bg-red-900/20' : 'bg-green-50 dark:bg-green-900/20'}`}>
+          {error ? (
+            <div className="flex items-start">
+              <FiAlertCircle className="text-red-500 mt-0.5 mr-2" />
+              <div>
+                <h3 className="text-sm font-medium text-red-800 dark:text-red-300">Error</h3>
+                <p className="mt-1 text-sm text-red-700 dark:text-red-400">{error}</p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-start">
+              <FiCheckCircle className="text-green-500 mt-0.5 mr-2" />
+              <div>
+                <h3 className="text-sm font-medium text-green-800 dark:text-green-300">Success</h3>
+                <p className="mt-1 text-sm text-green-700 dark:text-green-400">{result.message}</p>
+                {result.imported && (
+                  <p className="mt-1 text-sm text-green-700 dark:text-green-400">
+                    Imported {result.imported} products successfully.
+                  </p>
+                )}
+                {result.errors && result.errors.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-sm font-medium text-red-800 dark:text-red-300">Some items had errors:</p>
+                    <ul className="mt-1 text-sm text-red-700 dark:text-red-400 list-disc list-inside">
+                      {result.errors.slice(0, 5).map((err, idx) => (
+                        <li key={idx}>{err}</li>
+                      ))}
+                      {result.errors.length > 5 && <li>...and {result.errors.length - 5} more errors</li>}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

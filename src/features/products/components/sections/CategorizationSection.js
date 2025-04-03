@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { FiX } from 'react-icons/fi';
 import CategorySelector from '../../../categories/CategorySelector';
+import { apiService } from '../../../../api/config';
+import { useStore } from '../../../../contexts/StoreContext'; // Import the StoreContext
 
 /**
  * Categories & Tags section for product form
@@ -21,6 +23,7 @@ const CategorizationSection = ({
   const [showNewCategory, setShowNewCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newTag, setNewTag] = useState('');
+  const { currentStore } = useStore(); // Get the current store from context
 
   // Helper function to render progress indicator
   const renderProgressIndicator = (progress) => (
@@ -39,18 +42,68 @@ const CategorizationSection = ({
     }
     
     try {
-      // For development
-      const newCategory = { id: categories.length + 1, name: newCategoryName };
-      // In a real implementation, you'd call an API to create the category
+      // Get storeId from the StoreContext
+      const storeId = currentStore?.id;
       
-      // Update categories list and select the new category
-      // This would typically be done via a callback to the parent component
-      setProduct({ ...product, categoryId: newCategory.id });
+      if (!storeId) {
+        console.error('Store ID is missing');
+        alert('Store ID is missing. Please make sure you are in a valid store dashboard.');
+        return;
+      }
       
+      console.log('Using store ID for category creation:', storeId);
+      
+      // Create category object similar to AddCategoryModal.js
+      const newCategory = {
+        name: newCategoryName,
+        description: `Category for ${newCategoryName} products`,
+        status: 'Active',
+        parentCategoryId: product.categoryId || null,
+        productCount: 0,
+        image: `/api/placeholder/64/64?text=${newCategoryName.charAt(0).toUpperCase()}&bgcolor=5a67d8&color=ffffff`
+      };
+      
+      // Use apiService.post with the correct endpoint
+      const response = await apiService.post(
+        `/categories/${storeId}`, 
+        newCategory
+      );
+      
+      console.log('Category created successfully:', response);
+      
+      // Create a new category object in the format expected by CategorySelector
+      const createdCategory = {
+        id: response.id,
+        name: response.name,
+        parentId: response.parentCategoryId,
+        image: response.image,
+        productCount: 0,
+        status: 'Active'
+      };
+      
+      // Add the new category to the categories list (this will update the CategorySelector)
+      const updatedCategories = [...categories, createdCategory];
+      
+      // Force a re-render of the CategorySelector by creating a new array
+      // This is needed to ensure the TreeView updates properly
+      categories.length = 0;
+      categories.push(...updatedCategories);
+      
+      // Update the product's category with the response data
+      setProduct({
+        ...product,
+        storeId: storeId,
+        categoryId: response.id,
+        categoryName: response.name
+      });
+      
+      // Reset the form
       setNewCategoryName('');
       setShowNewCategory(false);
-    } catch (err) {
-      console.error('Error creating category:', err);
+      
+    } catch (error) {
+      console.error('Error creating category:', error);
+      alert(`Failed to create category: ${error.message || 'Unknown error'}`);
     }
   };
 
@@ -137,7 +190,7 @@ const CategorizationSection = ({
                       selectedCategoryId={product.categoryId}
                       onChange={(id) => setProduct({ ...product, categoryId: id })}
                       onCreateNew={() => setShowNewCategory(true)}
-                      className="w-full"
+                      className="w-full custom-scrollbar"
                     />
                   </div>
                 )}

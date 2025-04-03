@@ -22,6 +22,7 @@ import { EmptyStates } from '../../utils/loading-error-states';
 import ProductImportExport from '../importexport/ProductImportExport';
 import { Button } from '../../components/ui/Button';
 import Pagination from '../../components/ui/Pagination';
+import ImportFormatInfo from '../../components/products/ImportFormatInfo'; // Add this import
 
 const ProductList = () => {
   const { storeId } = useParams();
@@ -37,6 +38,7 @@ const ProductList = () => {
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [showImportExport, setShowImportExport] = useState(false);
+  const [showFormatInfo, setShowFormatInfo] = useState(false); // Add this state variable
   const [filterOpen, setFilterOpen] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState({});
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
