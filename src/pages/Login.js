@@ -8,6 +8,7 @@ import GoogleLogin from "../features/auth/GoogleLogin";
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false); // Add this state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -18,7 +19,12 @@ function Login() {
     setError(null);
 
     try {
-      const response = await apiService.post('/auth/login', { email, password });
+      // Include rememberMe in the request
+      const response = await apiService.post('/auth/login', { 
+        email, 
+        password,
+        rememberMe // Send this to the backend
+      });
       
       if (response.status !== 200) {
         if (response.status === 401) {
@@ -132,7 +138,9 @@ function Login() {
                 id="remember-me"
                 name="remember-me"
                 type="checkbox"
-                className="h-4 w-4 text-primary-600 border-gray-300 rounded"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
               />
               <label
                 htmlFor="remember-me"
