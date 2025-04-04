@@ -8,7 +8,9 @@ import {
   FiImage,
   FiTag,
   FiCheck,
-  FiX
+  FiX,
+  FiChevronDown,
+  FiChevronRight
 } from 'react-icons/fi';
 import api from '../../api/config';
 
@@ -22,7 +24,9 @@ import { EmptyStates } from '../../utils/loading-error-states';
 import ProductImportExport from '../importexport/ProductImportExport';
 import { Button } from '../../components/ui/Button';
 import Pagination from '../../components/ui/Pagination';
-import ImportFormatInfo from '../../components/products/ImportFormatInfo'; // Add this import
+import ImportFormatInfo from '../../components/products/ImportFormatInfo';
+// Import the ShopLoader component
+import ShopLoader from '../../components/loaders/ShopLoader';
 
 const ProductList = () => {
   const { storeId } = useParams();
@@ -38,10 +42,10 @@ const ProductList = () => {
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [showImportExport, setShowImportExport] = useState(false);
-  const [showFormatInfo, setShowFormatInfo] = useState(false); // Add this state variable
+  const [showFormatInfo, setShowFormatInfo] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState({});
-  const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
+  const [viewMode, setViewMode] = useState('list');
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get('page')) || 0); // Backend uses 0-based indexing
@@ -709,52 +713,63 @@ const ProductList = () => {
 
   return (
     <>
+      {/* Show ShopLoader when loading */}
+      {loading && (
+        <ShopLoader 
+          size="lg" 
+          message="Stocking your inventory..." 
+          fullPage={true} 
+        />
+      )}
+
       {showImportExport && (
         <div className="mb-6">
           <ProductImportExport storeId={storeId} />
         </div>
       )}
       
-      <GenericDataList
-        title="Products"
-        data={products}
-        columns={columns}
-        filters={filterConfig}
-        onSearch={handleSearch}
-        onFilterChange={handleFilterChange}
-        onApplyFilters={applyFilters}
-        onClearFilters={clearFilters}
-        onDelete={handleDeleteProduct}
-        onAdd={() => navigate(`/store-dashboard/${storeId}/all-products/add-product`)}
-        loading={loading}
-        error={error}
-        emptyState={
-          <EmptyStates.Products 
-            onAction={() => navigate(`/store-dashboard/${storeId}/all-products/add-product`)}
-          />
-        }
-        actionButtons={actionButtons}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        showViewModeToggle={true}
-        renderGridView={renderGridView}
-        bulkActions={bulkActions}
-        selectedItems={selectedProducts}
-        onItemSelect={(id) => {
-          setSelectedProducts(prev => 
-            prev.includes(id) 
-              ? prev.filter(itemId => itemId !== id)
-              : [...prev, id]
-          );
-        }}
-        onSelectAll={handleSelectAllItems}
-        filterOpen={filterOpen}
-        setFilterOpen={setFilterOpen}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        entityName="product"
-        pagination={renderPagination()}
-      />
+      {!loading && (
+        <GenericDataList
+          title="Products"
+          data={products}
+          columns={columns}
+          filters={filterConfig}
+          onSearch={handleSearch}
+          onFilterChange={handleFilterChange}
+          onApplyFilters={applyFilters}
+          onClearFilters={clearFilters}
+          onDelete={handleDeleteProduct}
+          onAdd={() => navigate(`/store-dashboard/${storeId}/all-products/add-product`)}
+          loading={loading}
+          error={error}
+          emptyState={
+            <EmptyStates.Products 
+              onAction={() => navigate(`/store-dashboard/${storeId}/all-products/add-product`)}
+            />
+          }
+          actionButtons={actionButtons}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          showViewModeToggle={true}
+          renderGridView={renderGridView}
+          bulkActions={bulkActions}
+          selectedItems={selectedProducts}
+          onItemSelect={(id) => {
+            setSelectedProducts(prev => 
+              prev.includes(id) 
+                ? prev.filter(itemId => itemId !== id)
+                : [...prev, id]
+            );
+          }}
+          onSelectAll={handleSelectAllItems}
+          filterOpen={filterOpen}
+          setFilterOpen={setFilterOpen}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          entityName="product"
+          pagination={renderPagination()}
+        />
+      )}
     </>
   );
 };
