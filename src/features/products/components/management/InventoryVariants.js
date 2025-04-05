@@ -25,6 +25,55 @@ const InventoryVariants = ({ product, storeId, onViewHistory, onInventoryUpdate 
   };
 
   // Save quick edit inventory changes for a variant
+  // const saveQuickEdit = async (variant) => {
+  //   setUpdateLoading(true);
+  //   try {
+  //     // Calculate the change in quantity
+  //     const originalQty = variant.stockQuantity === -1 ? 0 : variant.stockQuantity;
+  //     const change = editQuantity - originalQty;
+      
+  //     if (change === 0) {
+  //       // No change, just cancel
+  //       cancelQuickEdit();
+  //       return;
+  //     }
+      
+  //     // Call API to update variant stock
+  //     await quickUpdateInventory(storeId, {
+  //       productId: product.id,
+  //       variantId: variant.id,
+  //       quantityChange: change,
+  //       type: 'ADJUSTMENT',
+  //       reason: 'Quick edit from inventory management'
+  //     });
+      
+  //     // Update the variant's stock quantity for display
+  //     const updatedVariant = { ...variant, stockQuantity: editQuantity };
+      
+  //     // Notify parent component about the update
+  //     if (onInventoryUpdate) {
+  //       // Create display name for the variant
+  //       const variantName = variant.name || 
+  //         (variant.attributes ? 
+  //           Object.entries(variant.attributes)
+  //             .map(([key, value]) => `${key}: ${value}`)
+  //             .join(', ') : 
+  //           `Variant ${variant.id}`);
+            
+  //       onInventoryUpdate(
+  //         { ...product, variant: updatedVariant },
+  //         `Updated ${product.name} (${variantName}) quantity to ${editQuantity}`
+  //       );
+  //     }
+      
+  //     cancelQuickEdit();
+  //   } catch (err) {
+  //     console.error('Error updating variant inventory:', err);
+  //   } finally {
+  //     setUpdateLoading(false);
+  //   }
+  // };
+
   const saveQuickEdit = async (variant) => {
     setUpdateLoading(true);
     try {
@@ -39,36 +88,31 @@ const InventoryVariants = ({ product, storeId, onViewHistory, onInventoryUpdate 
       }
       
       // Call API to update variant stock
-      await quickUpdateInventory(storeId, {
+      // Fix: Ensure we're sending the correct variantId format
+      const updatedVariant = await quickUpdateInventory(storeId, {
         productId: product.id,
-        variantId: variant.id,
+        variantId: typeof variant.id === 'object' ? variant.id.variantId : variant.id,
         quantityChange: change,
-        type: 'ADJUSTMENT',
-        reason: 'Quick edit from inventory management'
+        reason: `Manual adjustment: ${change > 0 ? 'Added' : 'Removed'} ${Math.abs(change)} units for variant`
       });
       
-      // Update the variant's stock quantity for display
-      const updatedVariant = { ...variant, stockQuantity: editQuantity };
+      // Update the variant in the UI
+      const updatedVariantData = {
+        ...variant,
+        stockQuantity: editQuantity
+      };
       
-      // Notify parent component about the update
-      if (onInventoryUpdate) {
-        // Create display name for the variant
-        const variantName = variant.name || 
-          (variant.attributes ? 
-            Object.entries(variant.attributes)
-              .map(([key, value]) => `${key}: ${value}`)
-              .join(', ') : 
-            `Variant ${variant.id}`);
-            
-        onInventoryUpdate(
-          { ...product, variant: updatedVariant },
-          `Updated ${product.name} (${variantName}) quantity to ${editQuantity}`
-        );
-      }
+      // Call the parent component's update handler
+      onInventoryUpdate(
+        updatedVariantData,
+        `Updated inventory for variant: ${change > 0 ? 'Added' : 'Removed'} ${Math.abs(change)} units`
+      );
       
+      // Reset the editing state
       cancelQuickEdit();
-    } catch (err) {
-      console.error('Error updating variant inventory:', err);
+    } catch (error) {
+      console.error('Error updating variant inventory:', error);
+      // You might want to show an error message here
     } finally {
       setUpdateLoading(false);
     }
